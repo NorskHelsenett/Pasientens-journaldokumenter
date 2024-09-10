@@ -61,7 +61,7 @@ image:build:api:
   extends: .image:build:template
   variables:
     IMAGE_NAME: $EPJ_IMAGE_NAME
-    DOCKERFILE_PATH: /docker/epj/Dockerfile
+    DOCKERFILE_PATH: /.NET/Patient Health Records EPJ/docker/epj/Dockerfile
 
 image:scan:api:
   extends: .image:scan:template
