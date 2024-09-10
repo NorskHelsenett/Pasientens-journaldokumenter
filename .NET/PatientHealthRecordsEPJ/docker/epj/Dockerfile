@@ -10,7 +10,7 @@ ENV ASPNETCORE_URLS=http://*:8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
-COPY "./.NET/Patient Health Records EPJ/solutions/PatientHealthRecordsEPJ/PatientHealthRecordsEPJ/" ./
+COPY ./.NET/PatientHealthRecordsEPJ/solutions/PatientHealthRecordsEPJ/ ./
 
 RUN dotnet restore "PatientHealthRecordsEPJ/PatientHealthRecordsEPJ.csproj"
 RUN dotnet publish "PatientHealthRecordsEPJ/PatientHealthRecordsEPJ.csproj" -c Release -o /app/publish-documentsharing-epj /p:UseAppHost=false --no-restore 
