@@ -10,4 +10,4 @@ test:
     # Run ApiTests with Testcontainers in cloud. See https://testcontainers.com/cloud/ for more info.
     - curl -fsSL https://app.testcontainers.cloud/bash | bash
 
-    - dotnet test ".NET/Patient Health Records EPJ/solutions/PatientHealthRecordsEPJ/PatientHealthRecordsEPJ/PatientHealthRecordsEPJ.sln" -c Release
+    - dotnet test ".NET/PatientHealthRecordsEPJ/solutions/PatientHealthRecordsEPJ/PatientHealthRecordsEPJ.sln" -c Release
