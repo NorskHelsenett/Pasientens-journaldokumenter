@@ -1,0 +1,4 @@
+- Oppdatering av filene kan gjøres med bruk av [kj-updateKith.sh](jetbrains://idea/navigate/reference?project=kjernejournal&path=cli/kj-updateKith.sh)
+- Endringer som er gjort i forhold til orginalene fra Sarepta:
+  - svarrapport2html.xsl:
+    - Linje 85: Endret VisReferertDokumentVisSkjul til false

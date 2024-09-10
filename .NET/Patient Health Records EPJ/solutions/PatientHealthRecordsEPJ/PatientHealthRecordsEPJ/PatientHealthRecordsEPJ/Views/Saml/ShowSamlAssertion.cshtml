@@ -1,0 +1,185 @@
+﻿@inject IHttpContextAccessor _httpContextAccessor
+
+
+@model PatientHealthRecordsEPJ.Controllers.SamlAssertionViewModel
+
+@{
+	ISession session = _httpContextAccessor.HttpContext!.Session;	
+
+	var sessionLoginResult = session.SessionLoginResult();	
+}
+
+<style>
+	.head {
+		font-size: 14px;
+		font-style: italic;
+	}
+
+	tr.document-item {
+		cursor: pointer;
+	}
+
+	tr.document-detail {
+		display: none;
+	}
+
+</style>
+
+<style>
+	.textarea-container {
+		position: relative;
+		width: 100%;
+		/* max-width: 800px; */
+		margin: auto;
+	}
+
+	.textarea, .highlighted {
+		width: 100%;
+		height: 600px;
+		padding: 10px;
+		box-sizing: border-box;
+		font-family: monospace;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		overflow: auto;
+	}
+
+	.textarea {
+		position: absolute;
+		top: 0;
+		left: 0;
+		border: 1px solid #ccc;
+		background: none;
+		z-index: 2;
+		color: transparent;
+		caret-color: black;
+	}
+
+	.highlighted {
+		position: absolute;
+		top: 0;
+		left: 0;
+		border: 1px solid #ccc;
+		background: white;
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.tag {
+		color: blue;
+	}
+
+	.attribute {
+		color: red;
+	}
+
+	.value {
+		color: green;
+	}
+</style>
+
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">
+		SAML billett for innlogget bruker og valgt pasient:
+	</h4>
+
+	<div class="fs-5">
+		Mottatt fra Helse SAML endepunkt <strong>v2</strong>, med støtte for tillitsrammeverk 
+	</div>
+	
+	<br />
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionLoginResult.Name / @sessionLoginResult.AuthorizationName - @sessionLoginResult.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionLoginResult.PatientName <span style="font-size:14px;">(@sessionLoginResult.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<p>
+						Error: @Model.ErrorMessage	
+					</p>
+					<p>
+						API response status code: @Model.ApiResult.StatusCode
+					</p>
+					<p>
+						API response body: 
+						<pre>
+							@Model.ApiResult.Body
+						</pre>
+					</p>
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+
+					<div class="textarea-container">
+						<pre class="highlighted" aria-hidden="true"></pre>
+						<textarea class="textarea w-100" rows="50">@Model.SamlAssertion</textarea>
+					</div>
+																			
+
+				</div>
+			</div>
+		</div>
+	}
+</div>
+
+<script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+
+	textarea.addEventListener('input', updateHighlighting);
+	textarea.addEventListener('scroll', syncScroll);
+
+	function updateHighlighting() {
+		const xml = textarea.value;
+		highlighted.innerHTML = applySyntaxHighlighting(xml);
+	}
+
+	function applySyntaxHighlighting(xml) {
+		return xml.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+				return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+			});
+	}
+
+	function highlightAttributes(attributes) {
+		return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+			return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+		});
+	}
+
+	function syncScroll() {
+		highlighted.scrollTop = textarea.scrollTop;
+		highlighted.scrollLeft = textarea.scrollLeft;
+	}
+
+	// Initialize highlighting
+	updateHighlighting();
+</script>
