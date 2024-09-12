@@ -1,3 +1,7 @@
+.gitlab/
+.gitlab-ci.yml
+
+
 *.env
 *.DS_Store
 
