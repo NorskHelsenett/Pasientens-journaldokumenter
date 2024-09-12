@@ -17,9 +17,9 @@ public class LoopbackHttpListener : IDisposable
 
     public LoopbackHttpListener(int port)
     {
-        //var url = $"http://localhost:{port}/";
-		var url = $"https://localhost:{port}/";
-
+        var url = $"http://localhost:{port}/";
+		//var url = $"https://localhost:{port}/";
+		
 		_host = new WebHostBuilder()
             .UseKestrel()
             .UseUrls(url)

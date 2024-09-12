@@ -15,34 +15,20 @@ using IdentityModel.OidcClient.Browser;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using IdentityModel.OidcClient.DPoP;
-using System.Reflection.Metadata.Ecma335;
 
 namespace HelseId.Samples.SimpleRequestObjectsDemo;
 
 class Program
 {
 	//
+	// This sample is an adaption of the HelseID samples at https://github.com/NorskHelsenett/HelseID.Samples/tree/master/NativeClients
+    //
 	// The values below should normally be configurable
 	//
 
-	// In a production environment you MUST use your own private key stored somewhere safe (a vault, a certificate store, a secure database or similar).
-	/*private const string JwkPrivateKey = """
-                                         {
-                                           "alg": "RS256",
-                                           "d": "wUJFbzCvRwDlDyVyCmLmXQy0Xod81R5Cwk8U1vW2cJg1E88dQurAkgGAYcISUJKGW1haCVn-WZqmJm2WXLTjNHvGIH-sZapWqINVuwrl1FF_hQ-Cf2hRCyV8P-eU0tn_GH0gCRS2_ER5AbtDw26JfkHy9Y3ZRrL9EXjH_ZEd-7fNM_g_UelGe1a0xBLrCf80HkZaO-U10MV-iu88kqsUFb3RdIsbykGgrYVHmr87Y6K1DLYzJESQU3z_rJmubSELE6-HWw_gf1zb-FXhb1M3i1fbFlB0muom_BnbyOvOFRhGV5ngi8tyRBaz9BMbtyWLEEJzLorjz7C4iKfelefjjaUh-BinhpZ35j_Ki0aY5rwXjcyxQiciUHdfDcntzu815Rq5vu2lcL7VHz4mIp-X7Er4PfKqlrIgBp52SVJpWI1JEL8c7vA2ABGM9hqqY_Akh6YJmdMwNUpqE_Madr_cI2X3R9D0AxeGYrhwwYx41izST9X8dPrJ9X9w2UGlOCweHBi3Ok8gGIYvZzbi6cmXMkzo5J0-qCTQYDS2Lb6h4YKEVN7TQpp3PjXOfeZrc4AW8pHVjnirMoI7GGioGDMMEMA2n60I2qMmX-nyb5K5OsbWPDqMKZLBdTk5mfNfQvQy6cF5BR25QjxFGvXH0ThWjFaUWCgSBa0O3azzkcG1-b0",
-                                           "dp": "Y9CvDg6yfbZGyE-ycLasng1NLT1_cfiYkMLXa4c9TN2L7Ta1R4sBc4vX4IvZ_kSD3ubHD4q3vKSGxEawD7x-3odyrkamLZPHmkvafrkIZPZWcNqGTZAwqCpHxmodJsJIOkPWI_xn2uD2yU9aAaZEoxTqA7Oac-kLdDPjLKsvCRJcilQyD4kvodoK0n4YKINJM-taLIgsxwA7ZkH2GBlV49ZCvKLRZGERhEiunxncx4LNKUd5CBbKCBTZse8EpdhFxbzRgUxOQZujXaVOzdZB_IUkfDPFsN5Fjf6rYQmbyp1W7rUlqJQ5sqRgZngjrCMUdKCzMhVN7X34IMzUDv8ppQ",
-                                           "dq": "zcQhwDxvPDIPUMbIyyWw5G-tnMueZS8KlSmSTzUaLC9QDOU9RbSK6SbNSP-zahG13IJwtAJ9TqYlmj9AbVpdrXtctdcZkUn_wX5P-Qz6J_w-0xODjM_YB3ma_qYsh4yYoEm4lgS0JZN2F7fnc1rOXpzBjm-jsJyRbulD1K908dy6ui9kuO4FfoWpXwX7Jixqfz55koIm1umSVjwI6otz7NOLd8gZcapeBFPrCZnCMIVrGBU0DDVAolEF2GMps4a3259VYPYPkDDs7lwSY8Jk1jFUmdkqwXLwaDzlgnpJJI2boHMOxt1QAuMdToLphah5R3HNLh1NTrLQn0Uehiazhw",
-                                           "e": "AQAB",
-                                           "kty": "RSA",
-                                           "n": "4e76k7QF01kw3hhdHyc3iyUn6c465yrLD9KV7m4gNIc3Tm66Iq3P72xq9w5abAXJG9GJUkbhtTG5isFmXLCU4MOlU5T2a7iBqx2dmao72LSsQ7WZQVtIv5JvWYAXpd4rlgTaJfO3Unv9Tn8v5wWgL9ZbplVmR_GWMY5l-7i44PWwLwGZge_KUVGQmKtx7XXsnezG4JfEAPJbO9zfD4CH6AGtRdcAn2r-2-jqk_-uU1BVoWwDdrCJ_DKOyYNDUfkRneTATY5RDdH5flNd-19XW31L1q3dTMqHbcMzFMfiqwyBYX5kFJrDT-W7poIex7jhZfA5by8K1tfwJqdYRGH4Qp5QtBTs76iuANNBUz3tO0vmV8bYez2AWegvRqrZGHPsMPtA5pCjXw1rueJdH5WqpCHrBsnNkOHNVcd8yHLPmXRokwi3cSanOuquLOI5Qh-pqeuTTJAv8QQ3X5aQRnHmZoyVuOP9Qqq05MGRPp6W-7Vdbi6mslDP-FwUnkHb2C-XenxHesqfcbqBOELa-PD6Fj_usVKPcL9HR_J4IK38XFFOT669_Xhpyaq6iRtvlmj1n_fQNvRcGpZIfIAFgf64cIwLAz2vimj5ywXneyDIRv5Wge8VyhfsAe9S01x0dNq-aR16clayKDn48e6fETeTWJJaPK7lvi1-Oc-tlaA7Pfk",
-                                           "p": "8fDDtrup_sHpmpnAQ6arzA6S2zG23OlRwsrPQu1bByDJSAB6Y0RQDIxQB06NjNCyyoetpiUlblgpcLQpy-R9xAgdvw-gcxNYW4hxkQdbnSP0U9vv8V3tGtxN8szjBEsNz0vhs0Gc4Wz01IYGVY6OJhOg3qshAFrjZie49MsIRw_w0dJA6UAXbx19fvoFtKDSyp-w2FnFQHMnzwsoJULiCPB6R77XJZLx3gyQN4ad-s63E7f89055JNIO8rt-cigkL_ilQh-x9m-oX_nBWb_N4gjVdnyoH2Vjlq2os2l209URLPl4bq6AMCfe7SAnuyLA9U_aTiLOF2eAlbgznmUWjw",
-                                           "q": "7xAWBXurm-Qv60KwKF2dqkGbCyNTrQv1Ep8L2ArTVeTMcQb54dQiwLZb-NDaiRIAyBXOsrkWEyh8tru5fvicn-EdAnajGTxEwwKktaUA-ufDw8vy4HOfATXGuA0DFt1L6nZ_n9lFYxd09iEUj0GwvaRM21A7nbOz3Qf6JThCaP8JOK3doOYsr7fufD8E9gcE7CiTcbbpm8BOa6-h2fY3tENCOV76a9_G2RfPOrvIu-tgVPU_2K-r8vSWQobXhGELOYc0XAipUxEAPxGLOq3T-OTQk2SvPnom2mEG_-5V1PG1sxH0WGf53XpUjjsUW1Zj9bidmuhLPqbMBf-ZhbLm9w",
-                                           "qi": "3h-0vyBkKf0WsPhCiIWXm8yPU-J_qgM4JjkrBzwWOU6CpnQyIdoSfStXhas7ehoODnb7sAQ2PEh4RBls2kJrXmzqC_0wsUEFdnfSERsf8eb8Sgu1NF5JgqRU9UBe9-4bvLZAcFpBG_PJyMg8QhCEuqFbjrjNjg9r3EVfeRHyjl7dPEGF5RwIUiGbkyLmXmcqf0L4GhuvqGdd56krht_kvwI-lppMB4OoZDgwfOH0fcKuHJUyc0RyfZ-iS9YZTQI-1AO2gA-RsjCjvtZB2QBdhvqPp2OujkYlcGXukSBtoBsU3elGBqFPRqlPsDMN8dj0bw_xjNxue7fKh9a68CPedA",
-                                           "kid": "B2C61A07EE0661237D19BEE1E0A1463C"}
-                                         """;
+	// In a production environment you MUST use your own private key stored somewhere safe (a vault, a certificate store, a secure database or similar).	    
 
-    // This client_id is only to be used for this particular sample. Your application will use it's own client_id.
-    private const string ClientId = "f7cd1256-0526-4b5a-b4c3-f054c984ace8";*/
+	// This private key is only to be used for this particular sample. Your application will use it's own private key.
 
 	private const string JwkPrivateKey = """ 
                 {
@@ -61,26 +47,28 @@ class Program
         }
         """;
 
-
-	//private const string ClientId = "3fe5151f-595b-4977-ab4f-aec7baf328d1";
-	private const string ClientId = "2141d734-7604-42ca-a377-27f1b712f4e6"; // "Patient Health Records API EPJ"
+	// This client_id is only to be used for this particular sample. Your application will use it's own client_id.
+	private const string ClientId = "2141d734-7604-42ca-a377-27f1b712f4e6"; // "Patient Health Records API EPJ"	
 
 	// The client is configured in the HelseID test environment, so we will point to that
 	private const string StsUrl = "https://helseid-sts.test.nhn.no";
 
 	private const string PatientId = "13116900216";
-	private const string ApiUrl = "https://api.pjd.test.nhn.no/fhir/documentreference/_search";
+	private const string ApiUrl = "https://api.pjd.test.nhn.no/R4/fhir/documentreference/_search";
 
 	//private const int LocalhostPort = 8080;
 	private const int LocalhostPort = 8089;
 
 	// In a test environment, the port does not need to be pre-registered in HelseID Selvbetjening;
 	// this means that you can allocate any available port when launching the application:
-	private static readonly string RedirectUrl = $"https://localhost:{LocalhostPort.ToString()}/callback";
+	//private static readonly string RedirectUrl = $"https://localhost:{LocalhostPort.ToString()}/callback";
+	private static readonly string RedirectUrl = $"http://127.0.0.1:{LocalhostPort.ToString()}/callback";
 
-    // This is the scope of the API you want to call (get an access token for)
-    //private const string ApiScopes = "nhn:helseid-public-samplecode/authorization-code";
+	private static bool useKjernejournalforskriften = true;  // Set to true to call API with ApiScopesKjernejournalforskriften and hit-access-basis
+
+	// This is the scope of the API you want to call (get an access token for)	
 	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences";
+	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften";
 
 	// These scopes indicate that you want an ID-token ("openid"), and what information about the user you want the ID-token to contain
 	private const string IdentityScopes = "openid profile offline_access helseid://scopes/identity/pid helseid://scopes/identity/security_level";
@@ -216,13 +204,15 @@ class Program
         var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
         var requestObject = BuildRequestObject(disco);
 
+		var scopes = useKjernejournalforskriften ? ApiScopesKjernejournalforskriften : ApiScopes; 
+
         var dictionary = new Dictionary<string, string>
         {
             { "client_id", ClientId },
             { "client_assertion", clientAssertionPayload.Value },
             { "client_assertion_type", clientAssertionPayload.Type },
             { "request", requestObject },
-            { "scope", ApiScopes + " " + IdentityScopes },
+            { "scope", scopes + " " + IdentityScopes },
             { "redirect_uri", RedirectUrl},
             { "response_type", OidcConstants.ResponseTypes.Code },
             { "code_challenge", codeChallenge },
@@ -231,203 +221,6 @@ class Program
         };
         return new Parameters(dictionary);
     }
-
-	/*private static string BuildRequestObject(DiscoveryDocumentResponse disco)
-    {
-        // Builds a request object containing the authorization details claim with the following structure:
-        // (This type of structure indicates a multi-tenant client)
-        //        "authorization_details":{
-        //            "type":"helseid_authorization",
-        //            "practitioner_role":{
-        //                "organization":{
-        //                    "identifier": {
-        //                        "system":"urn:oid:1.0.652301",
-        //                        "type":"ENH",
-        //                        "value":"NO:ORGNR:[parent organization number]:[child organization number]"
-        //                    }
-        //                }
-        //            }
-        //        }
-
-
-        var orgNumberDetails = new Dictionary<string, string>
-        {
-            {"system", "urn:oid:1.0.6523"},
-            {"type", "ENH"},
-            {
-                // The client configuration in HelseID contains a delegation from the supplier of this system to the
-                // requested organization number. If this delegation is not set, the request will be invalidated.
-                "value", "NO:ORGNR:994598759:123456789"
-            }
-        };
-
-        var identifier = new Dictionary<string, object>
-        {
-            {"identifier", orgNumberDetails}
-        };
-
-        var organization = new Dictionary<string, object>
-        {
-            {"organization", identifier}
-        };
-
-        var authorizationDetails = new Dictionary<string, object>
-        {
-            {"type", "helseid_authorization"},
-            {"practitioner_role", organization}
-        };
-
-        var serialized = JsonSerializer.Serialize(authorizationDetails);
-
-        var claims = new List<Claim>
-        {
-            new Claim("authorization_details", serialized, "json"),
-            new Claim(JwtClaimTypes.Subject, ClientId),
-            new Claim(JwtClaimTypes.IssuedAt, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
-            new Claim(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
-        };
-
-        return BuildHelseIdJwt(disco, claims);
-    }*/
-
-#if false
-    private static string BuildRequestObject(DiscoveryDocumentResponse disco)
-	{
-		// Builds a request object containing the authorization details claim with the following structure:
-		// (This type of structure indicates a multi-tenant client)
-		//        "authorization_details":{
-		//            "type":"helseid_authorization",
-		//            "practitioner_role":{
-		//                "organization":{
-		//                    "identifier": {
-		//                        "system":"urn:oid:1.0.652301",
-		//                        "type":"ENH",
-		//                        "value":"NO:ORGNR:[parent organization number]:[child organization number]"
-		//                    }
-		//                }
-		//            }
-		//        }
-
-
-		/*var orgNumberDetails = new Dictionary<string, string>
-		{
-			{"system", "urn:oid:1.0.6523"},
-			{"type", "ENH"},
-			{
-                // The client configuration in HelseID contains a delegation from the supplier of this system to the
-                // requested organization number. If this delegation is not set, the request will be invalidated.
-                "value", "NO:ORGNR:994598759:123456789"
-			}
-		}; */
-
-		/* practioner */
-
-		var identifier = new Dictionary<string, object>
-		{
-			{"id", "16858399649"},
-			{"system", "urn:oid:2.16.578.1.12.4.1.4.1"},
-		};
-
-		var legal_entity = new Dictionary<string, object>
-		{
-			{"id", "994598759"},    // ST. OLAVS HOSPITAL HF
-			{"system", "urn:oid:2.16.578.1.12.4.1.4.101"},
-		};
-
-		var point_of_care = new Dictionary<string, object>
-		{
-			{"id", "994598759"},    // ST OLAVS HOSPITAL HF OPPLÆRINGSKONTORET
-			{"system", "urn:oid:2.16.578.1.12.4.1.4.101"},
-		};
-
-		var department = new Dictionary<string, object>
-		{
-			{"id", "121313"},    // Avdeling ved Sykehus
-			{"system", "urn:oid:2.16.578.1.12.4.1.4.102"},
-		};
-
-		var practioner = new Dictionary<string, object>
-		{
-			//{"identifier", identifier},
-			{"legal_entity", legal_entity},
-			{"point_of_care", point_of_care},
-			//{"department", department},
-		};
-
-		/* care_relationship */
-
-		var healthcare_service = new Dictionary<string, object>
-		{
-			{"code", "110"}, // Indremedisin
-			{"system", "urn:oid:2.16.578.1.12.4.1.1.8451"},
-		};
-
-		var purpose_of_use = new Dictionary<string, object>
-		{
-			{"code", "TREAT"},
-			{"system", "urn:oid:2.16.840.1.113883.1.11.20448"},
-		};
-
-		var decision_ref = new Dictionary<string, object>
-		{
-			{"id", Guid.NewGuid().ToString()},
-			{"user_selected", true},
-		};
-
-		var care_relationship = new Dictionary<string, object>
-		{
-			{"healthcare_service", healthcare_service},
-			{"purpose_of_use", purpose_of_use},			
-			{"decision_ref", decision_ref},
-		};
-
-		/* patients */
-
-		var patient_point_of_care = new Dictionary<string, object>
-		{
-			{"id", "924916753"}, // ST OLAVS HOSPITAL HF OPPLÆRINGSKONTORET
-			{"system", "urn:oid:2.16.578.1.12.4.1.4.101"},
-		};
-
-		var patient_department = new Dictionary<string, object>
-		{
-			//{"id", "4206043"},
-			//{"system", "urn:oid:2.16.578.1.12.4.1.4.102"},
-			{"id", "121313"},
-			{"system", "urn:oid:2.16.578.1.12.4.1.4.102"},
-		};
-
-		var patient = new Dictionary<string, object>
-		{
-			{"point_of_care", patient_point_of_care},
-			{"department", patient_department},
-		};
-
-        List<object> patients = new List<object>() { patient }; 
-
-		var authorizationDetails = new Dictionary<string, object>
-		{
-			{"type", "nhn:tillitsrammeverk:parameters"},
-			{"practitioner", practioner},
-			//{"practitioner_role", organization},
-			{"care_relationship", care_relationship},
-			//{"patients", patients},			
-		};
-
-		var serialized = JsonSerializer.Serialize(authorizationDetails);
-
-		var claims = new List<Claim>
-		{
-			new Claim("authorization_details", serialized, "json"),
-			new Claim(JwtClaimTypes.Subject, ClientId),
-			new Claim(JwtClaimTypes.IssuedAt, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
-			new Claim(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
-		};
-
-		return BuildHelseIdJwt(disco, claims);
-	}
-
-#endif
 
 	private static string BuildRequestObject(DiscoveryDocumentResponse disco)
 	{
@@ -617,10 +410,18 @@ class Program
 	private static async Task CallApi(string accessToken)
 	{
 		var apiUrl = ApiUrl + $"?patient.identifier={PatientId}&status=current"; 
-		// We need to use the HttpRequestMessage type for this functionality:
-		//var request = new HttpRequestMessage(HttpMethod.Get, ApiUrl);
-		//var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl);
+		
 		var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
+
+		if (useKjernejournalforskriften)
+		{
+			// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
+
+			var headerKeyValues = new List<KeyValuePair<string, string>>()
+			{
+				new KeyValuePair<string, string>("hit-access-basis", "samtykke")
+			};								
+		}
 
 		var proofRequest = new DPoPProofRequest
 		{
