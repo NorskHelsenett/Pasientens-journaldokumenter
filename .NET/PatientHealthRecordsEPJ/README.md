@@ -1,7 +1,7 @@
-# Dokumentdeling EPJ
+# Pasientens journaldokumenter EPJ
 
 
-Publisert her: [https://epj.pjd.nhn.no](https://epj.pjd.nhn.no)
+Publisert her: [https://epj.pjd.test.nhn.no](https://epj.pjd.test.nhn.no)
 
 Demo EPJ for Pasientens Journaldokumenter REST API
 
@@ -20,7 +20,6 @@ Demonstrerer følgende funksjonalitet:
 
 Prosjektet er bygd så enkelt som mulig og har dermed lite abstraksjon og bruker enkel lagring i sesjon. 
 
-
 ## Utvikling av Patient Health Records API og Demo EPJ på utviklermaskin
 
 - Lag appsettings.Development.json i dette prosjektet og pek ApiUrls til lokale endepunkter, for eksempel
@@ -28,8 +27,8 @@ Prosjektet er bygd så enkelt som mulig og har dermed lite abstraksjon og bruker 
 ```
 {
     "ApiUrls": {
-        "GetDocumentReferencesApiUrl": "https://localhost:8443/fhir/documentreference/_search",
-        "GetDocumentApiUrl": "https://localhost:8443/fhir/document"
+        "GetDocumentReferencesApiUrl": "https://localhost:8443/R4/fhir/documentreference/_search",
+        "GetDocumentApiUrl": "https://localhost:8443/mhd/iti68/document"
     },    
 }
 
