@@ -27,6 +27,9 @@ public class SessionLoginResult
 	public string? EnvironmentId { get; set; } = default!;
 	public string? EnvironmentName { get; set; } = default!;
 
+	public int DocumentListScopeId { get; set; } = default!;
+	public string? DocumentListScopeName { get; set; } = default!;
+
 	// Used to keep state before and after login
 	public string? AuthorizeState { get; set; } = default!;
 	

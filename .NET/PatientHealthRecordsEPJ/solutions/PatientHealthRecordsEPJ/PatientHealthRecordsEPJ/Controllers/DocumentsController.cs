@@ -21,9 +21,10 @@ namespace PatientHealthRecordsEPJ.Controllers
 		const int DEFAULT_PAGE_SIZE = 15;
 		//const int DEFAULT_PAGE_SIZE = 1000;
 
-        private const string SORTEXPRESSION = "Date";
+		/*
+		private const string SORTEXPRESSION = "Date";
 
-		/*public enum SortBy
+		public enum SortBy
 		{
 			Date = 0,     
             Name = 1, 
@@ -33,7 +34,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 			Department = 5,     // Enhet/avdeling
 			Organization = 6    // Institusjon
 		}*/
-		
+
 		public DocumentsController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache, ApiUrlSettings apiUrlSettings)
 		{
 			_logger = logger;
@@ -61,11 +62,19 @@ namespace PatientHealthRecordsEPJ.Controllers
 			string query = ""
 			)
         {
-            GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel(); 
+            GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel();
+			
+			var headerKeyValues = new List<KeyValuePair<string, string>>();
 
+			if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+			{
+				// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
+				headerKeyValues.Add(new KeyValuePair<string, string>("hit-access-basis", sessionLoginResult.GrunnlagId ?? string.Empty));
+			}
+									
 			var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl + $"?patient.identifier={sessionLoginResult.PatientId}&status=current&_count={pageSize}&_page={pageIndex}&_sort={sort}";
-	
-			var apiResult = await ApiCaller.CallApi("POST", apiUrl, sessionLoginResult.AccessToken!, document: false);			
+
+			var apiResult = await ApiCaller.CallApi("POST", apiUrl, sessionLoginResult.AccessToken!, document: false, headerKeyValues: headerKeyValues);
 			
 			if (apiResult.IsSuccess)
             {
@@ -74,7 +83,7 @@ namespace PatientHealthRecordsEPJ.Controllers
                     var json = apiResult.Body;
 
                     var serializerOptions = new JsonSerializerOptions().ForFhir(ModelInfo.ModelInspector).Pretty();
-                    var bundle = System.Text.Json.JsonSerializer.Deserialize<Bundle>(json, serializerOptions);
+                    var bundle = JsonSerializer.Deserialize<Bundle>(json, serializerOptions);
 
                     //model.Entries = new X.PagedList.PagedList<Bundle.EntryComponent>(bundle!.Entry, pageIndex, pageSize);
 

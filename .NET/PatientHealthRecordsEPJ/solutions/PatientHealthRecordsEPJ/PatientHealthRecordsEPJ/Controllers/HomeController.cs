@@ -30,12 +30,13 @@ namespace PatientHealthRecordsEPJ.Controllers
 				
 		// This is the scope of the API you want to call (get an access token for)		
 		private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document";
+		private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document";
 
 		// These scopes indicate that you want an ID-token ("openid"), and what information about the user you want the ID-token to contain
 		private const string IdentityScopes = "openid profile offline_access helseid://scopes/identity/pid helseid://scopes/identity/security_level";
 
-		private const string TestRedirectUrl = "https://epj.pjd.nhn.no/callback";
-		private const string TestPostLogoutRedirectUrl = "https://epj.pjd.nhn.no/";
+		private const string TestRedirectUrl = "https://epj.pjd.test.nhn.no/callback";
+		private const string TestPostLogoutRedirectUrl = "https://epj.pjd.test.nhn.no/";
 
 		HttpClient httpClient;
 		OidcClient oidcClient;
@@ -92,7 +93,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 			var sessionLoginResult = session.SessionLoginResult();
 
 			sessionLoginResult.PatientId = model.PatientId;
-			sessionLoginResult.PatientName = PasientvalgViewModel.PatientMappingList.FirstOrDefault(x => x.Id == model.PatientId)?.Name;
+			sessionLoginResult.PatientName = PasientvalgViewModel.PatientMappingList.FirstOrDefault(x => x.Id == model.PatientId)?.Label;
 			sessionLoginResult.GrunnlagId = model.GrunnlagId;
 			sessionLoginResult.GrunnlagName = PasientvalgViewModel.GrunnlagList.FirstOrDefault(x => x.Id == model.GrunnlagId)?.Label;
 			//sessionLoginResult.EnvironmentId = model.EnvironmentId;
@@ -168,7 +169,20 @@ namespace PatientHealthRecordsEPJ.Controllers
 				sessionLoginResult.AuthorizationName = model.AuthorizationName;
 
 				sessionLoginResult.EnvironmentId = model.EnvironmentId;
-				sessionLoginResult.EnvironmentName = model.EnvironmentName; 
+				sessionLoginResult.EnvironmentName = model.EnvironmentName;
+
+				sessionLoginResult.DocumentListScopeId = model.DocumentListScopeId;
+
+				switch (model.DocumentListScopeId)
+				{
+					case (int)DocumentListScopeEnum.HelsepersonellovenParagraf45:
+						sessionLoginResult.DocumentListScopeName = "Helsepersonelloven § 45";
+						break;
+
+					case (int)DocumentListScopeEnum.Kjernejournalforskriften:
+						sessionLoginResult.DocumentListScopeName = "Kjernejournalforskriften";
+						break;
+				}
 
 				sessionLoginResult.SaveToSession(session);
 
@@ -208,12 +222,15 @@ namespace PatientHealthRecordsEPJ.Controllers
 				var sessionLoginResult = session.SessionLoginResult();
 
 				sessionLoginResult.AuthorizeState = JsonSerializer.Serialize(authorizeState);
-				sessionLoginResult.SaveToSession(session); 
+				sessionLoginResult.SaveToSession(session);
+
+				var scopes = sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.HelsepersonellovenParagraf45 ? ApiScopes : ApiScopesKjernejournalforskriften; 
 
 				var pushedAuthorizationResponse = await GetPushedAuthorizationResponse(model.AttestJson,
 					httpClient,
-					authorizeState,
+					authorizeState,				
 					disco,
+					scopes,
 					redirectUrl
 					);
 
@@ -257,6 +274,19 @@ namespace PatientHealthRecordsEPJ.Controllers
 
 				sessionLoginResult.EnvironmentId = model.EnvironmentId;
 				sessionLoginResult.EnvironmentName = model.EnvironmentName;
+				
+				sessionLoginResult.DocumentListScopeId = model.DocumentListScopeId;
+
+				switch (model.DocumentListScopeId)
+				{
+					case (int)DocumentListScopeEnum.HelsepersonellovenParagraf45:
+						sessionLoginResult.DocumentListScopeName = "Helsepersonelloven § 45";
+						break;
+
+					case (int)DocumentListScopeEnum.Kjernejournalforskriften:
+						sessionLoginResult.DocumentListScopeName = "Kjernejournalforskriften";
+						break;					
+				}
 
 				sessionLoginResult.SaveToSession(session);
 
@@ -273,10 +303,13 @@ namespace PatientHealthRecordsEPJ.Controllers
 				sessionLoginResult.AuthorizeState = JsonSerializer.Serialize(authorizeState);
 				sessionLoginResult.SaveToSession(session);
 
+				var scopes = sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.HelsepersonellovenParagraf45 ? ApiScopes : ApiScopesKjernejournalforskriften;
+
 				var pushedAuthorizationResponse = await GetPushedAuthorizationResponse(attestJson,
 					httpClient,
 					authorizeState,
 					disco,
+					scopes,
 					redirectUrl
 					);
 
@@ -429,6 +462,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 			HttpClient httpClient,
 			AuthorizeState authorizeState,
 			DiscoveryDocumentResponse disco,
+			string scopes, 
 			string redirectUrl
 			)
 
@@ -444,6 +478,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 					clientAssertionPayload,
 					authorizeState,
 					disco,
+					scopes,
 					redirectUrl
 					),
 			};
@@ -459,6 +494,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 			ClientAssertion clientAssertionPayload,
 			AuthorizeState authorizeState,
 			DiscoveryDocumentResponse disco,
+			string scopes, 
 			string redirectUrl
 			)
 		{
@@ -473,7 +509,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 			{ "client_assertion", clientAssertionPayload.Value },
 			{ "client_assertion_type", clientAssertionPayload.Type },
 			{ "request", requestObject },
-			{ "scope", ApiScopes + " " + IdentityScopes },
+			{ "scope", scopes + " " + IdentityScopes },
 			{ "redirect_uri", redirectUrl},
 			{ "response_type", OidcConstants.ResponseTypes.Code },
 			{ "code_challenge", codeChallenge },

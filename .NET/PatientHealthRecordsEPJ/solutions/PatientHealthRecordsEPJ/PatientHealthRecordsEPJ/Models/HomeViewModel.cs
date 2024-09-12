@@ -15,62 +15,64 @@ namespace PatientHealthRecordsEPJ.Models
 		public string EnvironmentName { get; set; } = default!;
 		public string EnvironmentId { get; set; } = default!;
 
-		public static List<AuthorizationPair> AuthorizationList { get; set; } = new List<AuthorizationPair>()
+		public int  DocumentListScopeId { get; set; } = default!; // See DocumentListScopeEnum
+
+		public static List<OptionPair> AuthorizationList { get; set; } = new List<OptionPair>()
 		{
-			new AuthorizationPair() { Id = "AA", Label = "Ambulansearbeider"},
-			new AuthorizationPair() { Id = "AT", Label="Apotektekniker"},
-			new AuthorizationPair() { Id = "AU", Label="Audiograf"},
-			new AuthorizationPair() { Id = "BI", Label="Bioingeniør" },
-			new AuthorizationPair() { Id = "ET", Label="Ergoterapeut"},
-			new AuthorizationPair() { Id = "FB", Label="Fiskehelsebiolog"},
-			new AuthorizationPair() { Id = "FO", Label="Fotterapeut"},
-			new AuthorizationPair() { Id = "FT", Label="Fysioterapeut"},
-			new AuthorizationPair() { Id = "HF", Label="Helsefagarbeider"},
-			new AuthorizationPair() { Id = "HE", Label="Helsesekretær"},
-			new AuthorizationPair() { Id = "HP", Label="Hjelpepleier"},
-			new AuthorizationPair() { Id = "JO", Label="Jordmor"},
-			new AuthorizationPair() { Id = "KI", Label="Kiropraktor"},
-			new AuthorizationPair() { Id = "KE", Label="Klinisk ernæringsfysiolog"},
-			new AuthorizationPair() { Id = "LE", Label="Lege"},
-			new AuthorizationPair() { Id = "MT", Label="Manuellterapeut"},
-			new AuthorizationPair() { Id = "NP", Label="Naprapat"},
-			new AuthorizationPair() { Id = "OA", Label="Omsorgsarbeider"},
-			new AuthorizationPair() { Id = "OP", Label="Optiker"},
-			new AuthorizationPair() { Id = "OI", Label="Ortopediingeniør"},
-			new AuthorizationPair() { Id = "OR", Label="Ortoptist"},
-			new AuthorizationPair() { Id = "OS", Label="Osteopat"},
-			new AuthorizationPair() { Id = "PM", Label="Paramedisiner"},
-			new AuthorizationPair() { Id = "PE", Label="Perfusjonist"},
-			new AuthorizationPair() { Id = "FA1", Label="Provisorfarmasøyt"},
-			new AuthorizationPair() { Id = "PS", Label="Psykolog"},
-			new AuthorizationPair() { Id = "RA", Label="Radiograf"},
-			new AuthorizationPair() { Id = "FA2", Label="Reseptarfarmasøyt"},
-			new AuthorizationPair() { Id = "SP", Label="Sykepleier"},
-			new AuthorizationPair() { Id = "TH", Label="Tannhelsesekretær"},
-			new AuthorizationPair() { Id = "TL", Label="Tannlege"},
-			new AuthorizationPair() { Id = "TP", Label="Tannpleier"},
-			new AuthorizationPair() { Id = "TT", Label="Tanntekniker"},
-			new AuthorizationPair() { Id = "XX", Label="Ukjent/uspesifisert"},
-			new AuthorizationPair() { Id = "VP", Label="Vernepleier"},
-			new AuthorizationPair() { Id = "VE", Label="Veterinær"},
+			new OptionPair() { Id = "AA", Label = "Ambulansearbeider"},
+			new OptionPair() { Id = "AT", Label="Apotektekniker"},
+			new OptionPair() { Id = "AU", Label="Audiograf"},
+			new OptionPair() { Id = "BI", Label="Bioingeniør" },
+			new OptionPair() { Id = "ET", Label="Ergoterapeut"},
+			new OptionPair() { Id = "FB", Label="Fiskehelsebiolog"},
+			new OptionPair() { Id = "FO", Label="Fotterapeut"},
+			new OptionPair() { Id = "FT", Label="Fysioterapeut"},
+			new OptionPair() { Id = "HF", Label="Helsefagarbeider"},
+			new OptionPair() { Id = "HE", Label="Helsesekretær"},
+			new OptionPair() { Id = "HP", Label="Hjelpepleier"},
+			new OptionPair() { Id = "JO", Label="Jordmor"},
+			new OptionPair() { Id = "KI", Label="Kiropraktor"},
+			new OptionPair() { Id = "KE", Label="Klinisk ernæringsfysiolog"},
+			new OptionPair() { Id = "LE", Label="Lege"},
+			new OptionPair() { Id = "MT", Label="Manuellterapeut"},
+			new OptionPair() { Id = "NP", Label="Naprapat"},
+			new OptionPair() { Id = "OA", Label="Omsorgsarbeider"},
+			new OptionPair() { Id = "OP", Label="Optiker"},
+			new OptionPair() { Id = "OI", Label="Ortopediingeniør"},
+			new OptionPair() { Id = "OR", Label="Ortoptist"},
+			new OptionPair() { Id = "OS", Label="Osteopat"},
+			new OptionPair() { Id = "PM", Label="Paramedisiner"},
+			new OptionPair() { Id = "PE", Label="Perfusjonist"},
+			new OptionPair() { Id = "FA1", Label="Provisorfarmasøyt"},
+			new OptionPair() { Id = "PS", Label="Psykolog"},
+			new OptionPair() { Id = "RA", Label="Radiograf"},
+			new OptionPair() { Id = "FA2", Label="Reseptarfarmasøyt"},
+			new OptionPair() { Id = "SP", Label="Sykepleier"},
+			new OptionPair() { Id = "TH", Label="Tannhelsesekretær"},
+			new OptionPair() { Id = "TL", Label="Tannlege"},
+			new OptionPair() { Id = "TP", Label="Tannpleier"},
+			new OptionPair() { Id = "TT", Label="Tanntekniker"},
+			new OptionPair() { Id = "XX", Label="Ukjent/uspesifisert"},
+			new OptionPair() { Id = "VP", Label="Vernepleier"},
+			new OptionPair() { Id = "VE", Label="Veterinær"},
 
 		};
 
-		public static List<OrganizationPair> OrganizationList { get; set; } = new List<OrganizationPair>()
+		public static List<OptionPair> OrganizationList { get; set; } = new List<OptionPair>()
 		{		
-			new OrganizationPair() { Id = "BETANIEN_HOSPITAL" , Label="Betanien Hospital" },
-			new OrganizationPair() { Id = "BJØLSENHJEMMET" , Label="Bjølsenhjemmet"},
-			new OrganizationPair() { Id = "HAUKELAND_UNIVERSITETSSJUKEHUS" , Label="Haukeland Universitetssjukehus"},
-			new OrganizationPair() { Id = "HELSE_BERGEN_HF_BERGEN_PSYKIATRISKE_LEGEVAKT" , Label="Helse Bergen HF Bergen Psykiatriske Legevakt"},
-			new OrganizationPair() { Id = "HELSE_BERGEN_HF_VOSS" , Label="Helse Bergen HF Voss Sjukehus"},
-			new OrganizationPair() { Id = "LODDEFJORD_LEGESENTER_AS" , Label="Loddefjord Legesenter"},
-			new OrganizationPair() { Id = "MIDTBYEN_LEGESENTER_KONGSVINGER_DA" , Label="Midtbyen Legesenter Kongsvinger DA"},
-			new OrganizationPair() { Id = "OSLO_UNIVERSITETSSYKEHUS_HF_OSLO_LEGEVAKT" , Label="Oslo Universitetssykehus HF Oslo Legevakt"},
-			new OrganizationPair() { Id = "OSLO_UNIVERSITETSSYKEHUS_HF_RIKSHOSPITALET_SOMATIKK" , Label="Oslo Universitetssykehus HF Rikshospitalet - Somatikk"},
-			new OrganizationPair() { Id = "OSLO_UNIVERSITETSSYKEHUS_HF_ULLEVAAL_SOMATIKK" , Label="Oslo Universitetssykehus HF Ullevål - Somatikk"},
-			new OrganizationPair() { Id = "STAVANGER_LEGEVAKT_AVD_ARMAUER_HANSENS_VEI" , Label="Stavanger Legevakt Avd Armauer Hansens Vei"},
-			new OrganizationPair() { Id = "SYKEHUSET_TELEMARK_HF" , Label="Sykehuset Telemark HF"},
-			new OrganizationPair() { Id = "SØRLANDET_SYKEHUS_HF" , Label="Sørlandet Sykehus HF"},
+			new OptionPair() { Id = "BETANIEN_HOSPITAL" , Label="Betanien Hospital" },
+			new OptionPair() { Id = "BJØLSENHJEMMET" , Label="Bjølsenhjemmet"},
+			new OptionPair() { Id = "HAUKELAND_UNIVERSITETSSJUKEHUS" , Label="Haukeland Universitetssjukehus"},
+			new OptionPair() { Id = "HELSE_BERGEN_HF_BERGEN_PSYKIATRISKE_LEGEVAKT" , Label="Helse Bergen HF Bergen Psykiatriske Legevakt"},
+			new OptionPair() { Id = "HELSE_BERGEN_HF_VOSS" , Label="Helse Bergen HF Voss Sjukehus"},
+			new OptionPair() { Id = "LODDEFJORD_LEGESENTER_AS" , Label="Loddefjord Legesenter"},
+			new OptionPair() { Id = "MIDTBYEN_LEGESENTER_KONGSVINGER_DA" , Label="Midtbyen Legesenter Kongsvinger DA"},
+			new OptionPair() { Id = "OSLO_UNIVERSITETSSYKEHUS_HF_OSLO_LEGEVAKT" , Label="Oslo Universitetssykehus HF Oslo Legevakt"},
+			new OptionPair() { Id = "OSLO_UNIVERSITETSSYKEHUS_HF_RIKSHOSPITALET_SOMATIKK" , Label="Oslo Universitetssykehus HF Rikshospitalet - Somatikk"},
+			new OptionPair() { Id = "OSLO_UNIVERSITETSSYKEHUS_HF_ULLEVAAL_SOMATIKK" , Label="Oslo Universitetssykehus HF Ullevål - Somatikk"},
+			new OptionPair() { Id = "STAVANGER_LEGEVAKT_AVD_ARMAUER_HANSENS_VEI" , Label="Stavanger Legevakt Avd Armauer Hansens Vei"},
+			new OptionPair() { Id = "SYKEHUSET_TELEMARK_HF" , Label="Sykehuset Telemark HF"},
+			new OptionPair() { Id = "SØRLANDET_SYKEHUS_HF" , Label="Sørlandet Sykehus HF"},
 		};
 
 		public static List<LegalEntityAndPointOfCarePair> OrganizationMappingList { get; set; } = new List<LegalEntityAndPointOfCarePair>()
@@ -90,19 +92,7 @@ namespace PatientHealthRecordsEPJ.Models
 			new LegalEntityAndPointOfCarePair() { Id = "SØRLANDET_SYKEHUS_HF" , LegalEntity = "983975240", PointOfCare = "974733013" },			
 		};	
 	}
-
-	public class AuthorizationPair
-	{
-		public string Id { get; set; } = default!; 
-		public string Label { get; set; } = default!;
-	}
-
-	public class OrganizationPair
-	{
-		public string Id { get; set; } = default!;
-		public string Label { get; set; } = default!;
-	}
-
+	
 	public class LegalEntityAndPointOfCarePair
 	{
         public string Id { get; set; } = default!;

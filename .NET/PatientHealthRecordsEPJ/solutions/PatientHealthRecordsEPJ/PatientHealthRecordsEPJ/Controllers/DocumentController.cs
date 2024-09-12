@@ -41,14 +41,14 @@ namespace PatientHealthRecordsEPJ.Controllers
             string url			
 			)
         {            
-			GetDocumentViewModel model = new GetDocumentViewModel(); 
-			
-			// We send the patient Id in the header as X-Patient-Id to avoid having the patient Id in the URL.             
-			var headerKeyValues = new List<KeyValuePair<string, string>>()
-            {
-                new KeyValuePair<string, string> ("hit-patient-pid", patient)
-            }; 
+			GetDocumentViewModel model = new GetDocumentViewModel();
 
+            // We send the patient Id in the header as X-Patient-Id to avoid having the patient Id in the URL.             
+            var headerKeyValues = new List<KeyValuePair<string, string>>()
+            {
+				new KeyValuePair<string, string>("hit-patient-pid", patient)
+			}; 
+				     
 			var apiResult = await ApiCaller.CallApi("GET", url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
 
             if (apiResult.IsSuccess)

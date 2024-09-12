@@ -5,13 +5,17 @@
 @{
 	ISession session = _httpContextAccessor.HttpContext!.Session;
 
+
+
 	var sessionLoginResult = session.SessionLoginResult();
 }
 
 
 @if (!sessionLoginResult.IsAuthenticated)
+
 {
 	@if (string.IsNullOrEmpty(Model.AttestJson))
+
 	{
 		<form method="post" asp-action="LoginStep1">
 			<div class="container">
@@ -22,7 +26,7 @@
 
 						<div>
 							<select asp-for="EnvironmentId"
-									asp-items="@(new SelectList(PasientvalgViewModel.EnvironmentList, nameof(EnvironmentPair.Id), nameof(EnvironmentPair.Label)))"
+									asp-items="@(new SelectList(PasientvalgViewModel.EnvironmentList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
 									class="w-100">
 							</select>
 						</div>
@@ -32,7 +36,29 @@
 				<div class="row">
 					<div class="col-md-12">
 						<br />
-						<h5>2. Velg: </h5>						
+
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12">
+						<h5>2. Velg lovverk (scope for å hente dokumentliste): </h5>
+
+						<div>
+							<select asp-for="DocumentListScopeId"
+									asp-items="@(new SelectList(PasientvalgViewModel.DocumentListScopeList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
+							</select>
+						</div>
+
+					</div>
+				</div>
+
+
+				<div class="row">
+					<div class="col-md-12">
+						<br />
+						<h5>3. Velg: </h5>
 					</div>
 				</div>
 
@@ -43,29 +69,27 @@
 						</div>
 						<div>
 							<select asp-for="OrganizationId"
-									asp-items="@(new SelectList(HomeViewModel.OrganizationList, nameof(OrganizationPair.Id), nameof(OrganizationPair.Label)))"
-									class="w-100"
-							>
+									asp-items="@(new SelectList(HomeViewModel.OrganizationList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
 							</select>
 						</div>
 					</div>
 					@* <div class="col-md-4">
-						<div>
-							<strong>Bruker</strong>
-						</div>
-						<div>
-							<input asp-for="HealthcarePersonellUserId" class="w-100" value="22047800106" />
-						</div>
-					</div> *@
+			<div>
+			<strong>Bruker</strong>
+			</div>
+			<div>
+			<input asp-for="HealthcarePersonellUserId" class="w-100" value="22047800106" />
+			</div>
+			</div> *@
 					<div class="col-md-6">
 						<div>
 							<strong>Autorisasjon</strong>
 						</div>
 						<div>
 							<select asp-for="AuthorizationId"
-									asp-items="@(new SelectList(HomeViewModel.AuthorizationList, nameof(AuthorizationPair.Id), nameof(AuthorizationPair.Label)))"
-									class="w-100"
-							>
+									asp-items="@(new SelectList(HomeViewModel.AuthorizationList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
 							</select>
 						</div>
 					</div>
@@ -75,14 +99,16 @@
 					<div class="col-md-12 text-center pt-3">
 						<button type="submit" class="btn btn-primary" formaction="/Home/Login">Logg inn med HelseID @* <i class="bi-box-arrow-in-right"></i>  &rarr; *@ </button> eller
 						<button type="submit" class="btn btn-primary">Rediger attest og Logg inn med HelseID  @* <i class="bi-box-arrow-in-right"></i>  &rarr; *@ </button>
-						
+
 					</div>
 				</div>
 
 			</div>
 		</form>
 	}
+
 	else
+
 	{
 		@* Et unødvendig ekstra steg med mulighet til å redigere attesten direkte for man logger inn *@
 		<form method="post" asp-action="LoginWithCustomizedAttest">
@@ -117,18 +143,20 @@
 		</form>
 	}
 }
+
 else
+
 {
 	<div class="container">
 		<div class="row">
 			<div class="col-md-12">
 
 				<div class="text-center fs-3">
-					Bruker: @sessionLoginResult.Name (@sessionLoginResult.PersonId)&nbsp;&nbsp;&nbsp; Autorisasjon: @sessionLoginResult.AuthorizationName 
+					Bruker: @sessionLoginResult.Name (@sessionLoginResult.PersonId)&nbsp;&nbsp;&nbsp; Autorisasjon: @sessionLoginResult.AuthorizationName
 				</div>
 
 				<div class="text-center fs-3">
-					Pasient: 
+					Pasient:
 					@if (string.IsNullOrEmpty(sessionLoginResult.PatientName))
 					{
 						<span>
@@ -143,13 +171,25 @@ else
 				</div>
 
 				<div class="text-center fs-3">
-					Grunnlag: @sessionLoginResult.GrunnlagName				
-				</div>				
+					Lovverk/scope for å hente dokumentliste: @sessionLoginResult.DocumentListScopeName
+				</div>
+
+				@if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+				{
+					<div class="text-center fs-3">
+						Grunnlag: @sessionLoginResult.GrunnlagName
+					</div>
+				}
+				else
+				{
+					
+				}
 
 				<div class="text-center fs-3">
 					<p>
 						<a asp-action="pasientvalg" class="btn btn-primary"> &larr; Bytt pasient </a>
-						<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionLoginResult.EnvironmentName</a></p>
+						<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionLoginResult.EnvironmentName</a>
+					</p>
 				</div>
 			</div>
 		</div>
@@ -158,10 +198,10 @@ else
 			<div class="col-md-12">
 				<div class="text-center fs-3">
 					<p>
-						<a asp-controller="Saml" asp-action="ShowSamlAssertion" class="btn btn-primary"> Vis SAML billett &rarr;</a>	
+						<a asp-controller="Saml" asp-action="ShowSamlAssertion" class="btn btn-primary"> Vis SAML billett &rarr;</a>
 					</p>
 				</div>
-				</div>
+			</div>
 		</div>
 
 	</div>
