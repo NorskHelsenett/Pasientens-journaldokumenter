@@ -28,7 +28,7 @@ Available APIs:
    
 ### Patient Health Records EPJ:
 
-Live version at https://epj.pjd.nhn.no
+Live version at https://epj.pjd.test.nhn.no
 
 Demonstrates the following features
 
