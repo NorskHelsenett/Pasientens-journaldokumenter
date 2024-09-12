@@ -1,0 +1,153 @@
+﻿@inject IHttpContextAccessor _httpContextAccessor
+
+@{
+
+    ISession session = _httpContextAccessor.HttpContext!.Session;
+
+    var sessionLoginResult = session.SessionLoginResult();     
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pasientens journaldokumenter EPJ</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/PatientHealthRecordsEPJ.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        .btn-primary 
+        {
+            background-color: #015945; 
+            border:none; 
+        }
+
+        .btn-primary:hover {
+                background-color: #01755B;
+        }
+
+        .logo
+        {
+            background-color: #015945;             
+            display:inline-block; 
+            padding:3px 10px; 
+            border-radius:4px;
+            color:#fff; 
+        }
+
+        .navbar-brand
+        {
+            font-weight:bold; 
+        }
+
+        .environment
+        {            
+            padding:3px 80px; 
+            border-radius: 6px;
+            font-weight:bold; 
+        }
+
+        .environment.empty {
+                background-color: #aaa;
+                color: #fff;                
+        }
+
+        .environment.test {
+                background-color: red;
+                color: #fff;                
+        }
+
+            .environment.prod {
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><div class="logo">Pasientens journaldokumenter REST API</div> EPJ</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Hjem</a>
+                        </li>
+                        @* <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li> *@
+
+                        @if (sessionLoginResult.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Documents" asp-action="Index">Journaldokumenter</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Saml" asp-action="ShowSamlAssertion">SAML billett</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
+                            </li>
+                        }
+                        @* else                        
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Logg inn</a>
+                            </li>
+                        } *@
+                        
+                     
+                        
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <strong>Miljø:</strong>
+
+                            @if (string.IsNullOrEmpty(sessionLoginResult.EnvironmentId))
+                            {
+                                <span class="environment empty"><em>ikke valgt</em></span>
+                            }
+                            else
+                            {
+                                @* TODO: fix colors on different environmentst *@
+                                @if (sessionLoginResult.EnvironmentId == "test")
+                                {
+                                    <span class="environment test">@sessionLoginResult.EnvironmentName</span>
+                                }
+                                else if (sessionLoginResult.EnvironmentId == "prod")
+                                {
+                                    <span class="environment prod">@sessionLoginResult.EnvironmentName</span>
+                                }
+                                
+                            }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container-fluid">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            Pasientens journaldokumenter REST API - EPJ @* - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

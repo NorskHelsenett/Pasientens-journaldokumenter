@@ -1,0 +1,92 @@
+﻿@inject IHttpContextAccessor _httpContextAccessor
+
+@model PasientvalgViewModel
+
+@{
+	ISession session = _httpContextAccessor.HttpContext!.Session;
+
+
+
+
+
+
+
+	var sessionLoginResult = session.SessionLoginResult();
+}
+
+
+@if (sessionLoginResult.IsAuthenticated)
+
+
+
+{
+
+	<form method="post" asp-action="VelgPasient">
+		<div class="container">
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<div class="text-center fs-3">
+						Bruker: @sessionLoginResult.Name (@sessionLoginResult.PersonId)<br />
+						Lovverk/scope for å hente dokumentliste: @sessionLoginResult.DocumentListScopeName
+					</div>
+
+					<br />
+
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-4">
+					<div>
+						<strong>Pasient</strong>
+					</div>
+					<div>
+						<input asp-for="PatientId" class="w-100" value="@Model.PatientId" />
+					</div>
+				</div>
+
+				<div class="col-md-8">				
+					<div>
+						<strong>Grunnlag</strong>
+					</div>
+					<div>
+						@if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+						{
+							<select asp-for="GrunnlagId"
+									asp-items="@(new SelectList(PasientvalgViewModel.GrunnlagList , nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
+							</select>
+						}
+						else
+						{
+							<div>Grunnlag kreves ikke ved bruk av scope for Helsepersonelloven § 45</div>
+						}
+					</div>
+				</div>
+
+				@* 	<div class="col-md-4">
+			<div>
+			<strong>Miljø</strong>
+			</div>
+			<div>
+			<select asp-for="EnvironmentId"
+			asp-items="@(new SelectList(PasientvalgViewModel.EnvironmentList, nameof(EnvironmentPair.Id), nameof(EnvironmentPair.Label)))"
+			class="w-100">
+			</select>
+			</div>
+			</div> *@
+			</div>
+
+
+
+			<div class="row">
+				<div class="col-md-12 text-center pt-3">
+					<button type="submit" class="btn btn-primary">Neste </button>
+				</div>
+			</div>
+
+		</div>
+	</form>
+}
