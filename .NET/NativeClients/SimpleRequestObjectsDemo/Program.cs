@@ -417,10 +417,7 @@ class Program
 		{
 			// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
 
-			var headerKeyValues = new List<KeyValuePair<string, string>>()
-			{
-				new KeyValuePair<string, string>("hit-access-basis", "samtykke")
-			};								
+			request.Headers.Add("hit-access-basis", "samtykke");
 		}
 
 		var proofRequest = new DPoPProofRequest
