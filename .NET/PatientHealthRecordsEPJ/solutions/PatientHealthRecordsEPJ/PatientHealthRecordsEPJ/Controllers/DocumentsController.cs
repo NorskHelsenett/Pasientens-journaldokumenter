@@ -71,10 +71,24 @@ namespace PatientHealthRecordsEPJ.Controllers
 				// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
 				headerKeyValues.Add(new KeyValuePair<string, string>("hit-access-basis", sessionLoginResult.GrunnlagId ?? string.Empty));
 			}
-									
-			var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl + $"?patient.identifier={sessionLoginResult.PatientId}&status=current&_count={pageSize}&_page={pageIndex}&_sort={sort}";
 
-			var apiResult = await ApiCaller.CallApi("POST", apiUrl, sessionLoginResult.AccessToken!, document: false, headerKeyValues: headerKeyValues);
+			var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl; 
+
+			var urlencodedContent = new FormUrlEncodedContent([
+				new("patient.identifier", sessionLoginResult.PatientId),
+				new("status", "current"),
+				new("_count", pageSize.ToString()),
+				new("_page", pageIndex.ToString()),
+				new("_sort", sort)
+			]);
+
+			var apiResult = await ApiCaller.CallApi("POST", 
+				apiUrl, 
+				sessionLoginResult.AccessToken!, 
+				document: false, 
+				headerKeyValues: headerKeyValues,
+				formUrlEncodedContent: urlencodedContent
+				);
 			
 			if (apiResult.IsSuccess)
             {

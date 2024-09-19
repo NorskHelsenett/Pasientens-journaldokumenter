@@ -54,7 +54,8 @@ class Program
 	private const string StsUrl = "https://helseid-sts.test.nhn.no";
 
 	private const string PatientId = "13116900216";
-	private const string ApiUrl = "https://api.pjd.test.nhn.no/R4/fhir/documentreference/_search";
+	//private const string ApiUrl = "https://api.pjd.test.nhn.no/R4/fhir/documentreference/_search";
+	private const string ApiUrl = "https://localhost:8443/R4/fhir/documentreference/_search";
 
 	//private const int LocalhostPort = 8080;
 	private const int LocalhostPort = 8089;
@@ -409,15 +410,21 @@ class Program
 
 	private static async Task CallApi(string accessToken)
 	{
-		var apiUrl = ApiUrl + $"?patient.identifier={PatientId}&status=current"; 
-		
-		var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
+		var urlencodedContent = new FormUrlEncodedContent([
+		    new("patient.identifier", PatientId),
+			new("status", "current")
+	    ]);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl)
+        {
+            Content = urlencodedContent
+        }; 
 
 		if (useKjernejournalforskriften)
 		{
 			// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
 
-			request.Headers.Add("hit-access-basis", "samtykke");
+			request.Headers.Add("hit-access-basis", "SAMTYKKE");
 		}
 
 		var proofRequest = new DPoPProofRequest
