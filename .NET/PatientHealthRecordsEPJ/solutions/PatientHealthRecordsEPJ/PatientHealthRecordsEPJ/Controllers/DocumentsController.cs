@@ -11,12 +11,12 @@ namespace PatientHealthRecordsEPJ.Controllers
 	public class DocumentsController : Controller
 	{
 		private readonly ILogger<HomeController> _logger;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private ISession session => _httpContextAccessor.HttpContext!.Session;
-        private readonly IMemoryCache _memoryCache;
-        private readonly ApiUrlSettings _apiUrlSettings;
-		                
-        SessionLoginResult sessionLoginResult; 
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		private ISession session => _httpContextAccessor.HttpContext!.Session;
+		private readonly IMemoryCache _memoryCache;
+		private readonly ApiUrlSettings _apiUrlSettings;
+
+		SessionLoginResult sessionLoginResult;
 
 		const int DEFAULT_PAGE_SIZE = 15;
 		//const int DEFAULT_PAGE_SIZE = 1000;
@@ -38,32 +38,32 @@ namespace PatientHealthRecordsEPJ.Controllers
 		public DocumentsController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache, ApiUrlSettings apiUrlSettings)
 		{
 			_logger = logger;
-            _httpContextAccessor = httpContextAccessor;
-            _memoryCache = memoryCache;
-            _apiUrlSettings = apiUrlSettings;
-        }
-	
+			_httpContextAccessor = httpContextAccessor;
+			_memoryCache = memoryCache;
+			_apiUrlSettings = apiUrlSettings;
+		}
+
 		public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date")
-		{           
-			sessionLoginResult = session.SessionLoginResult();			
+		{
+			sessionLoginResult = session.SessionLoginResult();
 
 			if (!sessionLoginResult.IsAuthenticated)
-				return Redirect("/");			
+				return Redirect("/");
 
-			var model = await GetDocumentReferences(page, pageSize, sort: sort, query: query);			
+			var model = await GetDocumentReferences(page, pageSize, sort: sort, query: query);
 
 			return View(model);
 		}
 
 		private async Task<GetDocumentReferencesViewModel> GetDocumentReferences(
-            int pageIndex = 1,			
+			int pageIndex = 1,
 			int pageSize = DEFAULT_PAGE_SIZE,
-			string sort = "-date",		
+			string sort = "-date",
 			string query = ""
 			)
-        {
-            GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel();
-			
+		{
+			GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel();
+
 			var headerKeyValues = new List<KeyValuePair<string, string>>();
 
 			if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
@@ -71,55 +71,69 @@ namespace PatientHealthRecordsEPJ.Controllers
 				// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
 				headerKeyValues.Add(new KeyValuePair<string, string>("hit-access-basis", sessionLoginResult.GrunnlagId ?? string.Empty));
 			}
-									
-			var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl + $"?patient.identifier={sessionLoginResult.PatientId}&status=current&_count={pageSize}&_page={pageIndex}&_sort={sort}";
 
-			var apiResult = await ApiCaller.CallApi("POST", apiUrl, sessionLoginResult.AccessToken!, document: false, headerKeyValues: headerKeyValues);
-			
+			var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl;
+
+			var urlencodedContent = new FormUrlEncodedContent([
+				new("patient.identifier", sessionLoginResult.PatientId),
+				new("status", "current"),
+				new("_count", pageSize.ToString()),
+				new("_page", pageIndex.ToString()),
+				new("_sort", sort)
+			]);
+
+			var apiResult = await ApiCaller.CallApi("POST",
+				apiUrl,
+				sessionLoginResult.AccessToken!,
+				document: false,
+				headerKeyValues: headerKeyValues,
+				formUrlEncodedContent: urlencodedContent
+				);
+
 			if (apiResult.IsSuccess)
-            {
-                try
-                {
-                    var json = apiResult.Body;
+			{
+				try
+				{
+					var json = apiResult.Body;
 
-                    var serializerOptions = new JsonSerializerOptions().ForFhir(ModelInfo.ModelInspector).Pretty();
-                    var bundle = JsonSerializer.Deserialize<Bundle>(json, serializerOptions);
+					var serializerOptions = new JsonSerializerOptions().ForFhir(ModelInfo.ModelInspector).Pretty();
+					var bundle = JsonSerializer.Deserialize<Bundle>(json, serializerOptions);
 
-                    //model.Entries = new X.PagedList.PagedList<Bundle.EntryComponent>(bundle!.Entry, pageIndex, pageSize);
+					//model.Entries = new X.PagedList.PagedList<Bundle.EntryComponent>(bundle!.Entry, pageIndex, pageSize);
 
-                    model.Bundle = bundle;
-                    model.NorsCount = apiResult.NorsCount;
+					model.Bundle = bundle;
+					model.NorsCount = apiResult.NorsCount;
 
-                    //model.BlockedCount = bundle.entr // Hvordan gjør vi det når rest api bare returnerer et subset? 
+					//model.BlockedCount = bundle.entr // Hvordan gjør vi det når rest api bare returnerer et subset? 
 
-                    model.Pagination = Pagination.Create(bundle.Total ?? 0, pageIndex, pageSize);
+					model.Pagination = Pagination.Create(bundle.Total ?? 0, pageIndex, pageSize);
 
-                    model.SortExpression = sort;
+					model.SortExpression = sort;
 
-                    model.IsSuccess = true;					
+					model.IsSuccess = true;
 
 					return model;
-                }
-                catch (Hl7.Fhir.Serialization.DeserializationFailedException e)
-                {
+				}
+				catch (Hl7.Fhir.Serialization.DeserializationFailedException e)
+				{
 					foreach (var ex in e.Exceptions)
-                    {
-                        Debug.WriteLine(ex.Message);
-                    }
+					{
+						Debug.WriteLine(ex.Message);
+					}
 
 					model.IsSuccess = false;
 
 					return model;
 				}
-            }
-            else
-            {
-                model.IsSuccess = false;
-                model.ErrorMessage = "Could not retreive documents";
+			}
+			else
+			{
+				model.IsSuccess = false;
+				model.ErrorMessage = "Could not retreive documents";
 				model.ApiResult = apiResult;
 				model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
-				return model; 
-            }            
-        }       
-    }
+				return model;
+			}
+		}
+	}
 }

@@ -17,9 +17,19 @@ public class ApiResult
 public class ApiCaller
 {
 	// Call Get Document References or Get Document api endpoints, with accesstoken and DPoP 
-	public static async Task<ApiResult> CallApi(string method, string url, string accessToken, bool document, List<KeyValuePair<string, string>> headerKeyValues = null!)
-	{		
+	public static async Task<ApiResult> CallApi(string method,
+		string url,
+		string accessToken,
+		bool document,
+		List<KeyValuePair<string, string>> headerKeyValues = null!,
+		FormUrlEncodedContent formUrlEncodedContent = null!)
+	{
 		var request = method == "GET" ? new HttpRequestMessage(HttpMethod.Get, url) : new HttpRequestMessage(HttpMethod.Post, url);
+
+		if (formUrlEncodedContent != null)
+		{
+			request.Content = formUrlEncodedContent;
+		}
 
 		var proofRequest = new DPoPProofRequest
 		{
@@ -90,11 +100,11 @@ public class ApiCaller
 		{
 			var responseBody = await response.Content.ReadAsStringAsync();
 
-			return new ApiResult() 
-			{ 
-				IsSuccess = false, 
+			return new ApiResult()
+			{
+				IsSuccess = false,
 				StatusCode = (int)response.StatusCode,
-				Body = responseBody	
+				Body = responseBody
 			};
 		}
 	}
