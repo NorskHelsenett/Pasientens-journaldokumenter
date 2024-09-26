@@ -22,7 +22,7 @@ class Program
 {
 	//
 	// This sample is an adaption of the HelseID samples at https://github.com/NorskHelsenett/HelseID.Samples/tree/master/NativeClients
-    //
+	//
 	// The values below should normally be configurable
 	//
 
@@ -73,154 +73,154 @@ class Program
 	// These scopes indicate that you want an ID-token ("openid"), and what information about the user you want the ID-token to contain
 	private const string IdentityScopes = "openid profile offline_access helseid://scopes/identity/pid helseid://scopes/identity/security_level";
 
-    static async Task Main(string[] args)
-    {
-        try
-        {
-            using var httpClient = new HttpClient();
+	static async Task Main(string[] args)
+	{
+		try
+		{
+			using var httpClient = new HttpClient();
 
-            // Download the HelseID metadata from https://helseid-sts.test.nhn.no/.well-known/openid-configuration to determine endpoints and public keys used by HelseID:
-            // In a production environment, this document must be cached for better efficiency (both for this client and for HelseID)
-            var disco = await httpClient.GetDiscoveryDocumentAsync(StsUrl);
+			// Download the HelseID metadata from https://helseid-sts.test.nhn.no/.well-known/openid-configuration to determine endpoints and public keys used by HelseID:
+			// In a production environment, this document must be cached for better efficiency (both for this client and for HelseID)
+			var disco = await httpClient.GetDiscoveryDocumentAsync(StsUrl);
 
-            var options = new OidcClientOptions
-            {
-                Authority = StsUrl,
-                ClientId = ClientId,
-                RedirectUri = RedirectUrl,
-                LoadProfile = false,
-                // This validates the identity token (important!):
-                IdentityTokenValidator = new JwtHandlerIdentityTokenValidator(),
-            };
+			var options = new OidcClientOptions
+			{
+				Authority = StsUrl,
+				ClientId = ClientId,
+				RedirectUri = RedirectUrl,
+				LoadProfile = false,
+				// This validates the identity token (important!):
+				IdentityTokenValidator = new JwtHandlerIdentityTokenValidator(),
+			};
 
-            // Set the DPoP proof, we can use the same key for this as for the client assertion:
-            options.ConfigureDPoP(JwkPrivateKey);
+			// Set the DPoP proof, we can use the same key for this as for the client assertion:
+			options.ConfigureDPoP(JwkPrivateKey);
 
-            // Setup the oidc client for authentication against HelseID
-            var oidcClient = new OidcClient(options);
+			// Setup the oidc client for authentication against HelseID
+			var oidcClient = new OidcClient(options);
 
-            // The authorizeState object contains the state that needs to be held between starting the authorize request and the response
-            var authorizeState = await oidcClient.PrepareLoginAsync();
+			// The authorizeState object contains the state that needs to be held between starting the authorize request and the response
+			var authorizeState = await oidcClient.PrepareLoginAsync();
 
-            var pushedAuthorizationResponse = await GetPushedAuthorizationResponse(
-                httpClient,
-                authorizeState,
-                disco);
+			var pushedAuthorizationResponse = await GetPushedAuthorizationResponse(
+				httpClient,
+				authorizeState,
+				disco);
 
-            if (pushedAuthorizationResponse.IsError)
-            {
-                throw new Exception($"{pushedAuthorizationResponse.Error}: JSON: {pushedAuthorizationResponse.Json}");
-            }
+			if (pushedAuthorizationResponse.IsError)
+			{
+				throw new Exception($"{pushedAuthorizationResponse.Error}: JSON: {pushedAuthorizationResponse.Json}");
+			}
 
-            var startUrl = $"{disco.AuthorizeEndpoint}?client_id={ClientId}&request_uri={pushedAuthorizationResponse.RequestUri}";
+			var startUrl = $"{disco.AuthorizeEndpoint}?client_id={ClientId}&request_uri={pushedAuthorizationResponse.RequestUri}";
 
-            var browserOptions = new BrowserOptions(startUrl, RedirectUrl);
+			var browserOptions = new BrowserOptions(startUrl, RedirectUrl);
 
-            // Create a redirect URI using an available port on the loopback address.
-            var browser = new SystemBrowser(port: LocalhostPort);
+			// Create a redirect URI using an available port on the loopback address.
+			var browser = new SystemBrowser(port: LocalhostPort);
 
-            var browserResult = await browser.InvokeAsync(browserOptions, default);
+			var browserResult = await browser.InvokeAsync(browserOptions, default);
 
-            // If the result type is success, the browser result should contain the authorization code.
-            // We can now call the /token endpoint with the authorization code in order to get tokens:
+			// If the result type is success, the browser result should contain the authorization code.
+			// We can now call the /token endpoint with the authorization code in order to get tokens:
 
-            // We need a client assertion on the request in order to authenticate the client:
-            oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
+			// We need a client assertion on the request in order to authenticate the client:
+			oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
 
-            var loginResult = await oidcClient.ProcessResponseAsync(browserResult.Response, authorizeState);
+			var loginResult = await oidcClient.ProcessResponseAsync(browserResult.Response, authorizeState);
 
-            if (loginResult.IsError == false)
-            {
-                loginResult = ValidateIdentityClaims(loginResult);
-            }
+			if (loginResult.IsError == false)
+			{
+				loginResult = ValidateIdentityClaims(loginResult);
+			}
 
-            if (loginResult.IsError)
-            {
-                throw new Exception($"{loginResult.Error}: Description: {loginResult.ErrorDescription}");
-            }
+			if (loginResult.IsError)
+			{
+				throw new Exception($"{loginResult.Error}: Description: {loginResult.ErrorDescription}");
+			}
 
-            // The access token can now be used when calling an api
-            // It contains the user id, the security level, the organization number
-            // and the child organization
-            // Copy the access token and paste it at https://jwt.ms to decode it
+			// The access token can now be used when calling an api
+			// It contains the user id, the security level, the organization number
+			// and the child organization
+			// Copy the access token and paste it at https://jwt.ms to decode it
 
-            Console.WriteLine($"Identity token from login: {loginResult.IdentityToken}");            
+			Console.WriteLine($"Identity token from login: {loginResult.IdentityToken}");
 			Console.WriteLine($"DPoP token from login: {loginResult.AccessToken}");
 
 			// We can now call the /token endpoint again with the refresh token in order to get a new access token:
 			// Client assertions cannot be used twice, so we need a new payload:
 			oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
 
-            var refreshTokenResult = await oidcClient.RefreshTokenAsync(loginResult.RefreshToken);
+			var refreshTokenResult = await oidcClient.RefreshTokenAsync(loginResult.RefreshToken);
 
-            if (refreshTokenResult.IsError)
-            {
-                throw new Exception($"{refreshTokenResult.Error}: Description: {refreshTokenResult.ErrorDescription}");
-            }
+			if (refreshTokenResult.IsError)
+			{
+				throw new Exception($"{refreshTokenResult.Error}: Description: {refreshTokenResult.ErrorDescription}");
+			}
 
-            Console.WriteLine();
-            Console.WriteLine("New Access Token after using Refresh Token:");
-            Console.WriteLine(refreshTokenResult.AccessToken);
+			Console.WriteLine();
+			Console.WriteLine("New Access Token after using Refresh Token:");
+			Console.WriteLine(refreshTokenResult.AccessToken);
 
 
 			// Call the Patient Health Records API 
 			await CallApi(loginResult.AccessToken);
 		}
-        catch (Exception ex)
-        {
-            await Console.Error.WriteLineAsync("Error:");
-            await Console.Error.WriteLineAsync(ex.ToString());
-        }
-    }
+		catch (Exception ex)
+		{
+			await Console.Error.WriteLineAsync("Error:");
+			await Console.Error.WriteLineAsync(ex.ToString());
+		}
+	}
 
-    private static async Task<PushedAuthorizationResponse> GetPushedAuthorizationResponse(
-        HttpClient httpClient,
-        AuthorizeState authorizeState,
-        DiscoveryDocumentResponse disco)
-    {
-        // Setup a client assertion - this will authenticate the client (this application)
-        var clientAssertionPayload = GetClientAssertionPayload(disco);
-        var pushedAuthorizationRequest = new PushedAuthorizationRequest
-        {
-            Address = disco.PushedAuthorizationRequestEndpoint,
-            Parameters = GetParametersForPushedAuthorizationRequest(
-                clientAssertionPayload,
-                authorizeState,
-                disco),
-        };
+	private static async Task<PushedAuthorizationResponse> GetPushedAuthorizationResponse(
+		HttpClient httpClient,
+		AuthorizeState authorizeState,
+		DiscoveryDocumentResponse disco)
+	{
+		// Setup a client assertion - this will authenticate the client (this application)
+		var clientAssertionPayload = GetClientAssertionPayload(disco);
+		var pushedAuthorizationRequest = new PushedAuthorizationRequest
+		{
+			Address = disco.PushedAuthorizationRequestEndpoint,
+			Parameters = GetParametersForPushedAuthorizationRequest(
+				clientAssertionPayload,
+				authorizeState,
+				disco),
+		};
 
-        // Calls the /par endpoint in order to get a request URI for the /authorize endpoint
-        return await httpClient.PushAuthorizationAsync(pushedAuthorizationRequest);
-    }
+		// Calls the /par endpoint in order to get a request URI for the /authorize endpoint
+		return await httpClient.PushAuthorizationAsync(pushedAuthorizationRequest);
+	}
 
-    // This is necessary in order to please the IdentityModel library:
-    private static Parameters GetParametersForPushedAuthorizationRequest(
-        ClientAssertion clientAssertionPayload,
-        AuthorizeState authorizeState,
-        DiscoveryDocumentResponse disco)
-    {
-        // Sets the pushed authorization request parameters:
-        var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(authorizeState.CodeVerifier));
-        var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
-        var requestObject = BuildRequestObject(disco);
+	// This is necessary in order to please the IdentityModel library:
+	private static Parameters GetParametersForPushedAuthorizationRequest(
+		ClientAssertion clientAssertionPayload,
+		AuthorizeState authorizeState,
+		DiscoveryDocumentResponse disco)
+	{
+		// Sets the pushed authorization request parameters:
+		var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(authorizeState.CodeVerifier));
+		var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
+		var requestObject = BuildRequestObject(disco);
 
-		var scopes = useKjernejournalforskriften ? ApiScopesKjernejournalforskriften : ApiScopes; 
+		var scopes = useKjernejournalforskriften ? ApiScopesKjernejournalforskriften : ApiScopes;
 
-        var dictionary = new Dictionary<string, string>
-        {
-            { "client_id", ClientId },
-            { "client_assertion", clientAssertionPayload.Value },
-            { "client_assertion_type", clientAssertionPayload.Type },
-            { "request", requestObject },
-            { "scope", scopes + " " + IdentityScopes },
-            { "redirect_uri", RedirectUrl},
-            { "response_type", OidcConstants.ResponseTypes.Code },
-            { "code_challenge", codeChallenge },
-            { "code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256 },
-            { "state", authorizeState.State },
-        };
-        return new Parameters(dictionary);
-    }
+		var dictionary = new Dictionary<string, string>
+		{
+			{ "client_id", ClientId },
+			{ "client_assertion", clientAssertionPayload.Value },
+			{ "client_assertion_type", clientAssertionPayload.Type },
+			{ "request", requestObject },
+			{ "scope", scopes + " " + IdentityScopes },
+			{ "redirect_uri", RedirectUrl},
+			{ "response_type", OidcConstants.ResponseTypes.Code },
+			{ "code_challenge", codeChallenge },
+			{ "code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256 },
+			{ "state", authorizeState.State },
+		};
+		return new Parameters(dictionary);
+	}
 
 	private static string BuildRequestObject(DiscoveryDocumentResponse disco)
 	{
@@ -276,7 +276,7 @@ class Program
             //{"code", "010"}, // 
 			//{"system", "urn:oid:2.16.578.1.12.4.1.1.8451"},
             {"code", "01"}, // 
-			{"system", "urn:oid:2.16.578.1.12.4.1.1.8666"},			
+			{"system", "urn:oid:2.16.578.1.12.4.1.1.8666"},
 		};
 
 		var purpose_of_use = new Dictionary<string, object>
@@ -354,73 +354,76 @@ class Program
 	}
 
 	private static ClientAssertion GetClientAssertionPayload(DiscoveryDocumentResponse disco)
-    {
-        var clientAssertion = BuildClientAssertion(disco);
+	{
+		var clientAssertion = BuildClientAssertion(disco);
 
-        return new ClientAssertion
-        {
-            Type = OidcConstants.ClientAssertionTypes.JwtBearer,
-            Value = clientAssertion,
-        };
-    }
+		return new ClientAssertion
+		{
+			Type = OidcConstants.ClientAssertionTypes.JwtBearer,
+			Value = clientAssertion,
+		};
+	}
 
-    private static string BuildClientAssertion(DiscoveryDocumentResponse disco)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(JwtClaimTypes.Subject, ClientId),
-            new Claim(JwtClaimTypes.IssuedAt, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
-            new Claim(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
-        };
+	private static string BuildClientAssertion(DiscoveryDocumentResponse disco)
+	{
+		var claims = new List<Claim>
+		{
+			new Claim(JwtClaimTypes.Subject, ClientId),
+			new Claim(JwtClaimTypes.IssuedAt, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
+			new Claim(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
+		};
 
-        return BuildHelseIdJwt(disco, claims);
-    }
+		return BuildHelseIdJwt(disco, claims);
+	}
 
-    private static string BuildHelseIdJwt(DiscoveryDocumentResponse disco, List<Claim> extraClaims)
-    {
-        var credentials = new JwtSecurityToken(ClientId, disco.Issuer, extraClaims, DateTime.UtcNow,
-            DateTime.UtcNow.AddSeconds(60), GetClientAssertionSigningCredentials());
+	private static string BuildHelseIdJwt(DiscoveryDocumentResponse disco, List<Claim> extraClaims)
+	{
+		var credentials = new JwtSecurityToken(ClientId, disco.Issuer, extraClaims, DateTime.UtcNow,
+			DateTime.UtcNow.AddSeconds(60), GetClientAssertionSigningCredentials());
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        return tokenHandler.WriteToken(credentials);
-    }
+		var tokenHandler = new JwtSecurityTokenHandler();
+		return tokenHandler.WriteToken(credentials);
+	}
 
-    private static SigningCredentials GetClientAssertionSigningCredentials()
-    {
-        var securityKey = new JsonWebKey(JwkPrivateKey);
-        return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
-    }
+	private static SigningCredentials GetClientAssertionSigningCredentials()
+	{
+		var securityKey = new JsonWebKey(JwkPrivateKey);
+		return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
+	}
 
-    private static LoginResult ValidateIdentityClaims(LoginResult loginResult)
-    {
-        // The claims from the identity token has ben set on the User object;
-        // We validate that the user claims match the required security level:
-        if (loginResult.User.Claims.Any(c => c is
-            {
-                Type: "helseid://claims/identity/security_level",
-                Value: "4",
-            }))
-        {
-            return loginResult;
-        }
+	private static LoginResult ValidateIdentityClaims(LoginResult loginResult)
+	{
+		// The claims from the identity token has ben set on the User object;
+		// We validate that the user claims match the required security level:
+		if (loginResult.User.Claims.Any(c => c is
+			{
+				Type: "helseid://claims/identity/security_level",
+				Value: "4",
+			}))
+		{
+			return loginResult;
+		}
 
-        return new LoginResult("Invalid security level", "The security level is not at the required value");
-    }
+		return new LoginResult("Invalid security level", "The security level is not at the required value");
+	}
 
 	private static async Task CallApi(string accessToken)
 	{
-		var apiUrl = ApiUrl + $"?patient.identifier={PatientId}&status=current"; 
-		
-		var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
+		var urlencodedContent = new FormUrlEncodedContent([
+			new("patient.identifier", PatientId),
+			new("status", "current")
+		]);
+
+		var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl)
+		{
+			Content = urlencodedContent
+		};
 
 		if (useKjernejournalforskriften)
 		{
 			// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
 
-			var headerKeyValues = new List<KeyValuePair<string, string>>()
-			{
-				new KeyValuePair<string, string>("hit-access-basis", "samtykke")
-			};								
+			request.Headers.Add("hit-access-basis", "SAMTYKKE");
 		}
 
 		var proofRequest = new DPoPProofRequest
