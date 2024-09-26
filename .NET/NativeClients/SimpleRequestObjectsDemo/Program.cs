@@ -54,9 +54,8 @@ class Program
 	private const string StsUrl = "https://helseid-sts.test.nhn.no";
 
 	private const string PatientId = "13116900216";
-	//private const string ApiUrl = "https://api.pjd.test.nhn.no/R4/fhir/documentreference/_search";
-	private const string ApiUrl = "https://localhost:8443/R4/fhir/documentreference/_search";
-
+	private const string ApiUrl = "https://api.pjd.test.nhn.no/R4/fhir/documentreference/_search";
+	
 	//private const int LocalhostPort = 8080;
 	private const int LocalhostPort = 8089;
 
