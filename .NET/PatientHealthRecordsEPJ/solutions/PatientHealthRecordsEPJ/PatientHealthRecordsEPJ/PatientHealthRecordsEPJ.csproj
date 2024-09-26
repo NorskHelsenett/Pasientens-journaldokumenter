@@ -18,16 +18,18 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hl7.Fhir.R4B" Version="5.8.1" />
+		<PackageReference Include="Hl7.Fhir.R4B" Version="5.10.3" />
 		<PackageReference Include="Hl7.Fhir.Serialization" Version="4.3.0" />
-		<PackageReference Include="IdentityModel" Version="7.0.0-preview.4" />
-		<PackageReference Include="IdentityModel.OidcClient.DPoP" Version="6.0.0-preview.1" />
-		<PackageReference Include="IdentityModel.OidcClient.IdentityTokenValidator" Version="6.0.0-preview.1" />
-		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.6" />
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.6" />
+		<PackageReference Include="IdentityModel" Version="7.0.0" />
+		<PackageReference Include="IdentityModel.OidcClient.DPoP" Version="6.0.0" />
+		<PackageReference Include="IdentityModel.OidcClient.IdentityTokenValidator" Version="6.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.8" />
 
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.4.1" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.7.1" />
+
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1" />
 	</ItemGroup>
 
 	<ItemGroup>
