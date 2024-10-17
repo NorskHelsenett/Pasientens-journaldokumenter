@@ -5,6 +5,7 @@ using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace PatientHealthRecordsEPJ.Controllers
 {
@@ -53,9 +54,6 @@ namespace PatientHealthRecordsEPJ.Controllers
 
 			if (apiResult.IsSuccess)
 			{
-
-				model.ContentType = apiResult.ContentType;
-
 				try
 				{
 					switch (apiResult.ContentType)
@@ -68,22 +66,55 @@ namespace PatientHealthRecordsEPJ.Controllers
 
 							doc.LoadXml(xml);
 
-							var ns = doc.DocumentElement!.NamespaceURI;
+							if (doc.DocumentElement!.Name == "ClinicalDocument")
+							{
+								// TODO: in a real application you could properly deserialize the clinical document. 
+								// As an example we just read the base64 encoded PDF string
 
-							var xslFilename = Path.Combine(_webHostEnvironment.ContentRootPath, "Resources", XslLocations.GetXslLocation(ns));
+								var namespaceManager = new XmlNamespaceManager(doc.NameTable);
+								namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
 
-							XmlTemplate xmlTemplate = new XmlTemplate(xslFilename);
+								var textNode = doc.DocumentElement!.SelectSingleNode("//hl7:component/hl7:nonXMLBody/hl7:text", namespaceManager);
 
-							var html = xmlTemplate.Transform(xml);
+								if (textNode is not null)
+								{
+									if (textNode.Attributes["mediaType"]?.Value == "application/pdf" && textNode.Attributes["representation"]?.Value == "B64")
+									{
+										model.PdfBase64String = textNode.InnerText;
+										model.ContentType = "application/pdf";
 
-							model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
+										textNode.InnerText = "...removed for display...";
 
-							model.IsSuccess = true;
+										model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
+										model.IsShowClinicalDocumentXml = true;
+
+										model.IsSuccess = true;
+									}
+								}
+							}
+							else
+							{
+
+								var ns = doc.DocumentElement!.NamespaceURI;
+
+								var xslFilename = Path.Combine(_webHostEnvironment.ContentRootPath, "Resources", XslLocations.GetXslLocation(ns));
+
+								XmlTemplate xmlTemplate = new XmlTemplate(xslFilename);
+
+								var html = xmlTemplate.Transform(xml);
+
+								model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
+
+								model.ContentType = "application/xml";
+
+								model.IsSuccess = true;
+							}
 
 							break;
 
 						case "application/pdf":
 							model.PdfBase64String = Convert.ToBase64String(apiResult.Data!);
+							model.ContentType = "application/pdf";
 							model.IsSuccess = true;
 							break;
 
@@ -110,6 +141,29 @@ namespace PatientHealthRecordsEPJ.Controllers
 				model.IsSuccess = false;
 				model.ErrorMessage = "Could not retreive document";
 				return model;
+			}
+		}
+
+		public static string PrettyPrintXml(string xml)
+		{
+			// Load the XML string into an XDocument
+			XDocument xDocument = XDocument.Parse(xml);
+
+			// Use an XmlWriter with settings to format the XML
+			XmlWriterSettings settings = new XmlWriterSettings
+			{
+				Indent = true,
+				IndentChars = "  ", // You can customize the indentation here
+				NewLineChars = Environment.NewLine,
+				NewLineHandling = NewLineHandling.Replace
+			};
+
+			using (var stringWriter = new System.IO.StringWriter())
+			using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, settings))
+			{
+				xDocument.WriteTo(xmlWriter);
+				xmlWriter.Flush();
+				return stringWriter.GetStringBuilder().ToString();
 			}
 		}
 	}

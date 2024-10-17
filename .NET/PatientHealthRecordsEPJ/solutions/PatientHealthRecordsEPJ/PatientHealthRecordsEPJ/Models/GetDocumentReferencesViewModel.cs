@@ -26,6 +26,9 @@ namespace PatientHealthRecordsEPJ.Models
 		public bool IsSuccess { get; set; }
 		public string ErrorMessage { get; set; }
 
+		public bool IsShowClinicalDocumentXml { get; set; }
+		public string ClinicalDocumentXml { get; set; }
+
 		public Bundle Bundle { get; set; }		
 
 		public int PageSize { get; set; }
