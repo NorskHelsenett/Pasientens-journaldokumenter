@@ -69,7 +69,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 							if (doc.DocumentElement!.Name == "ClinicalDocument")
 							{
 								// TODO: in a real application you could properly deserialize the clinical document. 
-								// As an example we just read the base64 encoded PDF string
+								// As an example we just read the base64 encoded PDF string, or the KITH xml string
 
 								var namespaceManager = new XmlNamespaceManager(doc.NameTable);
 								namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
@@ -78,41 +78,62 @@ namespace PatientHealthRecordsEPJ.Controllers
 
 								if (textNode is not null)
 								{
-									if (textNode.Attributes["mediaType"]?.Value == "application/pdf" && textNode.Attributes["representation"]?.Value == "B64")
+									var mediaType = textNode.Attributes["mediaType"]?.Value;
+									var representation = textNode.Attributes["representation"]?.Value;
+
+									if (mediaType == "application/pdf" && representation == "B64")
 									{
 										model.PdfBase64String = textNode.InnerText;
 										model.ContentType = "application/pdf";
 
+										// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
+										// "DownloadPdf" action method and point the IFRAME src to that instead? 
+										//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
+										
 										textNode.InnerText = "...removed for display...";
 
 										model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
-										model.IsShowClinicalDocumentXml = true;
+										model.IsShowClinicalDocumentXml = true;										
 
 										model.IsSuccess = true;
+
+										return model;
+									}
+									else if (mediaType == "application/xml")
+									{
+										// Extract KITH xml from ClinicalDocument
+
+										xml = string.Empty; 
+										
+										xml = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
+
+										doc.LoadXml(xml); 
+
+										// Fall through to displaying KITH xml below
 									}
 								}
 							}
-							else
-							{
+							
+							// The following code is run whether the document is an XML (kith) directly, or if it's an XML extracted from ClinicalDocument
 
-								var ns = doc.DocumentElement!.NamespaceURI;
+							var ns = doc.DocumentElement!.NamespaceURI;
 
-								var xslFilename = Path.Combine(_webHostEnvironment.ContentRootPath, "Resources", XslLocations.GetXslLocation(ns));
+							var xslFilename = Path.Combine(_webHostEnvironment.ContentRootPath, "Resources", XslLocations.GetXslLocation(ns));
 
-								XmlTemplate xmlTemplate = new XmlTemplate(xslFilename);
+							XmlTemplate xmlTemplate = new XmlTemplate(xslFilename);
 
-								var html = xmlTemplate.Transform(xml);
+							var html = xmlTemplate.Transform(xml);
 
-								model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
+							model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
 
-								model.ContentType = "application/xml";
+							model.ContentType = "application/xml";
 
-								model.IsSuccess = true;
-							}
+							model.IsSuccess = true;
+							
 
 							break;
 
-						case "application/pdf":
+						case "application/pdf": // PDF not from within a ClinicalDocument
 							model.PdfBase64String = Convert.ToBase64String(apiResult.Data!);
 							model.ContentType = "application/pdf";
 							model.IsSuccess = true;
