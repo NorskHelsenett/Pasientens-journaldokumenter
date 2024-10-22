@@ -23,7 +23,6 @@
 	tr.document-detail {
 		display: none;
 	}
-
 </style>
 
 <script>
@@ -82,64 +81,118 @@
 
 	@if (!Model.IsSuccess)
 	{
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-md-12">
-					Error: @Model.ErrorMessage
-				</div>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+				Error: @Model.ErrorMessage
 			</div>
 		</div>
+	</div>
 	}
 	else
 	{
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-md-12">
+	@if (Model.IsShowClinicalDocumentXml)
+		{
+	<div class="container-fluid container-highlighted">
+		<div class="row">
+			<div class="col-md-12">
 
-					@if (Model.ContentType == "application/pdf")
-					{
-						<iframe src="data:application/pdf;base64,@Model.PdfBase64String"
-								width="100%"
-								height="800px"
-								style="border: none;">
-						</iframe>
-					}
-
-					@if (Model.ContentType == "application/xml")
-					{
-						<iframe id="contentIframe"
-								width="100%"
-								height="800px"
-								style="border: none;">
-						</iframe>
-
-						<script type="text/javascript">
-							setIframeContent('contentIframe', `@Html.Raw(Model.Html)`);
-						</script>
-					}
-
-					@* @Html.PagedListPager(Model.Bundle.Entry, page => Url.Action("Index", "Document", new { page, sort = Model.SortExpression, pageSize = Model.PageSize }), PagedListRenderOptions.ClassicPlusFirstAndLast) *@
-
-
-					@* 	<div class="pagination-container">
-				<ul class="pagination">
-				<li class="PagedList-skipToFirst disabled"><a>&lt;&lt;</a></li>
-				<li class="PagedList-skipToPrevious disabled">
-				<a rel="prev">&lt;</a></li>
-				<li class="active"><span>1</span></li>
-				<li>
-				<a href="/Contacts?page=2&amp;sort=recent&amp;pageSize=25">2</a></li>
-				<li><a href="/Contacts?page=3&amp;sort=recent&amp;pageSize=25">3</a></li>
-				<li><a href="/Contacts?page=4&amp;sort=recent&amp;pageSize=25">4</a></li>
-				<li><a href="/Contacts?page=10&amp;sort=recent&amp;pageSize=25">10</a></li>
-				<li class="PagedList-skipToNext"><a href="/Contacts?page=2&amp;sort=recent&amp;pageSize=25" rel="next">&gt;</a></li>
-				<li class="PagedList-skipToLast"><a href="/Contacts?page=219&amp;sort=recent&amp;pageSize=25">&gt;&gt;</a></li>
-				</ul></div>  *@
-
+				<div class="textarea-container">
+					<pre class="highlighted clinicaldocument" aria-hidden="true"></pre>
+					<textarea class="textarea w-100 clinicaldocument" rows="10">@Model.ClinicalDocumentXml</textarea>
 				</div>
+
+
 			</div>
 		</div>
+	</div>
+		}
+
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+
+				@if (Model.ContentType == "application/pdf")
+					{
+				<iframe src="data:application/pdf;base64,@Model.PdfBase64String"
+						width="100%"
+						height="800px"
+						style="border: none;">
+				</iframe>
+					}
+
+				@if (Model.ContentType == "application/xml")
+					{
+				<iframe id="contentIframe"
+						width="100%"
+						height="800px"
+						style="border: none;">
+				</iframe>
+
+				<script type="text/javascript">
+							setIframeContent('contentIframe', `@Html.Raw(Model.Html)`);
+				</script>
+					}
+
+				@* @Html.PagedListPager(Model.Bundle.Entry, page => Url.Action("Index", "Document", new { page, sort = Model.SortExpression, pageSize = Model.PageSize }), PagedListRenderOptions.ClassicPlusFirstAndLast) *@
+
+
+				@* 	<div class="pagination-container">
+					<ul class="pagination">
+					<li class="PagedList-skipToFirst disabled"><a>&lt;&lt;</a></li>
+					<li class="PagedList-skipToPrevious disabled">
+					<a rel="prev">&lt;</a></li>
+					<li class="active"><span>1</span></li>
+					<li>
+					<a href="/Contacts?page=2&amp;sort=recent&amp;pageSize=25">2</a></li>
+					<li><a href="/Contacts?page=3&amp;sort=recent&amp;pageSize=25">3</a></li>
+					<li><a href="/Contacts?page=4&amp;sort=recent&amp;pageSize=25">4</a></li>
+					<li><a href="/Contacts?page=10&amp;sort=recent&amp;pageSize=25">10</a></li>
+					<li class="PagedList-skipToNext"><a href="/Contacts?page=2&amp;sort=recent&amp;pageSize=25" rel="next">&gt;</a></li>
+					<li class="PagedList-skipToLast"><a href="/Contacts?page=219&amp;sort=recent&amp;pageSize=25">&gt;&gt;</a></li>
+					</ul></div>  *@
+
+			</div>
+		</div>
+	</div>
 	}
 </div>
 
 
+<script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+	const containerHighlighted = document.querySelector('.container-highlighted');
+
+	if (textarea !== undefined) {
+		textarea.addEventListener('input', updateHighlighting);
+		textarea.addEventListener('scroll', syncScroll);
+
+		function updateHighlighting() {
+			const xml = textarea.value;
+			highlighted.innerHTML = applySyntaxHighlighting(xml);
+		}
+
+		function applySyntaxHighlighting(xml) {
+			return xml.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+					return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+				});
+		}
+
+		function highlightAttributes(attributes) {
+			return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+				return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+			});
+		}
+
+		function syncScroll() {
+			highlighted.scrollTop = textarea.scrollTop;
+			highlighted.scrollLeft = textarea.scrollLeft;
+		}
+
+		// Initialize highlighting
+		updateHighlighting();
+	}
+</script>
