@@ -1,5 +1,6 @@
 using IdentityModel.Client;
 using IdentityModel.OidcClient.DPoP;
+using System.Net.Http.Headers;
 
 public class ApiResult
 {
@@ -22,6 +23,7 @@ public class ApiCaller
 		string accessToken, 
 		bool document, 
 		List<KeyValuePair<string, string>> headerKeyValues = null!, 
+		List<string> acceptHeaderValues =  null!,
 		FormUrlEncodedContent formUrlEncodedContent = null!)
 	{
 		var request = method == "GET" ? new HttpRequestMessage(HttpMethod.Get, url) : new HttpRequestMessage(HttpMethod.Post, url);
@@ -52,6 +54,14 @@ public class ApiCaller
 			}
 		}
 
+		if (acceptHeaderValues is not null)
+		{
+			foreach (var mediaType in acceptHeaderValues)
+			{
+				request!.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+			}
+		}
+
 		var handler = new HttpClientHandler
 		{
 			// Handle staging certificate from Let's Encrypt used by PHR API
@@ -67,7 +77,7 @@ public class ApiCaller
 			{
 				int norsCount = 0;
 
-				if (response.Headers.TryGetValues("Hit-SecurityLabel-Nors-Count", out var norsValues))
+				if (response.Headers.TryGetValues("NHN-SecurityLabel-Nors-Count", out var norsValues))
 				{
 					norsCount = Int32.Parse(norsValues.FirstOrDefault()!);
 				}

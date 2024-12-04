@@ -47,7 +47,9 @@ namespace PatientHealthRecordsEPJ.Controllers
 			// We send the patient Id in the header as X-Patient-Id to avoid having the patient Id in the URL.             
 			var headerKeyValues = new List<KeyValuePair<string, string>>()
 			{
-				new KeyValuePair<string, string>("hit-patient-pid", patient)
+				new KeyValuePair<string, string>("nhn-patient-nin", patient),
+				new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ 1.0"),
+				new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())
 			};
 
 			var apiResult = await ApiCaller.CallApi("GET", url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
