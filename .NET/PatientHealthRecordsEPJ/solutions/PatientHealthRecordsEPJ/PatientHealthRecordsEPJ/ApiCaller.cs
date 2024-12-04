@@ -58,7 +58,23 @@ public class ApiCaller
 		{
 			foreach (var mediaType in acceptHeaderValues)
 			{
-				request!.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+				var mediaTypeParts = mediaType.Split(';', 2); // Split media type and parameters
+				var mediaTypeValue = new MediaTypeWithQualityHeaderValue(mediaTypeParts[0].Trim());
+
+				if (mediaTypeParts.Length > 1) // If there are parameters
+				{
+					var parameters = mediaTypeParts[1].Split(';');
+					foreach (var parameter in parameters)
+					{
+						var keyValue = parameter.Split('=');
+						if (keyValue.Length == 2)
+						{
+							mediaTypeValue.Parameters.Add(new NameValueHeaderValue(keyValue[0].Trim(), keyValue[1].Trim()));
+						}
+					}
+				}
+
+				request!.Headers.Accept.Add(mediaTypeValue);
 			}
 		}
 
