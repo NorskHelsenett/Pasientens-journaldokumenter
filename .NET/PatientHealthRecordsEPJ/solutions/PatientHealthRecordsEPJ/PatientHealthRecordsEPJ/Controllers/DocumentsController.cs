@@ -89,7 +89,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 				sessionLoginResult.AccessToken!, 
 				document: false, 
 				headerKeyValues: headerKeyValues,
-				acceptHeaderValues: ["application/fhir+json"], // Only empty accept header, or 'application/fhir+json' is allowed	
+				acceptHeaderValues: ["application/fhir+json; fhirVersion=4.0"], // Only empty accept header, or 'application/fhir+json' is allowed
 				formUrlEncodedContent: urlencodedContent
 				);
 			
