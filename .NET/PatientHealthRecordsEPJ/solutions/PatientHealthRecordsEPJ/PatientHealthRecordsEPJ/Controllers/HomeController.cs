@@ -672,8 +672,19 @@ namespace PatientHealthRecordsEPJ.Controllers
 
 		private static string BuildHelseIdJwt(DiscoveryDocumentResponse disco, List<Claim> extraClaims)
 		{
-			var credentials = new JwtSecurityToken(ClientId, disco.Issuer, extraClaims, DateTime.UtcNow,
-				DateTime.UtcNow.AddSeconds(60), GetClientAssertionSigningCredentials());
+			var signingCredentials = GetClientAssertionSigningCredentials();
+
+			// Create a custom header with "typ" set to "client-authentication+jwt"
+			// Required according to updated requirements from HelseId
+			// https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/tekniske-mekanismer/bruk_av_client_assertion_enmd/
+			var header = new JwtHeader(signingCredentials);
+
+			header["typ"] = "client-authentication+jwt"; // Override the default "JWT"
+
+			var credentials = new JwtSecurityToken(
+				header,
+				new JwtPayload(ClientId, disco.Issuer, extraClaims, DateTime.UtcNow, DateTime.UtcNow.AddSeconds(60))
+			);
 
 			var tokenHandler = new JwtSecurityTokenHandler();
 			return tokenHandler.WriteToken(credentials);
