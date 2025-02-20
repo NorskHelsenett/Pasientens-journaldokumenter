@@ -69,10 +69,11 @@ namespace PatientHealthRecordsEPJ.Controllers
 			if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
 			{
 				// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften'
-				headerKeyValues.Add(new KeyValuePair<string, string>("nhn-access-basis", sessionLoginResult.GrunnlagId ?? string.Empty));
-				headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ 1.0"));
-				headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
+				headerKeyValues.Add(new KeyValuePair<string, string>("nhn-access-basis", sessionLoginResult.GrunnlagId ?? string.Empty));				
 			}
+
+			headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ 1.0"));
+			headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
 			var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl; 
 
