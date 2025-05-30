@@ -11,6 +11,11 @@
 }
 
 @{
+	bool IsOid(string? system, string oid)
+	{
+		return system?.Replace("urn:oid:", string.Empty) == oid;
+	}
+
 	string GetInstitutionName(DocumentReference document)
 	{
 		foreach (var author in document.Author)
@@ -29,7 +34,7 @@
 
 					if (coding != null)
 					{
-						if (coding.System == Constants.Oid.OrganisasjonNummer)
+						if (IsOid(coding.System, Constants.Oid.OrganisasjonNummer))
 						{
 							return organization!.Name;
 						}
@@ -39,7 +44,7 @@
 		}
 		return "-"; // Ikke Tilgjengelig
 	}
-
+	
 	string GetDepartmentName(DocumentReference document)
 	{
 		foreach (var author in document.Author)
@@ -57,7 +62,7 @@
 
 					if (coding != null)
 					{
-						if (coding.System == Constants.Oid.ReshId)
+						if (IsOid(coding.System, Constants.Oid.ReshId))
 						{
 							return organization!.Name;
 						}

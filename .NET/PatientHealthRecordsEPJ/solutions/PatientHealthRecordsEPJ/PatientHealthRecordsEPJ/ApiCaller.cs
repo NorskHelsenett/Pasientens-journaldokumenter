@@ -28,6 +28,8 @@ public class ApiCaller
 	{
 		var request = method == "GET" ? new HttpRequestMessage(HttpMethod.Get, url) : new HttpRequestMessage(HttpMethod.Post, url);
 
+		request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("nb-NO"));
+
 		if (formUrlEncodedContent != null)
 		{
 			request.Content = formUrlEncodedContent;
