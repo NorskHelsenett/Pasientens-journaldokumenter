@@ -2,6 +2,7 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.VisualBasic;
 using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
 using System.Text.Json;
@@ -107,6 +108,33 @@ namespace PatientHealthRecordsEPJ.Controllers
 
 					model.Bundle = bundle;
 					model.NorsCount = apiResult.NorsCount;
+
+					var operationOutcome = bundle.GetResources().OfType<OperationOutcome>().FirstOrDefault();
+
+					if (operationOutcome != null) 
+					{
+						foreach (var issue in operationOutcome.Issue)
+						{
+							if (issue.Severity == OperationOutcome.IssueSeverity.Error)
+							{
+								var firstCoding = issue.Details.Coding.FirstOrDefault();
+
+								if (firstCoding != null)
+								{
+									var system = firstCoding.System;
+									var code = firstCoding.Code;
+									var display = firstCoding.Display;
+								}
+
+								if (issue.Diagnostics != null)
+								{
+									var unavailableLocation = JsonSerializer.Deserialize<UnavailableLocation>(issue.Diagnostics);
+
+									model.UnavailableLocations.Add(unavailableLocation!);
+								}
+							}
+						}
+					}
 
 					//model.BlockedCount = bundle.entr // Hvordan gjør vi det når rest api bare returnerer et subset? 
 

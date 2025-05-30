@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+using System.Text.Json.Serialization;
 
 namespace PatientHealthRecordsEPJ.Models
 {
@@ -19,6 +20,8 @@ namespace PatientHealthRecordsEPJ.Models
         public ApiResult ApiResult { get; set; }
 
         public int? NorsCount { get; set; } // Antall sperrede dokumenter
+
+		public List<UnavailableLocation> UnavailableLocations { get; set; } = new List<UnavailableLocation>(); 
 	}
 
 	public class GetDocumentViewModel
@@ -42,4 +45,15 @@ namespace PatientHealthRecordsEPJ.Models
 		public string? Html { get; set; }
 		public string? PdfBase64String { get; set; }
     }
+
+	public class UnavailableLocation
+	{
+		[JsonPropertyName("location")]
+		public string Location { get; set; }
+		[JsonPropertyName("locationName")]
+		public string LocationName { get; set; }
+		[JsonPropertyName("errorCode")]
+		public string ErrorCode { get; set; }
+
+	}
 }
