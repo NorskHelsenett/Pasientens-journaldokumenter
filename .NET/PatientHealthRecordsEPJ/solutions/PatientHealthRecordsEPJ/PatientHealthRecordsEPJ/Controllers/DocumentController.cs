@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using PatientHealthRecordsEPJ.Mapper.Xml;
 using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
@@ -9,24 +10,74 @@ using System.Xml.Linq;
 
 namespace PatientHealthRecordsEPJ.Controllers
 {
-	public class DocumentController : Controller
+	public class DocumentController : BaseController
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private ISession session => _httpContextAccessor.HttpContext!.Session;
 		private readonly IWebHostEnvironment _webHostEnvironment;
+		private readonly IOidcClientService _oidcClientService;
 
 		SessionLoginResult sessionLoginResult;
 
-		public DocumentController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache, IWebHostEnvironment webHostEnvironment, ApiUrlSettings apiUrlSettings)
+		public DocumentController(
+			IOptions<SessionOptions> sessionOptions, 
+			ILogger<HomeController> logger, 
+			IHttpContextAccessor httpContextAccessor, 
+			IMemoryCache memoryCache, 
+			IWebHostEnvironment webHostEnvironment, 
+			ApiUrlSettings apiUrlSettings, 
+			IOidcClientService oidcClientService) : base(sessionOptions)
 		{
 			_logger = logger;
 			_httpContextAccessor = httpContextAccessor;
 			_webHostEnvironment = webHostEnvironment;
+			_oidcClientService = oidcClientService;
+		}
+
+		private string GetRedirectUrl()
+		{
+#if DEBUG
+			var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
+#else
+			var redirectUrl = TestRedirectUrl; 
+#endif
+			return redirectUrl;
+		}
+
+		public async Task<IActionResult> RefreshToken()
+		{
+			var redirectUrl = GetRedirectUrl();
+
+			await _oidcClientService.InitializeAsync(redirectUrl);
+
+			var loginResult = session.SessionLoginResult();
+
+			var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
+
+			if (result.IsError)
+			{
+				throw new Exception($"{result.Error}: {result.ErrorDescription}");
+			}
+
+			loginResult.AccessToken = result.AccessToken;
+			loginResult.RefreshToken = result.RefreshToken;
+			loginResult.SaveToSession(session);
+
+			return Ok(result.AccessToken);
 		}
 
 		public async Task<IActionResult> Index(string url)
 		{
+			var loginResult = session.SessionLoginResult();
+
+			if (loginResult.AccessToken == null)
+			{
+				return Redirect("/");
+			}
+
+			await RefreshToken();
+
 			sessionLoginResult = session.SessionLoginResult();
 
 			if (!sessionLoginResult.IsAuthenticated)

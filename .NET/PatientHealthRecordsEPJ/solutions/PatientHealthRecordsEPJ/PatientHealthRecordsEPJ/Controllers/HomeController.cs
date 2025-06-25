@@ -5,6 +5,7 @@ using IdentityModel.OidcClient.DPoP;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
@@ -16,17 +17,18 @@ using System.Text.Json;
 
 namespace PatientHealthRecordsEPJ.Controllers
 {
-	public class HomeController : Controller
+	public class HomeController : BaseController
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private ISession session => _httpContextAccessor.HttpContext!.Session;
 		private readonly IMemoryCache _memoryCache;
-		
-		private const string ClientId = "2141d734-7604-42ca-a377-27f1b712f4e6"; // "Patient Health Records API EPJ". Privatnøkkel ligger i Constants.cs
+		private readonly IOidcClientService _oidcClientService;
+
+		public const string ClientId = "2141d734-7604-42ca-a377-27f1b712f4e6"; // "Patient Health Records API EPJ". Privatnøkkel ligger i Constants.cs
 
 		// The client is configured in the HelseID test environment, so we will point to that
-		private const string StsUrl = "https://helseid-sts.test.nhn.no";
+		public const string StsUrl = "https://helseid-sts.test.nhn.no";
 				
 		// This is the scope of the API you want to call (get an access token for)		
 		private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document";
@@ -35,20 +37,26 @@ namespace PatientHealthRecordsEPJ.Controllers
 		// These scopes indicate that you want an ID-token ("openid"), and what information about the user you want the ID-token to contain
 		private const string IdentityScopes = "openid profile offline_access helseid://scopes/identity/pid helseid://scopes/identity/security_level";
 
-		private const string TestRedirectUrl = "https://epj.pjd.test.nhn.no/callback";
-		private const string TestPostLogoutRedirectUrl = "https://epj.pjd.test.nhn.no/";
+		public const string TestRedirectUrl = "https://epj.pjd.test.nhn.no/callback";
+		public const string TestPostLogoutRedirectUrl = "https://epj.pjd.test.nhn.no/";
 
 		HttpClient httpClient;
 		OidcClient oidcClient;
 		DiscoveryDocumentResponse disco;
 
-		public HomeController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache)
+		public HomeController(
+			IOptions<SessionOptions> sessionOptions,
+			ILogger<HomeController> logger, 
+			IHttpContextAccessor httpContextAccessor, 
+			IMemoryCache memoryCache, 
+			IOidcClientService oidcClientService) : base(sessionOptions)
 		{
 			_logger = logger;
 			_httpContextAccessor = httpContextAccessor;
 			_memoryCache = memoryCache;
+			_oidcClientService = oidcClientService;
 		}
-
+		
 		public IActionResult Index()
 		{
 			HomeViewModel model = new HomeViewModel();
@@ -432,7 +440,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 				if (refreshTokenResult.IsError)
 				{
 					throw new Exception($"{refreshTokenResult.Error}: Description: {refreshTokenResult.ErrorDescription}");
-				}
+				}				
 
 				Console.WriteLine();
 				Console.WriteLine("New Access Token after using Refresh Token:");
@@ -647,7 +655,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 			return BuildHelseIdJwt(disco, claims);
 		}
 
-		private static ClientAssertion GetClientAssertionPayload(DiscoveryDocumentResponse disco)
+		public static ClientAssertion GetClientAssertionPayload(DiscoveryDocumentResponse disco)
 		{
 			var clientAssertion = BuildClientAssertion(disco);
 

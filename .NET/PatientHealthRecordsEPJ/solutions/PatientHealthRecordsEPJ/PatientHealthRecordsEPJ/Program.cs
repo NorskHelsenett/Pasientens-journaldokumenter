@@ -1,5 +1,6 @@
 // override XmlException: Resolving of external URIs was prohibited.
 using Microsoft.AspNetCore.DataProtection;
+using PatientHealthRecordsEPJ;
 using StackExchange.Redis;
 
 AppContext.SetSwitch("Switch.System.Xml.AllowDefaultResolver", true);
@@ -30,16 +31,20 @@ builder.Services.AddSingleton(apiUrlSettings);
 	});
 #endif
 
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IOidcClientService, OidcClientService>();
 
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession(options =>
 	{
-		options.IdleTimeout = TimeSpan.FromMinutes(30); // Set the session timeout
+		//options.IdleTimeout = TimeSpan.FromSeconds(20); 
+		//options.IdleTimeout = TimeSpan.FromMinutes(30); 
+		options.IdleTimeout = TimeSpan.FromHours(8); 		
 		options.Cookie.HttpOnly = true; // Make the session cookie HttpOnly
 		options.Cookie.IsEssential = true; // Mark the session cookie as essential
-		options.Cookie.Name = "PatientHealthRecordsEPJ"; 
+		options.Cookie.Name = "PatientHealthRecordsEPJ"; 		
 	}); 
 
 var app = builder.Build();
@@ -53,6 +58,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseSession();
+
+app.UseMiddleware<SessionActivityMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

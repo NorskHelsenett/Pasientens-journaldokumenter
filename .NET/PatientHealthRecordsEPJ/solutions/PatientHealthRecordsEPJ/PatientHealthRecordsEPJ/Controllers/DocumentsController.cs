@@ -1,7 +1,9 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic;
 using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
@@ -9,12 +11,13 @@ using System.Text.Json;
 
 namespace PatientHealthRecordsEPJ.Controllers
 {
-	public class DocumentsController : Controller
+	public class DocumentsController : BaseController
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private ISession session => _httpContextAccessor.HttpContext!.Session;
 		private readonly IMemoryCache _memoryCache;
+		private readonly IOidcClientService _oidcClientService;
 		private readonly ApiUrlSettings _apiUrlSettings;
 
 		SessionLoginResult sessionLoginResult;
@@ -36,16 +39,64 @@ namespace PatientHealthRecordsEPJ.Controllers
 			Organization = 6    // Institusjon
 		}*/
 
-		public DocumentsController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache, ApiUrlSettings apiUrlSettings)
+		public DocumentsController(
+			IOptions<SessionOptions> sessionOptions,
+			ILogger<HomeController> logger, 
+			IHttpContextAccessor httpContextAccessor, 
+			IMemoryCache memoryCache, 
+			ApiUrlSettings apiUrlSettings, 
+			IOidcClientService oidcClientService) : base(sessionOptions)
 		{
 			_logger = logger;
 			_httpContextAccessor = httpContextAccessor;
 			_memoryCache = memoryCache;
 			_apiUrlSettings = apiUrlSettings;
+			_oidcClientService = oidcClientService;
+		}
+
+		private string GetRedirectUrl()
+		{
+#if DEBUG
+			var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
+#else
+			var redirectUrl = TestRedirectUrl; 
+#endif
+			return redirectUrl;
+		}
+
+		public async Task<IActionResult> RefreshToken()
+		{
+			var redirectUrl = GetRedirectUrl(); 
+
+			await _oidcClientService.InitializeAsync(redirectUrl); 
+
+			var loginResult = session.SessionLoginResult();
+
+			var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
+			
+			if (result.IsError)
+			{
+				throw new Exception($"{result.Error}: {result.ErrorDescription}");
+			}
+
+			loginResult.AccessToken = result.AccessToken;
+			loginResult.RefreshToken = result.RefreshToken;
+			loginResult.SaveToSession(session); 
+
+			return Ok(result.AccessToken);
 		}
 
 		public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date")
 		{
+			var loginResult = session.SessionLoginResult();
+
+			if (loginResult.AccessToken == null)
+			{				
+				return Redirect("/");
+			}
+
+			await RefreshToken(); 
+
 			sessionLoginResult = session.SessionLoginResult();
 
 			if (!sessionLoginResult.IsAuthenticated)
