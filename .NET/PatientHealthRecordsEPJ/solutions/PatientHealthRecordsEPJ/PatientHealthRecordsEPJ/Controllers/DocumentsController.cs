@@ -59,7 +59,7 @@ namespace PatientHealthRecordsEPJ.Controllers
 #if DEBUG
 			var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
 #else
-			var redirectUrl = TestRedirectUrl; 
+			var redirectUrl = HomeController.TestRedirectUrl; 
 #endif
 			return redirectUrl;
 		}
