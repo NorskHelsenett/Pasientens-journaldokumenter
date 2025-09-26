@@ -1,6 +1,6 @@
 public class Constants
 {
-	public const string SessionLoginResultKey = "loginResult";
+	public const string SessionDataKey = "sessionData";
 
 	public const long KB = 1024;
 	public const long MB = KB * 1024;

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Primitives;
-
 namespace PatientHealthRecordsEPJ.Models; 
 
 public class AttestModel

@@ -3,24 +3,24 @@ using System.Text.Json;
 
 public static class SessionExtensions
 {
-	public static SessionLoginResult SessionLoginResult(this ISession session)
+	public static SessionData SessionData(this ISession session)
 	{
-		var serialized = session.GetString(Constants.SessionLoginResultKey);
+		var serialized = session.GetString(Constants.SessionDataKey);
 
 		if (!string.IsNullOrEmpty(serialized))
 		{
-			var sessionLoginResult = JsonSerializer.Deserialize<SessionLoginResult>(serialized);
+			var sessionLoginResult = JsonSerializer.Deserialize<SessionData>(serialized);
 
 			return sessionLoginResult!;
 		}
 
-		return new SessionLoginResult(); // .IsAuthenticated is false as default 
+		return new SessionData(); // .IsAuthenticated is false as default 
 	}
 
-	public static void SaveToSession(this SessionLoginResult sessionLoginResult, ISession session)
+	public static void SaveToSession(this SessionData sessionData, ISession session)
 	{
-		var serializedLoginResult = JsonSerializer.Serialize(sessionLoginResult);
+		var serializedLoginResult = JsonSerializer.Serialize(sessionData);
 
-		session.SetString(Constants.SessionLoginResultKey, serializedLoginResult);		
+		session.SetString(Constants.SessionDataKey, serializedLoginResult);		
 	}
 }

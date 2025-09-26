@@ -1,5 +1,5 @@
-using IdentityModel.Client;
-using IdentityModel.OidcClient.DPoP;
+using Duende.IdentityModel.Client;
+using Duende.IdentityModel.OidcClient.DPoP;
 using System.Net.Http.Headers;
 
 public class ApiResult

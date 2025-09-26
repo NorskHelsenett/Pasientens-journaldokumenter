@@ -1,0 +1,458 @@
+﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+@model FinalizeSubmissionViewModel
+
+<partial name="_WizardHeaderPartial" model="5" />
+
+@{
+	string SystemCodeWithColors(string codeAndSystemAndDisplay)
+	{
+		if (string.IsNullOrEmpty(codeAndSystemAndDisplay))
+			return string.Empty;
+
+		var s = codeAndSystemAndDisplay.Split("|");
+
+		var code = s[0];
+		var system = s[1];
+		var display = "";
+
+		if (s.Length > 2)
+		{
+			display = s[2];
+		}
+
+		var html = $"<span class='code'>{code}</span>|<span class='system'>{system}</span>";
+
+		if (!string.IsNullOrEmpty(display))
+		{
+			html += $"|<span class='display'>{display}</span>";
+		}
+
+		return html;
+	}
+}
+
+<style>
+
+	.table-sm tr > td:first-child {
+		width: 260px !important;
+	}
+
+	.code {
+		color: darkgoldenrod;
+	}
+
+	.system {
+		color: darkmagenta;
+	}
+
+	.display {
+		color: darkolivegreen;
+	}
+
+</style>
+
+<div class="container-fluid max">
+
+	<h3>Verify content before submission to repository - @Model.Upload.DocumentCollection.Documents.Count document(s)</h3>
+	<br />
+
+	<form method="post">
+
+		<div class="row">
+			<div class="col-lg-6">
+
+				@{
+					var index = 0;
+
+					foreach (var document in Model.Upload.DocumentCollection.Documents)
+					{
+						index++;
+
+						<div class="DocumentEntry">
+							<h5>DocumentEntry #@(index):</h5>
+							<table class="table table-sm">
+								<tr>
+									<td>Id:</td>
+									<td>@document.Metadata!.UniqueId</td>
+								</tr>
+								<tr>
+									<td>File Name:</td>
+									<td><strong>@document.Filename</strong></td>
+								</tr>
+								<tr>
+									<td>File Title:</td>
+									<td>@document.Title</td>
+								</tr>
+								<tr>
+									<td>File Creation Time:</td>
+									<td>@document.CreationTime </td>
+								</tr>
+								<tr>
+									<td>File MimeType:</td>
+									<td>@document.MimeType</td>
+								</tr>
+								<tr>
+									<td>File Content Hash (SHA1):</td>
+									<td>@BitConverter.ToString(document.Hash!).Replace("-", String.Empty)</td>
+								</tr>
+								<tr>
+									<td>File Content Language:</td>
+									<td>@document.LanguageCode</td>
+								</tr>
+								<tr>
+									<td>File Content Size:</td>
+									<td>@document.Size.ToPrettySize()</td>
+								</tr>
+							</table>
+
+							<strong>Content Metadata:</strong><br />
+
+							@foreach (var author in document.Metadata!.Authors!)
+							{
+								<table class="table table-sm">
+									<tr>
+										<td>Author:</td>
+										<td>@author.Name.ToFullName()</td>
+									</tr>
+									@if (author.InstitutionName!.Length > 0)
+									{
+
+										<tr>
+											<td>Institution:</td>
+											<td>
+												@foreach (var inst in author.InstitutionName)
+												{
+													<div>@inst.Name</div>
+												}
+											</td>
+										</tr>
+									}
+
+									@if (author.Role!.Length > 0)
+									{
+										<tr>
+											<td>Institution:</td>
+											<td>
+												@foreach (var role in author.Role)
+												{
+													<div>@role</div>
+												}
+											</td>
+										</tr>
+									}
+
+									@if (!string.IsNullOrEmpty(author.Specialty))
+									{
+										<tr>
+											<td>Specialty:</td>
+											<td>@author.Specialty</td>
+										</tr>
+									}
+
+								</table>
+
+
+							}
+							@if (document.Metadata!.LegalAuthenticator != null)
+							{
+								<div>Legal authenticator:&nbsp;</div>
+								document.Metadata!.LegalAuthenticator!.ToHl7String();
+							}
+							<br />
+							<table class="table table-sm">
+								<tr>
+									<td>Document Classification Type:</td>
+									<td>@Html.Raw(SystemCodeWithColors(document.Metadata.ClassCode))</td>
+								</tr>
+
+								<tr>
+									<td>Document Format Type:</td>
+									<td>@document.Metadata.FormatCode</td>
+								</tr>
+
+								<tr>
+									<td>Document Content Type:</td>
+									<td>@Html.Raw(SystemCodeWithColors(document.Metadata.TypeCode))</td>
+								</tr>
+
+								<tr>
+									<td>Document PatientId:</td>
+									<td>@document.Metadata.PatientId</td>
+								</tr>
+
+								<tr>
+									<td>Document SourcePatientId:</td>
+									<td>@document.Metadata.SourcePatientId</td>
+								</tr>
+
+							</table>
+
+							<br />
+							Document SourcePatientIdInfo:<br />
+
+							<table class="table table-sm">
+								<tr>
+									<td>&nbsp;&nbsp;&nbsp;Patient's family name:</td>
+									<td>@document.Metadata!.SourcePatientInfo!.Name!.FamilyName</td>
+								</tr>
+								<tr>
+									<td>&nbsp;&nbsp;&nbsp;Patient's first name:</td>
+									<td>@document.Metadata!.SourcePatientInfo!.Name!.FirstName</td>
+								</tr>
+								<tr>
+									<td>&nbsp;&nbsp;&nbsp;Patient's middle name:</td>
+									<td>@document.Metadata!.SourcePatientInfo!.Name!.MiddleName</td>
+								</tr>
+								<tr>
+									<td>&nbsp;&nbsp;&nbsp;Patient's gender: </td>
+									<td>@document.Metadata!.SourcePatientInfo!.Gender</td>
+								</tr>
+								<tr>
+									<td>&nbsp;&nbsp;&nbsp;Patient's date of birth:</td>
+									<td>@document.Metadata!.SourcePatientInfo!.DateOfBirth</td>
+								</tr>
+
+							</table>
+
+							<table class="table table-sm">
+								@if (document.Metadata!.ConfidentialityCodeList!.Count > 0)
+								{
+									<tr>
+										<td>Document Sensitivity:</td>
+										<td>
+											<div style="background-color:#eee;padding:5px;border-radius:6px">
+												@{
+													@foreach (var confCode in document.Metadata!.ConfidentialityCodeList!)
+													{
+														<div>@Html.Raw(SystemCodeWithColors(confCode))</div>
+													}
+												}
+											</div>
+										</td>
+									</tr>
+								}
+								<tr>
+									<td>Healthcare Facility Type:</td>
+									<td>@Html.Raw(SystemCodeWithColors(document.Metadata!.HealthCareFacilityType))</td>
+								</tr>
+								<tr>
+									<td>Practice Setting Code:</td>
+									<td>@Html.Raw(SystemCodeWithColors(document.Metadata!.PracticeSettingCode))</td>
+								</tr>
+								<tr>
+									<td>Service Start:</td>
+									<td>@document.Metadata!.ServiceStartTime</td>
+								</tr>
+
+								<tr>
+									<td>Service End:</td>
+									<td>@document.Metadata!.ServiceStopTime</td>
+								</tr>
+							</table>
+
+
+							@if (document.Metadata!.EventCodeList!.Count > 0)
+							{
+								<text>EventCodes</text>
+
+								<br />
+								foreach (var evCode in document.Metadata!.EventCodeList)
+								{
+									<text>&nbsp; - @evCode</text>
+
+									<br />
+								}
+								<br />
+							}
+							@if (!String.IsNullOrEmpty(document.Metadata!.Comment))
+							{
+								<text>Document comment: @document.Metadata.Comment</text>
+
+								<br />
+							}
+
+							@*     The <rim:RegistryObjectList> element shall contain:
+
+One rim:RegistryPackage for the Submission Set
+One rim:ExtrinsicObject for each DocumentEntry in the Submission Request
+One rim:Association for each Association in the Submission Request
+One rim:RegistryPackage for each Folder in the Submission Request *@
+						</div>
+
+						<br />
+						<hr />
+
+					}
+				}
+			</div>
+			@* <br />
+			<br /> *@
+
+			<div class="col-lg-6">
+				<div id="Submission">
+					<h5>SubmissionSet:</h5><br />
+					<table class="table table-sm">
+						<tr>
+							<td>Id:</td>
+							<td>@Model.Upload.Submission.UniqueId</td>
+						</tr>
+						<tr>
+							<td>Submission Title: </td>
+							<td>@Model.Upload.Submission.Title</td>
+						</tr>
+						<tr>
+							<td>Submission Time:</td>
+							<td>@Model.Upload.Submission.SubmissionTime</td>
+						</tr>
+						<tr>
+							<td>Submission SourceId:</td>
+							<td>@Model.Upload.Submission.SourceId</td>
+						</tr>
+						<tr>
+							<td>PatientId:</td>
+							<td>@Model.Upload.Submission.PatientId</td>
+						</tr>
+						<tr>
+							<td>Document Availability Status:</td>
+							<td>@Model.Upload.Submission.AvailabilityStatus</td>
+						</tr>
+					</table>
+					<br />
+
+					@if (Model.Upload.Submission.Author.Count > 0)
+					{
+						<table class="table table-sm">
+							@foreach (var author in Model.Upload.Submission.Author!)
+							{
+								<tr>
+									<td>Submission Author:</td>
+									<td>
+										@author.Name.ToFullName()
+									</td>
+								</tr>
+							}
+						</table>
+					}
+
+					@if (!String.IsNullOrEmpty(Model.Upload.Submission.Comments))
+					{
+						<div><strong>Submission comment:</strong> </div>
+						<div style="background-color:#eee;padding:10px;border-radius:8px">
+							@Model.Upload.Submission.Comments
+						</div>
+
+						<br />
+					}
+				</div>
+				<div id="Association">
+					<h5>Association:</h5><br />
+					@if (Model.Upload.Association != null)
+					{
+						<table class="table table-sm">
+							<tr>
+								<td>Id:</td>
+								<td>@Model.Upload.Association.Id</td>
+							</tr>
+							<tr>
+								<td>Association Type:</td>
+								<td>@Model.Upload.Association.Type</td>
+							</tr>
+							<tr>
+								<td>Source object Id:</td>
+								<td>@Model.Upload.Association.SourceObject</td>
+							</tr>
+							<tr>
+								<td>Target object Id:</td>
+								<td>@Model.Upload.Association.TargetObject</td>
+							</tr>
+
+							@if (Model.Upload.Association.Status != "")
+							{
+								<tr>
+									<td>Status:</td>
+									<td>@Model.Upload.Association.Status</td>
+								</tr>
+							}
+
+						</table>
+						<br />
+					}
+					else
+					{
+						@* <div>Document(s) will be uploaded as <strong> new documents</strong>. Future functionality may provide: <span style="color:darkgoldenrod"><em>replace, tranform, add to existing, sign, snapshot </em></span></div> *@
+						<div>Document(s) will not be related to any others. Future functionality may provide: <span style="color:darkgoldenrod"><em>replace, tranform, add to existing, sign, snapshot </em></span></div>
+					}
+
+
+				</div>
+			</div>
+
+			@{
+				// Create document-object
+				//var bundleDocument = BundleCreator.CreateFhirBundle(Model, "Comprehensive");
+			}
+
+			@* @message
+		<br />
+		<button class="btn btn-outline-success" @onclick ="() => RegisterBundleAsync(bundleDocument)">Register current dataset</button>
+		<br /> *@
+
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+
+				<br />
+				<h5>Created FHIR JSON bundle, ready for submission: (<a asp-action="ViewJsonFhirBundle" target="_blank">Open in new tab</a>)</h5>
+
+				<textarea class="w-100 normal" rows="20">@Model.JsonBundleDocument</textarea>
+
+				@* <div class="textarea-container">
+						<pre class="highlighted" aria-hidden="true"></pre>
+						<textarea class="textarea w-100" rows="50">@Model.JsonBundleDocument</textarea>
+					</div> *@
+
+
+			</div>
+		</div>
+
+		<partial name="_PrevNextPartial" />
+
+
+	</form>
+</div>
+
+@* <script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+
+	textarea.addEventListener('input', updateHighlighting);
+	textarea.addEventListener('scroll', syncScroll);
+
+	function updateHighlighting() {
+		const xml = textarea.value;
+		highlighted.innerHTML = applySyntaxHighlighting(xml);
+	}
+
+	function applySyntaxHighlighting(xml) {
+		return xml.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+				return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+			});
+	}
+
+	function highlightAttributes(attributes) {
+		return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+			return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+		});
+	}
+
+	function syncScroll() {
+		highlighted.scrollTop = textarea.scrollTop;
+		highlighted.scrollLeft = textarea.scrollLeft;
+	}
+
+	// Initialize highlighting
+	updateHighlighting();
+</script> *@

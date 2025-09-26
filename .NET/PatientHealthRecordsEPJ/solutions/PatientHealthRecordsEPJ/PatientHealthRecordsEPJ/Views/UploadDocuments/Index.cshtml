@@ -1,0 +1,17 @@
+﻿@model HomeViewModel
+
+@{	
+	var sessionLoginResult = Context.Session.SessionData();
+}
+
+
+@if (!sessionLoginResult.IsAuthenticated)
+{
+
+}
+else
+{
+
+    <partial name="_WizardHeaderPartial" />
+}
+

@@ -1,0 +1,135 @@
+﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+@model DocumentMetadataViewModel
+
+@{
+	//var = Model.Upload;
+}
+
+<partial name="_WizardHeaderPartial" model="3" />
+
+<div class="container-fluid max">
+	<h4><i id="AR1O9DG8K4UJM" class="bi bi-file-earmark-medical-fill fs-1 text-primary"></i> Select file(s) which should be uploaded to document repository:</h4>
+
+	<form method="post" asp-action="UploadFiles" enctype="multipart/form-data">
+		<div class="row mb-3">
+			<label for="file" class="col-sm-2 col-form-label">File(s):</label>
+			<div class="col-sm-10">
+				<input type="file" class="form-control" id="file" name="file">
+			</div>
+		</div>
+
+		<input type="hidden" id="fileCreationDate" name="fileCreationDate"> <!-- This is set with the Javascript snippet at the bottom -->
+		<button type="submit" class="btn btn-primary">Submit</button>
+	</form>
+
+	<br />
+
+	<form method="post">
+		<h4><i id="AR1O9DG8K4UJM" class="bi bi-file-earmark-medical-fill fs-1 text-primary"></i> Document's metadata:</h4>
+
+		<!-- Filename -->
+		<div class="row mb-3">
+			<label for="inputFilename" class="col-sm-2 col-form-label">Filename:</label>
+			<div class="col-sm-10">
+				@* <input type="password" class="form-control" id="inputPassword3"> *@
+				<input asp-for="SelectedDocument.Filename" type="text" class="form-control" id="inputFilename">
+			</div>
+		</div>
+
+		<!-- Title -->
+		<div class="row mb-3">
+			<label for="inputTitle" class="col-sm-2 col-form-label">Title:</label>
+			<div class="col-sm-10">
+				@* <input type="password" class="form-control" id="inputPassword3"> *@
+				<input asp-for="SelectedDocument.Title" type="text" class="form-control" id="inputTitle">
+			</div>
+		</div>
+
+		<!-- Date created -->
+		<div class="row mb-3">
+			<label for="inputCreationTime" class="col-sm-2 col-form-label">Created: </label>
+			<div class="col-sm-10">
+				<input asp-for="SelectedDocument.CreationTime" type="date" class="form-control" id="inputCreationTime">
+			</div>
+		</div>
+
+		<!-- Size -->
+
+		<input type="hidden" asp-for="SelectedDocument.Size" />
+
+		<div class="row mb-3">
+			<label for="inputPassword3" class="col-sm-2 col-form-label">Size:</label>
+			<div class="col-sm-10">
+				@Model.SelectedDocument?.Size.ToPrettySize()
+			</div>
+		</div>
+
+		<!-- Content Hash -->
+
+		<input type="hidden" asp-for="SelectedDocument.Hash" />
+
+		<div class="row mb-3">
+			<label for="inputPassword3" class="col-sm-2 col-form-label">Content # (SHA1):</label>
+			<div class="col-sm-10">
+				@if (Model.SelectedDocument?.Hash != null)
+				{
+					<div>
+						@BitConverter.ToString(Model.SelectedDocument.Hash!).Replace("-", String.Empty)
+					</div>
+				}
+			</div>
+		</div>
+
+		<!-- MimeType -->
+		<div class="row mb-3">
+			<label for="inputPassword3" class="col-sm-2 col-form-label">Media type (mime-type):</label>
+			<div class="col-sm-10">
+				<select asp-for="SelectedDocument.MimeType"
+						asp-items="Model.SelectMimeTypeList"
+						class="form-control">
+					<option value="">-- Select file format --</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- FormatCode -->
+		<div class="row mb-3">
+			<label for="inputPassword3" class="col-sm-2 col-form-label">Composition format:</label>
+			<div class="col-sm-10">
+				<select asp-for="SelectedDocument.Metadata.FormatCode"
+						asp-items="Model.SelectCompositionFormatList"
+						class="form-control">
+					<option value="">-- Select composition file format --</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Language -->
+		<div class="row mb-3">
+			<label for="inputPassword3" class="col-sm-2 col-form-label">Language:</label>
+			<div class="col-sm-10">
+				<select asp-for="SelectedDocument.LanguageCode"
+						asp-items="Model.SelectLanguageList"
+						class="form-control">
+					<option value="">-- Select language --</option>
+				</select>
+			</div>
+		</div>
+
+		<partial name="_PrevNextPartial" />
+
+	</form>
+</div>
+
+<script>
+	document.getElementById('file').addEventListener('change', function (event) {
+		const file = event.target.files[0];
+		if (file) {
+			// Browser exposes *last modified* timestamp, not original creation date.
+			// This comes from the OS metadata available to the browser.
+			const lastModified = new Date(file.lastModified);
+			console.log("lastModified" + lastModified);
+			document.getElementById('fileCreationDate').value = lastModified.toISOString();
+		}
+	});
+</script>

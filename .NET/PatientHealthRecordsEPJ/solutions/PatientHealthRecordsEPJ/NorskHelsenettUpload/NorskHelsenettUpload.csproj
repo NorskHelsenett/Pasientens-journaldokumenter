@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Hl7.Fhir.R4B" Version="5.12.1" />
+		<PackageReference Include="Hl7.Fhir.Serialization" Version="4.3.0" />
+	</ItemGroup>
+
+</Project>

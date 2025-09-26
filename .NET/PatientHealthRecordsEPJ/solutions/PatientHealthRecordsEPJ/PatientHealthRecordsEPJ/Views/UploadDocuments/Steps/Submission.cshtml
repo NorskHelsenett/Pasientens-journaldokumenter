@@ -1,0 +1,76 @@
+﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+@model SubmissionViewModel
+
+<partial name="_WizardHeaderPartial" model="4" />
+
+<div class="container-fluid max">
+
+	<form method="post">		
+			<h4>
+			@* 	<i class="bi bi-person-hearts fs-1 text-primary"></i> Register Metadata for Submission *@
+			<i class="bi bi-database fs-1 text-primary"></i> Register Metadata for Submission
+			</h4>
+
+		<div class="row mb-3">
+			<label for="inputAvailabilityStatus" class="col-sm-2 col-form-label">Availability Status:</label>
+			<div class="col-sm-10">
+				@* <input type="email" class="form-control" id="inputEmail3"> *@
+				<select asp-for="Submission.AvailabilityStatus"
+						asp-items="Model.SelectAvailabilityStatusList"
+						class="form-control">
+					<option value="">-- Select availability status --</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label for="inputSubmissionTime" class="col-sm-2 col-form-label">Submission Time:</label>
+			<div class="col-sm-10">
+				<input type="date" asp-for="Submission.SubmissionTime" class="form-control" id="inputSubmissionTime">
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label for="inputSourceId" class="col-sm-2 col-form-label">Source ID:</label>
+			<div class="col-sm-10">
+				<input type="text" asp-for="Submission.SourceId" class="form-control" id="inputSourceId">
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label for="inputPatientId" class="col-sm-2 col-form-label">Patient ID:</label>
+			<div class="col-sm-10">
+				<input type="text" asp-for="Submission.PatientId" class="form-control" id="inputPatientId">
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label for="inputTitle" class="col-sm-2 col-form-label">Title:</label>
+			<div class="col-sm-10">
+				<input type="text" asp-for="Submission.Title" class="form-control" id="inputTitle">
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label for="inputComments" class="col-sm-2 col-form-label">Comments:</label>
+			<div class="col-sm-10">
+				@* <input type="text" class="form-control" id="inputComments"> *@
+				<textarea asp-for="Submission.Comments" rows="10" cols="60" class="form-control"></textarea>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label for="inputAuthors" class="col-sm-2 col-form-label">Author(s):</label>
+			<div class="col-sm-10">
+				@* <input type="text" asp-for="Submission.Author[0].Name" class="form-control" id="inputAuthors"> *@
+				@* <input type="text"  class="form-control" id="inputAuthors"> *@
+				<input type="text" asp-for="AuthorName" class="form-control" id="inputAuthors">
+			</div>
+		</div>
+	
+
+		<partial name="_PrevNextPartial" />
+
+	</form>
+</div>
+

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Mapper.Xml;
 using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
@@ -8,237 +9,236 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace PatientHealthRecordsEPJ.Controllers
+namespace PatientHealthRecordsEPJ.Controllers; 
+
+public class DocumentController : BaseController
 {
-	public class DocumentController : BaseController
+	private readonly ILogger<HomeController> _logger;
+	private readonly IHttpContextAccessor _httpContextAccessor;
+	private ISession session => _httpContextAccessor.HttpContext!.Session;
+	private readonly IWebHostEnvironment _webHostEnvironment;
+	private readonly IOidcClientService _oidcClientService;
+
+	SessionData sessionLoginResult;
+
+	public DocumentController(
+		IOptions<SessionOptions> sessionOptions, 
+		ILogger<HomeController> logger, 
+		IHttpContextAccessor httpContextAccessor, 
+		IMemoryCache memoryCache, 
+		IWebHostEnvironment webHostEnvironment,
+		PhrApiOptions apiOptions,
+		IOidcClientService oidcClientService) : base(sessionOptions)
 	{
-		private readonly ILogger<HomeController> _logger;
-		private readonly IHttpContextAccessor _httpContextAccessor;
-		private ISession session => _httpContextAccessor.HttpContext!.Session;
-		private readonly IWebHostEnvironment _webHostEnvironment;
-		private readonly IOidcClientService _oidcClientService;
+		_logger = logger;
+		_httpContextAccessor = httpContextAccessor;
+		_webHostEnvironment = webHostEnvironment;
+		_oidcClientService = oidcClientService;
+	}
 
-		SessionLoginResult sessionLoginResult;
-
-		public DocumentController(
-			IOptions<SessionOptions> sessionOptions, 
-			ILogger<HomeController> logger, 
-			IHttpContextAccessor httpContextAccessor, 
-			IMemoryCache memoryCache, 
-			IWebHostEnvironment webHostEnvironment, 
-			ApiUrlSettings apiUrlSettings, 
-			IOidcClientService oidcClientService) : base(sessionOptions)
-		{
-			_logger = logger;
-			_httpContextAccessor = httpContextAccessor;
-			_webHostEnvironment = webHostEnvironment;
-			_oidcClientService = oidcClientService;
-		}
-
-		private string GetRedirectUrl()
-		{
+	private string GetRedirectUrl()
+	{
 #if DEBUG
-			var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
+		var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
 #else
-			var redirectUrl = HomeController.TestRedirectUrl; 
+		var redirectUrl = HomeController.TestRedirectUrl; 
 #endif
-			return redirectUrl;
+		return redirectUrl;
+	}
+
+	public async Task<IActionResult> RefreshToken()
+	{
+		var redirectUrl = GetRedirectUrl();
+
+		await _oidcClientService.InitializeAsync(redirectUrl);
+
+		var loginResult = session.SessionData();
+
+		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
+
+		if (result.IsError)
+		{
+			throw new Exception($"{result.Error}: {result.ErrorDescription}");
 		}
 
-		public async Task<IActionResult> RefreshToken()
+		loginResult.AccessToken = result.AccessToken;
+		loginResult.RefreshToken = result.RefreshToken;
+		loginResult.SaveToSession(session);
+
+		return Ok(result.AccessToken);
+	}
+
+	public async Task<IActionResult> Index(string url)
+	{
+		var loginResult = session.SessionData();
+
+		if (loginResult.AccessToken == null)
 		{
-			var redirectUrl = GetRedirectUrl();
-
-			await _oidcClientService.InitializeAsync(redirectUrl);
-
-			var loginResult = session.SessionLoginResult();
-
-			var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-
-			if (result.IsError)
-			{
-				throw new Exception($"{result.Error}: {result.ErrorDescription}");
-			}
-
-			loginResult.AccessToken = result.AccessToken;
-			loginResult.RefreshToken = result.RefreshToken;
-			loginResult.SaveToSession(session);
-
-			return Ok(result.AccessToken);
+			return Redirect("/");
 		}
 
-		public async Task<IActionResult> Index(string url)
+		await RefreshToken();
+
+		sessionLoginResult = session.SessionData();
+
+		if (!sessionLoginResult.IsAuthenticated)
+			return Redirect("/");
+
+		var model = await GetDocument(sessionLoginResult.PatientId!, url);
+
+		return View(model);
+	}
+
+	private async Task<GetDocumentViewModel> GetDocument(
+		string patient,
+		string url
+		)
+	{
+		GetDocumentViewModel model = new GetDocumentViewModel();
+
+		// We send the patient Id in the header as X-Patient-Id to avoid having the patient Id in the URL.             
+		var headerKeyValues = new List<KeyValuePair<string, string>>()
 		{
-			var loginResult = session.SessionLoginResult();
+			new KeyValuePair<string, string>("nhn-patient-nin", patient),
+			new KeyValuePair<string, string>("nhn-source-system", patient),
+			new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())
+		};
 
-			if (loginResult.AccessToken == null)
-			{
-				return Redirect("/");
-			}
+		var apiResult = await ApiCaller.CallApi("GET", url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
 
-			await RefreshToken();
-
-			sessionLoginResult = session.SessionLoginResult();
-
-			if (!sessionLoginResult.IsAuthenticated)
-				return Redirect("/");
-
-			var model = await GetDocument(sessionLoginResult.PatientId!, url);
-
-			return View(model);
-		}
-
-		private async Task<GetDocumentViewModel> GetDocument(
-			string patient,
-			string url
-			)
+		if (apiResult.IsSuccess)
 		{
-			GetDocumentViewModel model = new GetDocumentViewModel();
-
-			// We send the patient Id in the header as X-Patient-Id to avoid having the patient Id in the URL.             
-			var headerKeyValues = new List<KeyValuePair<string, string>>()
+			try
 			{
-				new KeyValuePair<string, string>("nhn-patient-nin", patient),
-				new KeyValuePair<string, string>("nhn-source-system", patient),
-				new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())
-			};
-
-			var apiResult = await ApiCaller.CallApi("GET", url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
-
-			if (apiResult.IsSuccess)
-			{
-				try
+				switch (apiResult.ContentType)
 				{
-					switch (apiResult.ContentType)
-					{
-						case "application/xml":
+					case "application/xml":
 
-							var xml = Encoding.UTF8.GetString(apiResult.Data!);
+						var xml = Encoding.UTF8.GetString(apiResult.Data!);
 
-							XmlDocument doc = new XmlDocument();
+						XmlDocument doc = new XmlDocument();
 
-							doc.LoadXml(xml);
+						doc.LoadXml(xml);
 
-							if (doc.DocumentElement!.Name == "ClinicalDocument")
+						if (doc.DocumentElement!.Name == "ClinicalDocument")
+						{
+							// TODO: in a real application you could properly deserialize the clinical document. 
+							// As an example we just read the base64 encoded PDF string, or the KITH xml string
+
+							var namespaceManager = new XmlNamespaceManager(doc.NameTable);
+							namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
+
+							var textNode = doc.DocumentElement!.SelectSingleNode("//hl7:component/hl7:nonXMLBody/hl7:text", namespaceManager);
+
+							if (textNode is not null)
 							{
-								// TODO: in a real application you could properly deserialize the clinical document. 
-								// As an example we just read the base64 encoded PDF string, or the KITH xml string
+								var mediaType = textNode.Attributes["mediaType"]?.Value;
+								var representation = textNode.Attributes["representation"]?.Value;
 
-								var namespaceManager = new XmlNamespaceManager(doc.NameTable);
-								namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
-
-								var textNode = doc.DocumentElement!.SelectSingleNode("//hl7:component/hl7:nonXMLBody/hl7:text", namespaceManager);
-
-								if (textNode is not null)
+								if (mediaType == "application/pdf" && representation == "B64")
 								{
-									var mediaType = textNode.Attributes["mediaType"]?.Value;
-									var representation = textNode.Attributes["representation"]?.Value;
+									model.PdfBase64String = textNode.InnerText;
+									model.ContentType = "application/pdf";
 
-									if (mediaType == "application/pdf" && representation == "B64")
-									{
-										model.PdfBase64String = textNode.InnerText;
-										model.ContentType = "application/pdf";
+									// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
+									// "DownloadPdf" action method and point the IFRAME src to that instead? 
+									//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
+									
+									textNode.InnerText = "...removed for display...";
 
-										// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
-										// "DownloadPdf" action method and point the IFRAME src to that instead? 
-										//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
-										
-										textNode.InnerText = "...removed for display...";
+									model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
+									model.IsShowClinicalDocumentXml = true;										
 
-										model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
-										model.IsShowClinicalDocumentXml = true;										
+									model.IsSuccess = true;
 
-										model.IsSuccess = true;
+									return model;
+								}
+								else if (mediaType == "application/xml")
+								{
+									// Extract KITH xml from ClinicalDocument
 
-										return model;
-									}
-									else if (mediaType == "application/xml")
-									{
-										// Extract KITH xml from ClinicalDocument
+									xml = string.Empty; 
+									
+									xml = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
 
-										xml = string.Empty; 
-										
-										xml = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
+									doc.LoadXml(xml); 
 
-										doc.LoadXml(xml); 
-
-										// Fall through to displaying KITH xml below
-									}
+									// Fall through to displaying KITH xml below
 								}
 							}
-							
-							// The following code is run whether the document is an XML (kith) directly, or if it's an XML extracted from ClinicalDocument
+						}
+						
+						// The following code is run whether the document is an XML (kith) directly, or if it's an XML extracted from ClinicalDocument
 
-							var ns = doc.DocumentElement!.NamespaceURI;
+						var ns = doc.DocumentElement!.NamespaceURI;
 
-							var xslFilename = Path.Combine(_webHostEnvironment.ContentRootPath, "Resources", XslLocations.GetXslLocation(ns));
+						var xslFilename = Path.Combine(_webHostEnvironment.ContentRootPath, "Resources", XslLocations.GetXslLocation(ns));
 
-							XmlTemplate xmlTemplate = new XmlTemplate(xslFilename);
+						XmlTemplate xmlTemplate = new XmlTemplate(xslFilename);
 
-							var html = xmlTemplate.Transform(xml);
+						var html = xmlTemplate.Transform(xml);
 
-							model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
+						model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
 
-							model.ContentType = "application/xml";
+						model.ContentType = "application/xml";
 
-							model.IsSuccess = true;
-							
+						model.IsSuccess = true;
+						
 
-							break;
+						break;
 
-						case "application/pdf": // PDF not from within a ClinicalDocument
-							model.PdfBase64String = Convert.ToBase64String(apiResult.Data!);
-							model.ContentType = "application/pdf";
-							model.IsSuccess = true;
-							break;
+					case "application/pdf": // PDF not from within a ClinicalDocument
+						model.PdfBase64String = Convert.ToBase64String(apiResult.Data!);
+						model.ContentType = "application/pdf";
+						model.IsSuccess = true;
+						break;
 
-						default:
-							break;
-					}
-
-					return model;
+					default:
+						break;
 				}
-				catch (Hl7.Fhir.Serialization.DeserializationFailedException e)
-				{
-					foreach (var ex in e.Exceptions)
-					{
-						Debug.WriteLine(ex.Message);
-					}
 
-					model.IsSuccess = false;
-					model.ErrorMessage = "Could not retreive document";
-					return model;
-				}
+				return model;
 			}
-			else
+			catch (Hl7.Fhir.Serialization.DeserializationFailedException e)
 			{
+				foreach (var ex in e.Exceptions)
+				{
+					Debug.WriteLine(ex.Message);
+				}
+
 				model.IsSuccess = false;
 				model.ErrorMessage = "Could not retreive document";
 				return model;
 			}
 		}
-
-		public static string PrettyPrintXml(string xml)
+		else
 		{
-			// Load the XML string into an XDocument
-			XDocument xDocument = XDocument.Parse(xml);
+			model.IsSuccess = false;
+			model.ErrorMessage = "Could not retreive document";
+			return model;
+		}
+	}
 
-			// Use an XmlWriter with settings to format the XML
-			XmlWriterSettings settings = new XmlWriterSettings
-			{
-				Indent = true,
-				IndentChars = "  ", // You can customize the indentation here
-				NewLineChars = Environment.NewLine,
-				NewLineHandling = NewLineHandling.Replace
-			};
+	public static string PrettyPrintXml(string xml)
+	{
+		// Load the XML string into an XDocument
+		XDocument xDocument = XDocument.Parse(xml);
 
-			using (var stringWriter = new System.IO.StringWriter())
-			using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, settings))
-			{
-				xDocument.WriteTo(xmlWriter);
-				xmlWriter.Flush();
-				return stringWriter.GetStringBuilder().ToString();
-			}
+		// Use an XmlWriter with settings to format the XML
+		XmlWriterSettings settings = new XmlWriterSettings
+		{
+			Indent = true,
+			IndentChars = "  ", // You can customize the indentation here
+			NewLineChars = Environment.NewLine,
+			NewLineHandling = NewLineHandling.Replace
+		};
+
+		using (var stringWriter = new System.IO.StringWriter())
+		using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, settings))
+		{
+			xDocument.WriteTo(xmlWriter);
+			xmlWriter.Flush();
+			return stringWriter.GetStringBuilder().ToString();
 		}
 	}
 }

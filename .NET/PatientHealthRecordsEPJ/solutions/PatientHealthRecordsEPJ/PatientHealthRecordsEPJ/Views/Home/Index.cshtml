@@ -1,17 +1,11 @@
-﻿@inject IHttpContextAccessor _httpContextAccessor
-
-@model HomeViewModel
+﻿@model HomeViewModel
 
 @{
-	ISession session = _httpContextAccessor.HttpContext!.Session;
-
-
-
-	var sessionLoginResult = session.SessionLoginResult();
+	var sessionData = Context.Session.SessionData();
 }
 
 
-@if (!sessionLoginResult.IsAuthenticated)
+@if (!sessionData.IsAuthenticated)
 
 {
 	@if (string.IsNullOrEmpty(Model.AttestJson))
@@ -22,7 +16,7 @@
 
 				<div class="row">
 					<div class="col-md-12">
-						<h5>1. Velg miljø (kun test er tilgjengelig): </h5>
+						<h5>1. Velg miljø (TEST og QA er tilgjengelig): </h5>
 
 						<div>
 							<select asp-for="EnvironmentId"
@@ -152,32 +146,32 @@ else
 			<div class="col-md-12">
 
 				<div class="text-center fs-3">
-					Bruker: @sessionLoginResult.Name (@sessionLoginResult.PersonId)&nbsp;&nbsp;&nbsp; Autorisasjon: @sessionLoginResult.AuthorizationName
+					Bruker: @sessionData.Name (@sessionData.PersonId)&nbsp;&nbsp;&nbsp; Autorisasjon: @sessionData.AuthorizationName
 				</div>
 
 				<div class="text-center fs-3">
 					Pasient:
-					@if (string.IsNullOrEmpty(sessionLoginResult.PatientName))
+					@if (string.IsNullOrEmpty(sessionData.PatientName))
 					{
 						<span>
-							@sessionLoginResult.PatientId
+							@sessionData.PatientId
 						</span>
 					}
 					else
 					{
-						<span>@sessionLoginResult.PatientName (@sessionLoginResult.PatientId)</span>
+						<span>@sessionData.PatientName (@sessionData.PatientId)</span>
 					}
 
 				</div>
 
 				<div class="text-center fs-3">
-					Lovverk/scope for å hente dokumentliste: @sessionLoginResult.DocumentListScopeName
+					Lovverk/scope for å hente dokumentliste: @sessionData.DocumentListScopeName
 				</div>
 
-				@if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+				@if (sessionData.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
 				{
 					<div class="text-center fs-3">
-						Grunnlag: @sessionLoginResult.GrunnlagName
+						Grunnlag: @sessionData.GrunnlagName
 					</div>
 				}
 				else
@@ -187,8 +181,9 @@ else
 
 				<div class="text-center fs-3">
 					<p>
-						<a asp-action="pasientvalg" class="btn btn-primary"> &larr; Bytt pasient </a>
-						<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionLoginResult.EnvironmentName</a>
+						<a asp-asp-controller="patient" asp-controller="patient" asp-action="pasientvalg" class="btn btn-primary"> &larr; Bytt pasient </a>
+						<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName</a>
+						<a href="/UploadDocuments" class="btn btn-primary">Last opp dokumenter til nasjonalt lager i @sessionData.EnvironmentName</a>
 					</p>
 				</div>
 			</div>

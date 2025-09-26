@@ -1,0 +1,48 @@
+﻿@{
+	var root = "/uploaddocuments/"; 
+
+	List<string> steps = ["patient", "uploaddocument", "classification", "submission", "finalizesubmission", "submissionconfirmation"];
+
+	var path = Context.Request.Path.ToString().ToLower().Replace(root, "");
+
+	var stepIndex = steps.FindIndex(step => step == path); 
+
+	var prev = "";
+	var next = "";
+
+	var prevDisabled = false;
+	var nextDisabled = false;
+
+	if (stepIndex == 0)
+	{
+		prevDisabled = true;
+		next = steps[stepIndex + 1]; 
+	}
+	else if (stepIndex == steps.Count - 1)
+	{
+		nextDisabled = true;
+		prev = steps[stepIndex - 1];
+	}
+	else
+	{
+		prev = steps[stepIndex - 1];
+		next = steps[stepIndex + 1];
+	}		
+
+	var buttonPrevText = "Forrige"; 
+	//var buttonNextText = next == "submissionconfirmation" ? "    Register current dataset    " : "Neste";
+	var buttonNextText = next == "submissionconfirmation" ? "    Register document submission set    " : "Neste";
+	var buttonNextClass = next == "submissionconfirmation" ? "btn-lg" : ""; 
+}
+
+<div class="container-fluid d-flex justify-content-end max">
+	@* <a href="@prev" class="btn btn-primary me-2">Forrige &larr;</a>
+	<a href="@next" class="btn btn-primary">Neste &rarr;</a> *@
+
+	<button type="submit" name="navButton" value="Previous" class="btn btn-primary me-2">
+		&larr; @buttonPrevText
+	</button>
+	
+	<button type="submit" name="navButton" value="Next" class="btn btn-primary @buttonNextClass ">@buttonNextText &rarr;</button>
+</div>
+

@@ -1,7 +1,7 @@
-﻿using IdentityModel.Client;
-using IdentityModel.OidcClient;
-using IdentityModel.OidcClient.DPoP;
-using IdentityModel.OidcClient.Results;
+﻿using Duende.IdentityModel.Client;
+using Duende.IdentityModel.OidcClient;
+using Duende.IdentityModel.OidcClient.DPoP;
+using Duende.IdentityModel.OidcClient.Results;
 using PatientHealthRecordsEPJ.Controllers;
 
 namespace PatientHealthRecordsEPJ; 
@@ -50,7 +50,7 @@ public class OidcClientService : IOidcClientService
 			ClientId = HomeController.ClientId,
 			RedirectUri = redirectUrl,
 			LoadProfile = false,
-			IdentityTokenValidator = new JwtHandlerIdentityTokenValidator(),
+			//IdentityTokenValidator = new JwtHandlerIdentityTokenValidator(),
 		};
 
 		options.ConfigureDPoP(Constants.JwkPrivateKey);

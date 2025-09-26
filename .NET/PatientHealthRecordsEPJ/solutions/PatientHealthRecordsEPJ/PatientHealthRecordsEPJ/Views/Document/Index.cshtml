@@ -1,13 +1,9 @@
-﻿@inject IHttpContextAccessor _httpContextAccessor
-
-@using Hl7.Fhir.Model
+﻿@using Hl7.Fhir.Model
 
 @model GetDocumentViewModel
 
-@{
-	ISession session = _httpContextAccessor.HttpContext!.Session;
-
-	var sessionLoginResult = session.SessionLoginResult();
+@{	
+	var sessionData = Context.Session.SessionData();
 }
 
 <style>
@@ -66,7 +62,7 @@
 
 			<h5>Innlogget som:</h5>
 			<div>
-				<h6>@sessionLoginResult.Name / @sessionLoginResult.AuthorizationName - @sessionLoginResult.OrganizationName</h6>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
 			</div>
 		</div>
 
@@ -75,7 +71,7 @@
 			<h5>Pasient:</h5>
 
 			<div>
-				<h6>@sessionLoginResult.PatientName <span style="font-size:14px;">(@sessionLoginResult.PatientId) @* / Kvinne (33 år) *@</span></h6>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
 			</div>
 		</div>
 	</div>

@@ -1,3 +1,10 @@
+public enum NavigationAction // Used in the wizard when uploading documents
+{
+	Previous,
+	Next
+}
+
+
 public class Pagination
 {
     public int TotalCount { get; set; }

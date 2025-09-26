@@ -1,13 +1,9 @@
-﻿@inject IHttpContextAccessor _httpContextAccessor
-
-@using Hl7.Fhir.Model
+﻿@using Hl7.Fhir.Model
 
 @model GetDocumentReferencesViewModel
 
-@{
-	ISession session = _httpContextAccessor.HttpContext!.Session;	
-
-	var sessionLoginResult = session.SessionLoginResult();	
+@{	
+	var sessionData = Context.Session.SessionData();
 }
 
 @{
@@ -174,7 +170,7 @@
 
 			<h5>Innlogget som:</h5>
 			<div>
-				<h6>@sessionLoginResult.Name / @sessionLoginResult.AuthorizationName - @sessionLoginResult.OrganizationName</h6>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
 			</div>
 		</div>
 
@@ -183,7 +179,7 @@
 			<h5>Pasient:</h5>
 
 			<div>
-				<h6>@sessionLoginResult.PatientName <span style="font-size:14px;">(@sessionLoginResult.PatientId) @* / Kvinne (33 år) *@</span></h6>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
 			</div>
 		</div>
 	</div>
@@ -538,39 +534,9 @@
 												</div>
 
 												<div>
-													@if (attachment.Size.HasValue)
-													{													
-														if (attachment.Size > Constants.GB)
-														{
-															<div>
-																@((attachment.Size.Value / Constants.GB).ToString("#0.00")) GB
-															</div>	
-														} 
-														else if (attachment.Size.Value > Constants.MB)
-														{
-															<div>
-																@((attachment.Size.Value / Constants.MB).ToString("#0.00")) MB
-															</div>	
-														} 
-														else if (attachment.Size > Constants.KB)
-														{
-															<div>
-																@((attachment.Size.Value / Constants.KB).ToString("#0.00")) KB
-															</div>
-														} 
-														else
-														{
-															<div>
-																@attachment.Size bytes
-															</div>
-														}
-													}
-													else
-													{
-														<div>
-															-
-														</div>
-													}
+													<div>
+														@attachment.Size.ToPrettySize()
+													</div>
 												</div>
 											</div>
 
