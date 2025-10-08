@@ -448,13 +448,14 @@ public class HomeController : BaseController
 
 			try
 			{
-				//var claimClientOrgNr = jsonAccessToken.Claims.Where(x => x.Type == "helseid://claims/client/claims/orgnr_parent").First()!.Value;
-				var claimClientOrgNr = jsonAccessToken.Claims.Where(x => x.Type == "helseid://claims/client/claims/orgnr_supplier").First()!.Value;
+				var claimClientOrgNr = jsonAccessToken.Claims.Where(x => x.Type == "helseid://claims/client/claims/orgnr_parent").First()!.Value;
+				//var claimClientOrgNr = jsonAccessToken.Claims.Where(x => x.Type == "helseid://claims/client/claims/orgnr_child").First()!.Value;
+				//var claimClientOrgNr = jsonAccessToken.Claims.Where(x => x.Type == "helseid://claims/client/claims/orgnr_supplier").First()!.Value;
 
 				var organization = await _organizationService.GetOrganizationByOrgNrAsync(claimClientOrgNr);
 
-				sessionData.OrganizationName = organization.name;
-				sessionData.OrganizationId = organization.id;
+				sessionData.OrganizationName = organization?.name;
+				sessionData.OrganizationId = organization?.id;
 
 				sessionData.OrgRegOrganization = organization; 
 
@@ -470,10 +471,8 @@ public class HomeController : BaseController
 			}
 			catch
 			{
-
-			}
-
-			// var givenName = loginResult.User.Claims.Where(x => x.Type == "given_name").First().Value;
+				_logger.LogError($"{nameof(HomeController)}.{nameof(Callback)}: Could not get organization details"); 
+			}			
 
 			sessionData.SaveToSession(session); 							
 		}

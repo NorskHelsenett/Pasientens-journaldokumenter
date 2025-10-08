@@ -1,14 +1,48 @@
 ﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
 @model FinalizeSubmissionViewModel
 
-<partial name="_WizardHeaderPartial" model="5" />
+@{
+	var sessionData = Context.Session.SessionData();
+}
+
+<partial name="_WizardHeaderPartial" model="7" />
 
 <div class="container-fluid max">
-
-	<h3>Success</h3>
-	<br />
-
 	
-		<partial name="_PrevNextPartial" />
+	<div class="row">
+		<div class="col-md-12">			
+
+			<h3>Dokument(ene) har blitt lastet opp. @* Document submission set has been registered successfully.  *@</h3>
+			<br />
+
+			<div class="text-center fs-3">
+				Pasient:
+				@if (string.IsNullOrEmpty(sessionData.PatientName))
+				{
+					<span>
+						@sessionData.PatientId
+					</span>
+				}
+				else
+				{
+					<span>@sessionData.PatientName (@sessionData.PatientId)</span>
+				}
+
+			</div>
+			
+			<div class="text-center fs-3">
+				<br />
+				<p>					
+					<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName</a><br />
+					<br />
+
+					<a href="/UploadDocuments" class="btn btn-primary">Last opp flere dokumenter til nasjonalt lager i @sessionData.EnvironmentName</a>
+				</p>
+			</div>
+		</div>
+	</div>
 	
+
+	<partial name="_PrevNextPartial" />
+
 </div>

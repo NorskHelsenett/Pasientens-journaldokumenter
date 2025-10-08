@@ -35,7 +35,8 @@ public class DocumentEntryMetadata
     public DateTime ServiceStartTime { get; set; }
     public DateTime ServiceStopTime { get; set; }
     public SourcePatientInfo? SourcePatientInfo { get; set; } = new();
-    [Required]
+	public ProviderOrganization? ProviderOrganization { get; set; }
+	[Required]
     public string? ClassCode { get; set; }
     [Required(AllowEmptyStrings = false, ErrorMessage = "Document MUST have at least 1 confidentiality code")]
     //public string[] ConfidentialityCodeList { get; set; } = [];
@@ -54,4 +55,6 @@ public class DocumentEntryMetadata
     //public Author[] Authors { get; set; } = [];
 	public List<Author> Authors { get; set; } = [];
 	public string? Comment { get; set; }
+	//public string? HomeCommunityId { get; set; }
+	//public string? RepositoryUniqueId { get; set; }
 }

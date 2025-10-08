@@ -8,38 +8,36 @@ namespace PatientHealthRecordsEPJ.Services;
 public class OrganizationService 
 {
 	private readonly IHttpClientFactory _httpClientFactory;
+	private readonly ILogger<OrganizationService> _logger;
 
-	public OrganizationService(IHttpClientFactory httpClientFactory)
+	public OrganizationService(IHttpClientFactory httpClientFactory, ILogger<OrganizationService> logger)
 	{
 		_httpClientFactory = httpClientFactory;
+		_logger = logger;
 	}
-
-	//[HttpGet("{identifier}")]
-	public async Task<OrgRegOrganization> GetOrganizationByOrgNrAsync(string identifier)
+	
+	public async Task<OrgRegOrganization?> GetOrganizationByOrgNrAsync(string identifier)
 	{
 		var httpClientOrganizationApi = _httpClientFactory.CreateClient("OrganizationAPI");
 
 		var apiUrl = httpClientOrganizationApi.BaseAddress + $"organization/{identifier}";
-
-		var response = await httpClientOrganizationApi.GetAsync(apiUrl);
-
-		response.EnsureSuccessStatusCode();
-
-		if (response != null)
+		//var apiUrl = httpClientOrganizationApi.BaseAddress + $"brreg/{identifier}";
+			
+		try
 		{
+			var response = await httpClientOrganizationApi.GetAsync(apiUrl);
+
 			var content = response.Content.ReadAsStringAsync();
 			var org = JsonSerializer.Deserialize<OrgRegOrganization>(content.Result);
 
-			return org; 
-			
-			//return Ok(await response.Content.ReadAsStreamAsync());
+			return org;
 		}
-		else
+		catch (Exception ex)
 		{
-			//return BadRequest($"Something went wrong when trying to retrive org.details for org.nr.#{identifier}");
-			return null; 
-		}
-
+			_logger.LogError($"Could not read organization from {apiUrl}"); 
+		}		
+		
+		return null; 
 	}
 
 	public async Task<Hl7.Fhir.Model.Organization> GetHl7OrganizationDetailsAsync(string orgIdentifier)

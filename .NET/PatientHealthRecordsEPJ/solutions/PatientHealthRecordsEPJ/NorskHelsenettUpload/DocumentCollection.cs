@@ -30,4 +30,32 @@ public class DocumentCollection
 		}
 		return this; 
 	}
+
+	public Document? SelectDocument(Guid uniqueID)
+	{
+		SelectedDocumentUniqueId = uniqueID;
+
+		return SelectedDocument; 
+	}
+
+	public Document? RemoveDocument(Guid uniqueID)
+	{
+		Documents.RemoveAll(document => document.Metadata.UniqueId == uniqueID);
+
+		if (SelectedDocumentUniqueId == uniqueID)
+		{
+			var firstDocument = Documents.FirstOrDefault();
+
+			SelectedDocumentUniqueId = firstDocument?.Metadata.UniqueId ?? null; 
+		}
+		
+		return SelectedDocument;
+	}
+
+	public void Clear()
+	{
+		Documents.Clear();
+
+		SelectedDocumentUniqueId = null; 			
+	}
 }

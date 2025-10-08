@@ -3,133 +3,189 @@
 
 @{
 	//var = Model.Upload;
+	var sessionData = Context.Session.SessionData();
 }
 
 <partial name="_WizardHeaderPartial" model="3" />
 
 <div class="container-fluid max">
-	<h4><i id="AR1O9DG8K4UJM" class="bi bi-file-earmark-medical-fill fs-1 text-primary"></i> Select file(s) which should be uploaded to document repository:</h4>
 
-	<form method="post" asp-action="UploadFiles" enctype="multipart/form-data">
-		<div class="row mb-3">
-			<label for="file" class="col-sm-2 col-form-label">File(s):</label>
-			<div class="col-sm-10">
-				<input type="file" class="form-control" id="file" name="file">
+	<div class="row">
+		<div class="col-md-5">
+			<h4><i class="bi bi-file-earmark-medical-fill fs-3 text-primary"></i> Select file(s) which should be uploaded to document repository:</h4>
+
+			<form method="post" asp-action="UploadFiles" enctype="multipart/form-data">
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-4">
+						<input type="file" multiple class="form-control" id="files" name="files">
+					</div>
+				</div>
+
+				<!-- This is set with the Javascript snippet at the bottom -->
+				<!-- This will hold an array of fileCreationDates as JSON -->
+				<input type="hidden" id="fileCreationDates" name="fileCreationDates">
+
+				<button type="submit" class="btn btn-primary">Submit - Add document(s) to submission set</button>
+			</form>
+
+			<br>
+
+		</div>
+
+		<div class="col-md-2">
+
+			<div class="fs-1 text-md-center">
+			- OR - 
 			</div>
 		</div>
 
-		<input type="hidden" id="fileCreationDate" name="fileCreationDate"> <!-- This is set with the Javascript snippet at the bottom -->
-		<button type="submit" class="btn btn-primary">Submit</button>
-	</form>
+		<div class="col-md-5">
 
-	<br />
+			<h4><i class="bi bi-shuffle fs-3 text-primary"></i> Generate random test documents (max 10)</h4>
+
+			<form method="post" asp-action="GenerateRandomTestDocuments">
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-4">
+						Number of documents: <input type="number" class="form-control" id="entriesToGenerate" name="entriesToGenerate" max="10" value="3">
+					</div>
+				</div>
+
+				<button type="submit" class="btn btn-primary">Submit - Generate random test document(s) for submission set</button>
+			</form>
+
+			<br />
+
+		</div>
+	</div>
 
 	<form method="post">
-		<h4><i id="AR1O9DG8K4UJM" class="bi bi-file-earmark-medical-fill fs-1 text-primary"></i> Document's metadata:</h4>
 
-		<!-- Filename -->
-		<div class="row mb-3">
-			<label for="inputFilename" class="col-sm-2 col-form-label">Filename:</label>
-			<div class="col-sm-10">
-				@* <input type="password" class="form-control" id="inputPassword3"> *@
-				<input asp-for="SelectedDocument.Filename" type="text" class="form-control" id="inputFilename">
-			</div>
-		</div>
+		@if (Model.SelectedDocument != null)
+		{
 
-		<!-- Title -->
-		<div class="row mb-3">
-			<label for="inputTitle" class="col-sm-2 col-form-label">Title:</label>
-			<div class="col-sm-10">
-				@* <input type="password" class="form-control" id="inputPassword3"> *@
-				<input asp-for="SelectedDocument.Title" type="text" class="form-control" id="inputTitle">
-			</div>
-		</div>
+			<div class="row">
+				<div class="col-md-4 documents">
 
-		<!-- Date created -->
-		<div class="row mb-3">
-			<label for="inputCreationTime" class="col-sm-2 col-form-label">Created: </label>
-			<div class="col-sm-10">
-				<input asp-for="SelectedDocument.CreationTime" type="date" class="form-control" id="inputCreationTime">
-			</div>
-		</div>
+					<partial name="Steps\_SelectDocument" />
 
-		<!-- Size -->
+				</div>
 
-		<input type="hidden" asp-for="SelectedDocument.Size" />
+				<div class="col-md-8">
 
-		<div class="row mb-3">
-			<label for="inputPassword3" class="col-sm-2 col-form-label">Size:</label>
-			<div class="col-sm-10">
-				@Model.SelectedDocument?.Size.ToPrettySize()
-			</div>
-		</div>
+					<h4><i id="AR1O9DG8K4UJM" class="bi bi-file-earmark-medical-fill fs-1 text-primary"></i> Document's metadata:</h4>
 
-		<!-- Content Hash -->
-
-		<input type="hidden" asp-for="SelectedDocument.Hash" />
-
-		<div class="row mb-3">
-			<label for="inputPassword3" class="col-sm-2 col-form-label">Content # (SHA1):</label>
-			<div class="col-sm-10">
-				@if (Model.SelectedDocument?.Hash != null)
-				{
-					<div>
-						@BitConverter.ToString(Model.SelectedDocument.Hash!).Replace("-", String.Empty)
+					<!-- Filename -->
+					<div class="row mb-3">
+						<label for="inputFilename" class="col-sm-2 col-form-label">Filename:</label>
+						<div class="col-sm-10">
+							@* <input type="password" class="form-control" id="inputPassword3"> *@
+							<input asp-for="SelectedDocument.Filename" type="text" class="form-control" id="inputFilename">
+						</div>
 					</div>
-				}
-			</div>
-		</div>
 
-		<!-- MimeType -->
-		<div class="row mb-3">
-			<label for="inputPassword3" class="col-sm-2 col-form-label">Media type (mime-type):</label>
-			<div class="col-sm-10">
-				<select asp-for="SelectedDocument.MimeType"
-						asp-items="Model.SelectMimeTypeList"
-						class="form-control">
-					<option value="">-- Select file format --</option>
-				</select>
-			</div>
-		</div>
+					<!-- Title -->
+					<div class="row mb-3">
+						<label for="inputTitle" class="col-sm-2 col-form-label">Title:</label>
+						<div class="col-sm-10">
+							@* <input type="password" class="form-control" id="inputPassword3"> *@
+							<input asp-for="SelectedDocument.Title" type="text" class="form-control" id="inputTitle">
+						</div>
+					</div>
 
-		<!-- FormatCode -->
-		<div class="row mb-3">
-			<label for="inputPassword3" class="col-sm-2 col-form-label">Composition format:</label>
-			<div class="col-sm-10">
-				<select asp-for="SelectedDocument.Metadata.FormatCode"
-						asp-items="Model.SelectCompositionFormatList"
-						class="form-control">
-					<option value="">-- Select composition file format --</option>
-				</select>
-			</div>
-		</div>
+					<!-- Date created -->
+					<div class="row mb-3">
+						<label for="inputCreationTime" class="col-sm-2 col-form-label">Created: </label>
+						<div class="col-sm-10">
+							<input asp-for="SelectedDocument.CreationTime" type="date" class="form-control" id="inputCreationTime">
+						</div>
+					</div>
 
-		<!-- Language -->
-		<div class="row mb-3">
-			<label for="inputPassword3" class="col-sm-2 col-form-label">Language:</label>
-			<div class="col-sm-10">
-				<select asp-for="SelectedDocument.LanguageCode"
-						asp-items="Model.SelectLanguageList"
-						class="form-control">
-					<option value="">-- Select language --</option>
-				</select>
+					<!-- Size -->
+
+					<input type="hidden" asp-for="SelectedDocument.Size" />
+
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Size:</label>
+						<div class="col-sm-10">
+							@Model.SelectedDocument?.Size.ToPrettySize()
+						</div>
+					</div>
+
+					<!-- Content Hash -->
+
+					<input type="hidden" asp-for="SelectedDocument.Hash" />
+
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Content # (SHA1):</label>
+						<div class="col-sm-10">
+							@if (Model.SelectedDocument?.Hash != null)
+							{
+								<div>
+									@BitConverter.ToString(Model.SelectedDocument.Hash!).Replace("-", String.Empty)
+								</div>
+							}
+						</div>
+					</div>
+
+					<!-- MimeType -->
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Media type (mime-type):</label>
+						<div class="col-sm-10">
+							<select asp-for="SelectedDocument.MimeType"
+									asp-items="Model.SelectMimeTypeList"
+									class="form-control">
+								<option value="">-- Select file format --</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- FormatCode -->
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Composition format:</label>
+						<div class="col-sm-10">
+							<select asp-for="SelectedDocument.Metadata.FormatCode"
+									asp-items="Model.SelectCompositionFormatList"
+									class="form-control">
+								<option value="">-- Select composition file format --</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- Language -->
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Language:</label>
+						<div class="col-sm-10">
+							<select asp-for="SelectedDocument.LanguageCode"
+									asp-items="Model.SelectLanguageList"
+									class="form-control">
+								<option value="">-- Select language --</option>
+							</select>
+						</div>
+					</div>
+				</div>
 			</div>
-		</div>
+
+		}
 
 		<partial name="_PrevNextPartial" />
 
 	</form>
+
 </div>
 
 <script>
-	document.getElementById('file').addEventListener('change', function (event) {
-		const file = event.target.files[0];
-		if (file) {
-			// Browser exposes *last modified* timestamp, not original creation date.
-			// This comes from the OS metadata available to the browser.
-			const lastModified = new Date(file.lastModified);
-			console.log("lastModified" + lastModified);
-			document.getElementById('fileCreationDate').value = lastModified.toISOString();
-		}
+	 document.getElementById('files').addEventListener('change', function (event) {
+		const files = Array.from(event.target.files);
+		const fileDates = files.map(f => ({
+			name: f.name,
+			lastModified: new Date(f.lastModified).toISOString()
+		}));
+
+		console.log("fileDates", fileDates);
+
+		// Store as JSON string
+		document.getElementById('fileCreationDates').value = JSON.stringify(fileDates);
 	});
 </script>

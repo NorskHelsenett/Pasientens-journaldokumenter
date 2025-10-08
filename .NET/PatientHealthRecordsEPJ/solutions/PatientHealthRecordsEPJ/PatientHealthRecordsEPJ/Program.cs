@@ -68,7 +68,14 @@ builder.Services.AddSession(options =>
 //builder.Services.AddHttpClient<PersonController>("PersontjenestenAPI", client => client.BaseAddress = new Uri(builder.Configuration["PersontjenestenEndpoints:test"]!));
 
 // Backend NHN Persontjenesten
-builder.Services.AddHttpClient("OrganizationAPI", client => client.BaseAddress = new Uri(builder.Configuration["OrgRegEndpoints:Dev"]!));
+builder.Services.AddHttpClient("OrganizationAPI", client => client.BaseAddress = new Uri(builder.Configuration["OrgRegEndpoints:Dev"]!))
+	.UseHelseIdDPoP(configureClient => 
+	{
+		configureClient.Audience = "nhn:orgreg";
+		configureClient.Scopes = "nhn:orgreg/read";
+
+		// PrivateJwk, ClientId and TokenEndpoint is the same as for Persontjenesten
+	});
 
 builder.Services.AddHttpClient("PersonApiClient", client =>
 {

@@ -1,5 +1,4 @@
-using Hl7.Fhir.Model.CdsHooks;
-using Microsoft.AspNetCore.Authorization;
+using Hl7.Fhir.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis;
@@ -9,24 +8,38 @@ using NorskHelsenettUpload;
 using NorskHelsenettUpload.FluidExtensions;
 using NorskHelsenettUpload.Ihe.Mhd.Interfaces;
 using NorskHelsenettUpload.Ihe.Mhd.Models;
+using NorskHelsenettUpload.Ihe.Mhd.Services;
 using NorskHelsenettUpload.Models;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Services;
-using PatientHealthRecordsEPJ.UploadDocuments;
 using PatientHealthRecordsEPJ.UploadDocuments.Lists;
 using PatientHealthRecordsEPJ.UploadDocuments.Models;
-using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Xml;
+using XcaXds.Commons.Commons;
+using XcaXds.Commons.Models.Custom.RegistryDtos;
+using XcaXds.Commons.Models.Custom.RegistryDtos.TestData;
+using XcaXds.Commons.Serializers;
+using XcaXds.Commons.Services;
 
 
 namespace PatientHealthRecordsEPJ.Controllers;
 /*
 	
-For a simple example of how to upload documents to National XDS repository with Patient Health Records API, see project ConsoleUploadDocument. 
+See project ConsoleUploadDocument for a simple example of how to upload documents to National XDS repository with Patient Health Records API, 
 
 This controller uses the same NorskHelsenettUplaod library with fluid extensions to build the ProvideDocumentBundleRequest. 
 
  */
+
+class FileDateInfo
+{
+	public string name { get; set; }
+	public DateTime lastModified { get; set; }
+}
+
 public class UploadDocumentsController : BaseController
 {
 	private readonly ILogger<HomeController> _logger;
@@ -167,7 +180,8 @@ public class UploadDocumentsController : BaseController
 				.WithAvailabilityStatus(DocumentSubmissionMetadata.AvailabilityStatusApproved)
 				.WithSubmissionTime(DateTime.Now)
 				//.WithSourceId("1.2.840.4711.815.1")
-				.WithSourceId("2.16.578.1.12.4.5.100.1")
+				//.WithSourceId("2.16.578.1.12.4.5.100.1")
+				//.WithSourceId("2.16.578.1.12.4.5.100.15") // Source is selected on next page in wizard
 				.WithPatientId(sessionData.PatientId)
 				.WithTitle(submissionTitle); 				
 
@@ -182,42 +196,7 @@ public class UploadDocumentsController : BaseController
 				orgIdentifier = ident.Value;
 				orgAssignOid = ident.System;
 			}
-
-			/*
-			var givenName = user.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname").First().Value;
-			var middleName = user.Claims.Where(x => x.Type == "middle_name").First().Value;
-			var familyName = user.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname").First().Value;
-			authorName = $"{givenName}{" " + middleName} {familyName}";
-
-			// Retrieve submission's AUTHOR-ORG details
-			var org = new Hl7.Fhir.Model.Organization();
-
-
-			try
-			{
-				// Get token
-				var result = await ApiService.GetTokenAsync();
-				var jwtToken = JsonSerializer.Deserialize<AccessTokenWithExpiration>(result);
-				var handler = new JwtSecurityTokenHandler();
-				var token = handler.ReadJwtToken(jwtToken!.accessToken);
-
-				var claimClientOrgNr = token.Claims.Where(x => x.Type == "helseid://claims/client/claims/orgnr_parent").First()!.Value;
-
-				org = await ApiService.GetOrganizationDetailsAsync(claimClientOrgNr);
-
-				orgName = org.Name;
-
-				foreach (var ident in org.Identifier)
-				{
-					orgIdentifier = ident.Value;
-					orgAssignOid = ident.System;
-				}
-			}
-			catch
-			{
-				//Console.Error.WriteLine("Problems while retrieving organization's details from OrgReg [Grunndata]");
-			} */
-
+			
 			// Create author-entry for submission
 			var author = new Author
 			{
@@ -322,10 +301,51 @@ public class UploadDocumentsController : BaseController
 
 		if (navButton == NavigationAction.Next)
 		{
-			return RedirectToAction(nameof(UploadDocument));
+			//return RedirectToAction(nameof(UploadDocument));
+			return RedirectToAction(nameof(Source));
 		}
 
 		return View(); 
+	}
+
+	public async Task<IActionResult> Source()
+	{
+		var sessionData = session.SessionData();
+		
+		sessionData.SaveToSession(session);
+
+		return View("Steps/Source");
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> Source(string selectedHomeCommunityId, NavigationAction navButton)
+	{
+		if (!string.IsNullOrEmpty(selectedHomeCommunityId))
+		{
+			navButton = NavigationAction.Next; 
+		}
+
+		if (navButton == NavigationAction.Previous)
+		{
+			return RedirectToAction(nameof(Patient));
+		}		
+
+		if (!string.IsNullOrEmpty(selectedHomeCommunityId))
+		{
+			var sessionData = session.SessionData();
+			var request = sessionData.BundleRequest;
+
+			request!.Submission.WithSourceId(selectedHomeCommunityId);
+
+			sessionData.SaveToSession(session);
+		}
+
+		if (navButton == NavigationAction.Next)
+		{
+			return RedirectToAction(nameof(UploadDocument));
+		}
+
+		return View();
 	}
 
 	public async Task<IActionResult> UploadDocument()
@@ -336,8 +356,7 @@ public class UploadDocumentsController : BaseController
 		var request = sessionData.BundleRequest;
 
 		model.SelectedDocument = request.DocumentCollection?.SelectedDocument; 
-		//model.Metadata = request.DocumentCollection?.SelectedDocument?.Metadata;
-
+		
 		model.SelectMimeTypeList = new SelectList(
 			MimeTypeList.MimeTypes,
 			nameof(TextValue.Value),
@@ -360,18 +379,46 @@ public class UploadDocumentsController : BaseController
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> UploadDocument(DocumentMetadataViewModel model, NavigationAction navButton)
+	public async Task<IActionResult> UploadDocument(DocumentMetadataViewModel model, string? selectedFileUniqueId, NavigationAction navButton)
 	{
-		//SaveToSession(model.Metadata);
-		SaveDocumentToSession(model.SelectedDocument, model.SelectedDocument!.Metadata.FormatCode!); 
+		var sessionData = session.SessionData();
 
 		if (navButton == NavigationAction.Previous)
 		{
-			return RedirectToAction(nameof(Patient));
+			return RedirectToAction(nameof(Source));
+		}		
+
+		SaveDocumentToSession(model.SelectedDocument, model.SelectedDocument!.Metadata.FormatCode!);
+
+		if (!string.IsNullOrEmpty(selectedFileUniqueId))
+		{
+			sessionData = session.SessionData(); // Reload since it has been overwritten in session above in SaveMetadataToSession
+
+			Guid? fileUniqueId;
+
+			if (selectedFileUniqueId == "remove_all")
+			{
+				sessionData.BundleRequest?.DocumentCollection.Clear(); 
+			}
+			else if (selectedFileUniqueId.StartsWith("remove"))
+			{
+				fileUniqueId = new Guid(selectedFileUniqueId.Replace("remove,", "").Trim());
+				sessionData.BundleRequest?.DocumentCollection.RemoveDocument(fileUniqueId.Value);
+			}
+			else
+			{
+				fileUniqueId = new Guid(selectedFileUniqueId);
+
+				sessionData.BundleRequest?.DocumentCollection.SelectDocument(fileUniqueId.Value);
+			}
+
+			sessionData.SaveToSession(session);
+
+			return RedirectToAction(nameof(UploadDocument));
 		}
 
 		if (navButton == NavigationAction.Next)
-		{
+		{		
 			return RedirectToAction(nameof(Classification));
 		}
 
@@ -379,38 +426,73 @@ public class UploadDocumentsController : BaseController
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> UploadFiles(IFormFile file, DateTime fileCreationDate)
-	{
-		if (file == null || file.Length == 0)
-			return BadRequest("No file uploaded.");
+	public async Task<IActionResult> UploadFiles(List<IFormFile> files, string fileCreationDates)
+	{	
+		if (files == null || files.Count == 0)
+			return BadRequest("No files uploaded.");
 
+		if (string.IsNullOrWhiteSpace(fileCreationDates))
+			return BadRequest("No file creation dates provided.");
+
+		// Deserialize JSON
+		var fileDateList = JsonSerializer.Deserialize<List<FileDateInfo>>(fileCreationDates);
+
+		if (fileDateList == null || fileDateList.Count != files.Count)
+			return BadRequest("Mismatch between files and creation dates.");
+
+		for (int i = 0; i < files.Count; i++)
+		{
+			var file = files[i];
+			var fileDate = fileDateList.FirstOrDefault(f => f.name == file.FileName);
+
+			if (file == null || file.Length == 0)
+				return BadRequest("No file uploaded.");
+
+			var sessionData = session.SessionData();
+			var request = sessionData.BundleRequest;
+
+			byte[] bytes;
+			using (var ms = new MemoryStream())
+			{
+				await file.CopyToAsync(ms);
+				bytes = ms.ToArray();
+			}
+
+			var document = await CreateDocument(file.FileName, file.ContentType, bytes, fileDate!.lastModified);
+
+			request.DocumentCollection.WithDocument(document, selectDocument: true);
+
+			sessionData.SaveToSession(session);
+		}
+
+		//return View("Steps/UploadDocument");
+		return RedirectToAction(nameof(UploadDocument));
+	}
+
+	private async Task<Document> CreateDocument(string fileName, string contentType, byte[] content, DateTime lastModified, bool createRandom = false)
+	{
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;
 
-		byte[] bytes;
-		using (var ms = new MemoryStream())
-		{
-			await file.CopyToAsync(ms);
-			bytes = ms.ToArray();
-		}
+		var extension = Path.GetExtension(fileName);
 
-		var extension = Path.GetExtension(file.FileName);
+		string mimeType = NormalizeMime(contentType, extension);
 
-		string mimeType = NormalizeMime(file.ContentType, extension);
-
-		var formatCode = CompositionFormatDetector.DetermineFormat(bytes, ref mimeType, file.FileName);
+		var formatCode = CompositionFormatDetector.DetermineFormat(content, ref mimeType, fileName);
 
 		Document document = new Document()
-		//Document document = upload.DocumentCollection.SelectedDocument		
-			.WithUniqueId(Guid.NewGuid())			
-			.WithFilename(file.FileName)
-			.WithContent(bytes, computeSha: true)
+			//Document document = upload.DocumentCollection.SelectedDocument		
+			.WithUniqueId(Guid.NewGuid())
+			.WithFilename(fileName)
+			.WithContent(content, computeSha: true)
 			.WithMimeType(mimeType)
-			.WithCreationTime(fileCreationDate)			
-			.WithSize((int)file.Length);        // TODO: make .Size property of type long? 
+			//.WithCreationTime(fileDate!.lastModified)
+			.WithCreationTime(lastModified)
+			//.WithSize((int)file.Length);        // TODO: make .Size property of type long? 
+			.WithSize((int)content.Length);        // TODO: make .Size property of type long? 
 
 		//.WithLanguageCode("nb-NO");		// TODO: detect automatically? 
-		
+
 		// Create an author. For now we'll just use the logged in health personell. 
 
 		var orgName = sessionData.OrganizationName;
@@ -435,7 +517,7 @@ public class UploadDocumentsController : BaseController
 			.WithAuthor(new Author()
 			{
 				Name = new Xcn()
-				{					
+				{
 					GivenName = sessionData.GivenName,
 					FamilyName = sessionData.FamilyName,
 					MiddleName = sessionData.MiddleName
@@ -475,7 +557,12 @@ public class UploadDocumentsController : BaseController
 		{
 			case ".xml":
 				XmlDocument doc = new XmlDocument();
-				doc.Load(file.OpenReadStream());
+				//doc.Load(file.OpenReadStream());
+
+				using (var stream = new MemoryStream(content))
+				{
+					doc.Load(stream);
+				}
 
 				var test = doc.DocumentElement.OuterXml;
 
@@ -515,7 +602,7 @@ public class UploadDocumentsController : BaseController
 						var typeCode = codeNode.Attributes?["code"]?.Value!;
 						var typeCodeSystem = codeNode.Attributes?["codeSystem"]?.Value!;
 
-						var typeCodeCoding = TypeCodeList.TypeCodes.FirstOrDefault(coding => coding.Code == typeCode); 
+						var typeCodeCoding = TypeCodeList.TypeCodes.FirstOrDefault(coding => coding.Code == typeCode);
 
 						document.Metadata.WithTypeCode(typeCodeCoding);
 
@@ -536,7 +623,7 @@ public class UploadDocumentsController : BaseController
 						var confidentialityCode = confidentialityCodeNode.Attributes?["code"]?.Value;
 						var confidentialityCodeSystem = confidentialityCodeNode.Attributes?["codeSystem"]?.Value;
 
-						var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == confidentialityCode); 
+						var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == confidentialityCode);
 
 						document.Metadata.WithConfidentialityCode(confidentialityCodeCoding);
 					}
@@ -589,12 +676,31 @@ public class UploadDocumentsController : BaseController
 				break;
 		}
 
-		request.DocumentCollection.WithDocument(document, selectDocument: true);
+		if (createRandom)
+		{
+			// Healthcare facility type and practice setting code cannot (currently?) be read from CDA
+			// TODO: generate more data randomly? 
 
-		sessionData.SaveToSession(session);
+			var healthCareFacilityTypes = HealthcareFacilityTypeList.HealthcareFacilityTypes.Select(c =>
+				new TextValue(
+					$"{c.System}|{c.Code}|{c.Display}", // Value in select list
+					$"{c.Display} [{c.Code}]"           // What the user sees
+				)).ToList();
 
-		//return View("Steps/UploadDocument");
-		return RedirectToAction(nameof(UploadDocument));
+			var healthCareFacilityType = healthCareFacilityTypes[Random.Shared.Next(healthCareFacilityTypes.Count)].Value;
+
+			var practiceSettingCodes = PracticeSettingCodeList.PracticeSettingCodes.Select(c =>
+				new TextValue(
+					$"{c.System}|{c.Code}|{c.Display}",
+					$"{c.Display} [{c.Code}]"
+				)).ToList();
+
+			var practiceSettingCode = practiceSettingCodes[Random.Shared.Next(practiceSettingCodes.Count)].Value;
+
+			document.Metadata.WithHealthCareFacilityType(healthCareFacilityType);
+			document.Metadata.WithPracticeSettingCode(practiceSettingCode); 
+		}
+		return document; 
 	}
 
 	private static string NormalizeMime(string contentType, string extension)
@@ -620,7 +726,106 @@ public class UploadDocumentsController : BaseController
 			_ => contentType
 		};
 	}
+	
+	[HttpPost]
+	public async Task<IActionResult> GenerateRandomTestDocuments(int entriesToGenerate)
+	{
+		var sessionData = session.SessionData();
+		var request = sessionData.BundleRequest;
 
+		var testDataFiles = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "TestData"));
+		var testDataDocuments = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "TestData", "Documents"));
+
+		using var testDataFile = System.IO.File.OpenText(testDataFiles.First(f => f.Contains("TestDataRegistryObjects.json")));
+
+		var jsonTestData = RegistryJsonSerializer.Deserialize<Test_DocumentReference>(await testDataFile.ReadToEndAsync());
+		if (jsonTestData == null)
+		{
+			return null;
+		}
+
+		jsonTestData.PossibleSubmissionSetValues.Authors = jsonTestData.PossibleDocumentEntryValues.Authors;
+
+		var files = testDataDocuments.Select(file => System.IO.File.ReadAllBytes(file)).ToList();
+
+		var generatedTestRegistryObjects = TestDataGeneratorService.GenerateRegistryObjectsFromTestData(jsonTestData, entriesToGenerate);
+
+		var files2 = jsonTestData.Documents.Select(file => Convert.FromBase64String(file));
+		
+		var sxmls = new SoapXmlSerializer(XcaXds.Commons.Commons.Constants.XmlDefaultOptions.DefaultXmlWriterSettings);
+
+		foreach (var generatedTestObject in generatedTestRegistryObjects.OfType<DocumentEntryDto>())
+		{			
+			var randomFileAsByteArray = files.ElementAt(Random.Shared.Next(files.Count()));
+
+			if (generatedTestObject?.SourcePatientInfo?.PatientId?.Id != null && generatedTestObject.Id != null && randomFileAsByteArray != null)
+			{
+				generatedTestObject.Title = "XcaDS - " + generatedTestObject.Title;
+				generatedTestObject.Size = randomFileAsByteArray.Length.ToString();
+				using (var md5 = MD5.Create())
+				{
+					generatedTestObject.Hash = BitConverter.ToString(md5.ComputeHash(randomFileAsByteArray)).Replace("-", "");
+				}
+
+				//generatedTestObject.RepositoryUniqueId = _xdsConfig.RepositoryUniqueId;
+				//generatedTestObject.HomeCommunityId = _xdsConfig.HomeCommunityId;
+
+				generatedTestObject.RepositoryUniqueId = request!.Submission.SourceId + ".25"; // TODO: fix. And don't use .25 because that's just a testing default 
+				generatedTestObject.HomeCommunityId = request.Submission.SourceId; 
+
+				//_repositoryWrapper.StoreDocument(generatedTestObject.UniqueId, randomFileAsByteArray, generatedTestObject.SourcePatientInfo.PatientId.Id);
+
+				var submissionSet = generatedTestRegistryObjects
+				.OfType<SubmissionSetDto>()
+				.FirstOrDefault(ro => ro.Id == generatedTestRegistryObjects?
+					.OfType<AssociationDto>()?
+					.FirstOrDefault(assoc => assoc.TargetObject == generatedTestObject?.Id)?.SourceObject);
+
+				var documentDto = new DocumentDto()
+				{
+					// Data = _repository.Read(documentUniqueId),
+					Data = randomFileAsByteArray,
+					DocumentId = generatedTestObject?.Id
+				};
+
+				var clinicalDocument = CdaTransformerService.TransformRegistryObjectsToClinicalDocument(generatedTestObject, submissionSet, documentDto);
+				var cdaXml = sxmls.SerializeSoapMessageToXmlString(clinicalDocument, XcaXds.Commons.Commons.Constants.XmlDefaultOptions.DefaultXmlWriterSettingsInline).Content;
+
+				var cdaXmlBytes = Encoding.UTF8.GetBytes(cdaXml);
+
+				var contentType = "application/xml";
+				var fileName = $"CDA_{generatedTestObject.Id}.xml"; 
+
+				var document = await CreateDocument(
+					//generatedTestObject.Title,
+					//generatedTestObject.MimeType!,
+					fileName,
+					contentType,
+					cdaXmlBytes,
+					generatedTestObject.CreationTime!.Value,
+					createRandom: true
+					);
+
+				request.DocumentCollection.WithDocument(document, selectDocument: true);
+
+				sessionData.SaveToSession(session);
+
+			}
+
+			/*var cdaDoc = CdaBuilder.FromDocumentEntryDto(generatedTestObject);
+			var outputPath = Path.Combine(AppContext.BaseDirectory, "GeneratedCda", $"CDA_{generatedTestObject.Id}.xml");
+
+			Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+			cdaDoc.Save(outputPath); */
+
+			
+		}
+
+		//_registryWrapper.UpdateDocumentRegistryContentWithDtos(generatedTestRegistryObjects);
+
+		return RedirectToAction(nameof(UploadDocument));		
+	}
+	
 	public async Task<IActionResult> Classification()
 	{
 		var model = new ClassificationViewModel(); 
@@ -628,23 +833,19 @@ public class UploadDocumentsController : BaseController
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;
 
+		model.SelectedDocument = request.DocumentCollection?.SelectedDocument;
+
 		//model.Upload = request;
 		model.Metadata = request.DocumentCollection?.SelectedDocument?.Metadata;
-
+	
+		
 		//upload.Classification.
 
 		//
 		//	Encounter information
-		//
+		//		
 
-		/*model.SelectHealthcareFacilityList = new SelectList(
-			HealthcareFacilityTypeList.HealthcareFacilityTypes,
-			nameof(SimpleCoding.Code),		// Value
-			nameof(SimpleCoding.Display)	// Text
-		);*/
-
-		model.SelectHealthcareFacilityList = new SelectList(
-			//HealthcareFacilityTypeList.HealthcareFacilityTypes,
+		model.SelectHealthcareFacilityList = new SelectList(			
 			HealthcareFacilityTypeList.HealthcareFacilityTypes.Select(c => 
 			new TextValue(
 				$"{c.System}|{c.Code}|{c.Display}",	// Value in select list
@@ -653,13 +854,7 @@ public class UploadDocumentsController : BaseController
 			nameof(TextValue.Value),				// Name of property used for value
 			nameof(TextValue.Text)                  // Name of property used for text
 		);
-
-		/*HealthcareFacilityTypeList.HealthcareFacilityTypes.Select(c => new
-		{
-			Value = $"{c.System}|{c.Code}|{c.Display}",  // matches your earlier option values
-			Text = $"{c.Display} [{c.Code}]"             // what the user sees
-		}),*/
-
+		
 		model.SelectPracticeSettingCodeList = new SelectList(
 			PracticeSettingCodeList.PracticeSettingCodes.Select(c =>
 			new TextValue(
@@ -708,10 +903,39 @@ public class UploadDocumentsController : BaseController
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> Classification(ClassificationViewModel model, NavigationAction navButton)
+	public async Task<IActionResult> Classification(ClassificationViewModel model, string? selectedFileUniqueId, NavigationAction navButton)
 	{
-		SaveMetadataToSession(model.Metadata); 
-		
+		var sessionData = session.SessionData();
+
+		SaveMetadataToSession(model.Metadata);
+
+		if (!string.IsNullOrEmpty(selectedFileUniqueId))
+		{
+			sessionData = session.SessionData(); // Reload since it has been overwritten in session above in SaveMetadataToSession
+
+			Guid? fileUniqueId;
+			
+			if (selectedFileUniqueId == "remove_all")
+			{
+				sessionData.BundleRequest?.DocumentCollection.Clear();
+			}
+			else if (selectedFileUniqueId.StartsWith("remove"))
+			{
+				fileUniqueId = new Guid(selectedFileUniqueId.Replace("remove,", "").Trim());
+				sessionData.BundleRequest?.DocumentCollection.RemoveDocument(fileUniqueId.Value);
+			}
+			else
+			{
+				fileUniqueId = new Guid(selectedFileUniqueId);
+
+				sessionData.BundleRequest?.DocumentCollection.SelectDocument(fileUniqueId.Value);
+			}
+
+			sessionData.SaveToSession(session);
+
+			return RedirectToAction(nameof(Classification));
+		}
+
 		if (navButton == NavigationAction.Previous)
 		{
 			return RedirectToAction(nameof(UploadDocument));
@@ -724,9 +948,7 @@ public class UploadDocumentsController : BaseController
 
 
 		return View(); 
-	}
-
-	
+	}	
 
 	public async Task<IActionResult> Submission()
 	{
@@ -808,16 +1030,22 @@ public class UploadDocumentsController : BaseController
 		return View();
 	}
 
-	public async Task<IActionResult> FinalizeSubmission()
+	public async Task<IActionResult> FinalizeSubmission(string error)
 	{
 		var model = new FinalizeSubmissionViewModel();
+
+		model.ErrorMessage = error;
+		model.IsError = !string.IsNullOrEmpty(error); 
 
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;
 
 		model.Upload = request;
 
-		model.JsonBundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
+		model.JsonBundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: true);
+
+		// Replace the base64 encoded embedded data with just text "...removed for display..." (only done for documents with index > 0 if there are more than 1 document)
+		model.JsonBundleDocument = model.JsonBundleDocument.Replace(BundleCreator.REMOVED_FOR_DISPLAY_TEXT_BASE64, "...removed for display...");
 
 		return View("Steps/FinalizeSubmission", model);
 	}
@@ -827,9 +1055,12 @@ public class UploadDocumentsController : BaseController
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;		
 
-		var bundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
+		var bundleDocumentJsonString = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: true);
 
-		return Content(bundleDocument, "application/json"); 
+		// Replace the base64 encoded embedded data with just text "...removed for display..." (only done for documents with index > 0 if there are more than 1 document)
+		bundleDocumentJsonString = bundleDocumentJsonString.Replace(BundleCreator.REMOVED_FOR_DISPLAY_TEXT_BASE64, "...removed for display..."); 
+
+		return Content(bundleDocumentJsonString, "application/json"); 
 	}
 		
 	[HttpPost]
@@ -847,49 +1078,18 @@ public class UploadDocumentsController : BaseController
 		//var bundleDocument = _bundleCreator.CreateFhirBundle(Model, "Comprehensive");
 		var bundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
 
-		await _phrApiService.ProvideDocumentBundleAsync(sessionData.AccessToken, Constants.JwkPrivateKey, bundleDocument);
+		var apiResult = await _phrApiService.ProvideDocumentBundleAsync(sessionData.AccessToken, Constants.JwkPrivateKey, bundleDocument);
 		//await _phrApiService.CreateDocumentReferenceAsync(bundleDocument); 
 
-		//await RegisterBundleAsync("test"); 
-		
-
-		if (navButton == NavigationAction.Next)
+		if (apiResult.IsSuccess)
 		{
 			return RedirectToAction(nameof(SubmissionConfirmation));
 		}
-
-		return View();
-	}
-
-	/*public async Task RegisterBundleAsync(string documentBundle)
-	{
-		try
+		else
 		{
-			var result = await ApiService.CreateDocumentReferanceAsync(documentBundle);
-
-			//var state = PatientContextHandler.UpsertPatientSessionData(userSessionData.Identities.FirstOrDefault()!.Name!, patient);
-
-			if (result != null!)
-			{
-				ShowMessage(ToastType.Info, "");
-				//statusTask = "Completed";
-			}
-			;
-
-			message = result.ToString(); // await result.Content.ReadAsStringAsync();
-			StateHasChanged();
-
-		}
-		catch (AccessTokenNotAvailableException exception)
-		{
-			exception.Redirect();
-		}
-		catch (Exception ex)
-		{
-			throw ex;
-		}
-	} */
-
+			return RedirectToAction(nameof(FinalizeSubmission), new { error = "An error occurred trying to register document bundle"});
+		}		
+	}	
 	public async Task<IActionResult> SubmissionConfirmation()
 	{
 		var model = new FinalizeSubmissionViewModel();
@@ -898,6 +1098,10 @@ public class UploadDocumentsController : BaseController
 		var request = sessionData.BundleRequest;
 
 		model.Upload = request;
+
+		sessionData.BundleRequest = null;
+		sessionData.UploadWizardOpenSteps.Clear();
+		sessionData.SaveToSession(session); 
 
 		return View("Steps/SubmissionConfirmation", model);
 	}

@@ -8,8 +8,8 @@ namespace PatientHealthRecords.ApiService;
 public interface IPhrApiService
 {
 	/* Document and Document references operations */
-	Task<OperationOutcome> ProvideDocumentBundleAsync(string accessToken, string jwtProofPrivatekey, string content); 
-	Task<OperationOutcome> CreateDocumentReferenceAsync(string documentReference);
+	Task<ApiResult> ProvideDocumentBundleAsync(string accessToken, string jwtProofPrivatekey, string content); 
+	Task<ApiResult> CreateDocumentReferenceAsync(string documentReference);
 	Task<Bundle?> GetDocumentReferencesForPatientAsync(DocumentSearchParams docFilter);
 	//Task<(byte[], string)> FetchDocumentFromRepositoryAsync(string patientId, string uniqueId, string homeCommunityId, string repositoryUniqueId);
 	
@@ -35,7 +35,7 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 	/// </summary>
 	/// <param name="content"></param>
 	/// <returns>status of creation</returns>
-	public async Task<OperationOutcome> ProvideDocumentBundleAsync(string accessToken, string jwtProofPrivatekey, string content)
+	public async Task<ApiResult> ProvideDocumentBundleAsync(string accessToken, string jwtProofPrivatekey, string content)
 	{
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
 
@@ -50,15 +50,7 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 
 		//var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl;
 		var apiUrl = _apiOptions.ProvideDocumentBundleUrl;
-
-		/*var urlencodedContent = new FormUrlEncodedContent([
-			new("patient.identifier", sessionLoginResult.PatientId),
-			new("status", "current"),
-			new("_count", pageSize.ToString()),
-			new("_page", pageIndex.ToString()),
-			new("_sort", sort)
-		]);*/
-
+		
 		StringContent stringContent = new StringContent(content, Encoding.UTF8, mediaType: "application/fhir+json"); 
 
 		var apiResult = await _apiCaller.CallApi(
@@ -72,39 +64,8 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 			content: stringContent
 			//formUrlEncodedContent: urlencodedContent
 			);
-
-		
-
-		return null;
-
-		/*var httpContent = new StringContent(content, Encoding.UTF8, "application/fhir+json");
-		var outcome = await httpClient.PostAsync(httpClient.BaseAddress + "ihemhd/documentreference", httpContent);
-
-		if (outcome.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
-		{
-			var operationOutcome = OperationOutcome.ForMessage(
-								"Couldn't establish connection to the server",
-								OperationOutcome.IssueType.Exception,
-								OperationOutcome.IssueSeverity.Fatal);
-
-			return operationOutcome;
-		}
-		if (outcome.StatusCode != System.Net.HttpStatusCode.OK)
-		{
-			var s = await outcome.Content.ReadAsStringAsync();
-
-			var operationOutcome = OperationOutcome.ForMessage(
-								s,
-								OperationOutcome.IssueType.Success,
-								OperationOutcome.IssueSeverity.Success);
-
-			return operationOutcome;
-		}
-		else
-		{
-			throw new Exception("New status not handeled");
-		}
-		 */
+	
+		return apiResult;		
 	}
 
 	/// <summary>
@@ -112,7 +73,7 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 	/// </summary>
 	/// <param name="content"></param>
 	/// <returns>status of creation</returns>
-	public async Task<OperationOutcome> CreateDocumentReferenceAsync(string content)
+	public async Task<ApiResult> CreateDocumentReferenceAsync(string content)
 	{
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
 
@@ -148,36 +109,7 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 
 		*/
 
-		return null; 
-
-		/*var httpContent = new StringContent(content, Encoding.UTF8, "application/fhir+json");
-		var outcome = await httpClient.PostAsync(httpClient.BaseAddress + "ihemhd/documentreference", httpContent);
-
-		if (outcome.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
-		{
-			var operationOutcome = OperationOutcome.ForMessage(
-								"Couldn't establish connection to the server",
-								OperationOutcome.IssueType.Exception,
-								OperationOutcome.IssueSeverity.Fatal);
-
-			return operationOutcome;
-		}
-		if (outcome.StatusCode != System.Net.HttpStatusCode.OK)
-		{
-			var s = await outcome.Content.ReadAsStringAsync();
-
-			var operationOutcome = OperationOutcome.ForMessage(
-								s,
-								OperationOutcome.IssueType.Success,
-								OperationOutcome.IssueSeverity.Success);
-
-			return operationOutcome;
-		}
-		else
-		{
-			throw new Exception("New status not handeled");
-		}
-		 */
+		return null; 	
 	}
 
 	public Task<Bundle?> GetDocumentReferencesForPatientAsync(DocumentSearchParams docFilter)

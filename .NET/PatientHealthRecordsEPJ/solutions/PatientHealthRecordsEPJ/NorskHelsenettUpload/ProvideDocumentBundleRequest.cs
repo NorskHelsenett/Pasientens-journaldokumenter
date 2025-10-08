@@ -15,15 +15,11 @@ public class ProvideDocumentBundleRequest
 
 	// - Only manage 1 single Patient instance of type SourcePatientInfo on top-level in this class
 	// - When it is time to create the FHIR bundle, then we set this instance on all documents (.MetaData.SourcePatientInfo)
-
-	//public Patient Patient { get; set; } = new Patient();
-	public SourcePatientInfo? Patient { get; set; } // = new SourcePatientInfo();
-	//public AuthorCollection Authors { get; set; } = new AuthorCollection();
-	//public Classification Classification { get; set; } = new Classification();
-	public DocumentCollection DocumentCollection { get; set; } = new DocumentCollection();
-	//public Submission Submission { get; set; } = new Submission();
+	
+	public SourcePatientInfo? Patient { get; set; } 	
+	public DocumentCollection DocumentCollection { get; set; } = new DocumentCollection();	
 	public DocumentSubmissionMetadata Submission { get; set; } = new DocumentSubmissionMetadata();
-	public Association? Association { get; set; } // = new Association();
+	public Association? Association { get; set; } 
 
 	public void SetPatientOnAllDocuments()
 	{
@@ -31,5 +27,5 @@ public class ProvideDocumentBundleRequest
 		{
 			document.Metadata.SourcePatientInfo = Patient;
 		}
-	}
+	}	
 }

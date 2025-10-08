@@ -42,20 +42,32 @@
 
 					<div>
 						<br />
-						<strong>Eller velg fra liste:</strong><br />
+						<h4>Eller velg fra liste:</h4>
 						
-						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="56856300299"><i class="bi bi-gender-female fs-5"></i> SAKTE SØSTER (D-nummer)</button>&nbsp;
-						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="12909598867"><i class="bi bi-gender-female fs-5"></i> LIKEGYLDIG KAHYTT BRØDSKIVE (Mellomnavn)</button>
+						<strong>Ikke-syntetisk test pasienter (vil snart fjernes):</strong><br />
+
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="13116900216"><i class="bi bi-gender-female fs-5"></i> Line Danser</button>&nbsp;
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="12119000465"><i class="bi bi-gender-female fs-5"></i> Malin Fos Bogen</button>
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="08077000292"><i class="bi bi-gender-male fs-5"></i> Harry Handel</button>
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="23077200290"><i class="bi bi-gender-female fs-5"></i> Else Nett</button>
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="15076500565"><i class="bi bi-gender-male fs-5"></i> Roland (Kith) Gundersen</button>
 						
 						<br />
-						<strong>Testpersoner Nasjonalt lager:</strong><br />
+						<strong>Syntetisk test pasienter</strong><br />
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="02835998374"><i class="bi bi-gender-male fs-5"></i> AUTORISERT JUL (F-nummer), HSØ</button>&nbsp;
+
+						<br />
+						<strong>Testpersoner NHN nasjonalt dokumentlager:</strong><br />
 						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="22876699307"><i class="bi bi-gender-male fs-5"></i> LIVSGLAD KREPS (F-nummer)</button>&nbsp;
 						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="17855599120"><i class="bi bi-gender-female fs-5"></i> USNOBBET KLOKKE (F-nummer)</button>
 						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="08777634659"><i class="bi bi-gender-female fs-5"></i> ULYDIG BOLLE (F-nummer)</button>
+						<button type="submit" class="btn btn-info mb-2" asp-action="VelgPasient" asp-route-nin="21825297143"><i class="bi bi-gender-male fs-5"></i> PUSLETE PIKE (F-nummer)</button>
 						
 						@* <button class="btn btn-info" @onclick ="() => producePatientLineDanser()"><Icon Name="IconName.GenderFemale" Size="IconSize.x5" /> Line Danser</button> *@
 						<br />
+						<em>Ta kontakt med oss i Slack-kanal #ext-nhn-pasientens-journaldokumenter hvis du ønsker å endre eller legge til pasienter i listen </em>
 						<br />
+
 					</div>
 				</div>
 

@@ -1,7 +1,9 @@
 ﻿@{
+	var sessionData = Context.Session.SessionData();
+
 	var root = "/uploaddocuments/"; 
 
-	List<string> steps = ["patient", "uploaddocument", "classification", "submission", "finalizesubmission", "submissionconfirmation"];
+	List<string> steps = ["patient", "source", "uploaddocument", "classification", "submission", "finalizesubmission", "submissionconfirmation"];
 
 	var path = Context.Request.Path.ToString().ToLower().Replace(root, "");
 
@@ -32,17 +34,31 @@
 	var buttonPrevText = "Forrige"; 
 	//var buttonNextText = next == "submissionconfirmation" ? "    Register current dataset    " : "Neste";
 	var buttonNextText = next == "submissionconfirmation" ? "    Register document submission set    " : "Neste";
-	var buttonNextClass = next == "submissionconfirmation" ? "btn-lg" : ""; 
+	var buttonNextClass = next == "submissionconfirmation" ? "btn-lg" : "";
+
+	bool showButtonPrevious = true; 
+	bool showButtonNext = true; 
+
+	if (path == "uploaddocument" && sessionData.BundleRequest?.DocumentCollection.SelectedDocument == null)
+	{
+		showButtonNext = false; 
+	}
 }
 
 <div class="container-fluid d-flex justify-content-end max">
 	@* <a href="@prev" class="btn btn-primary me-2">Forrige &larr;</a>
 	<a href="@next" class="btn btn-primary">Neste &rarr;</a> *@
 
-	<button type="submit" name="navButton" value="Previous" class="btn btn-primary me-2">
-		&larr; @buttonPrevText
+	@if (showButtonPrevious && (stepIndex > 0 && stepIndex < (steps.Count - 1)))
+	{
+		<button type="submit" name="navButton" value="Previous" class="btn btn-primary me-2">
+			&larr; @buttonPrevText
 	</button>
+	}
 	
-	<button type="submit" name="navButton" value="Next" class="btn btn-primary @buttonNextClass ">@buttonNextText &rarr;</button>
+	@if (showButtonNext && (stepIndex < (steps.Count -1 )))
+	{
+		<button type="submit" name="navButton" value="Next" class="btn btn-primary @buttonNextClass ">@buttonNextText &rarr;</button>
+	}
 </div>
 

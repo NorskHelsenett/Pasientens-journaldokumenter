@@ -1,6 +1,8 @@
 // This demo project has some very simple session storage to store the authenticated user and associated information to keep things as simple as possible
 using NorskHelsenettUpload.Ihe.Mhd.Models;
 using NorskHelsenettUpload.Models;
+using PatientHealthRecordsEPJ.UploadDocuments;
+using System.Linq;
 
 public class SessionData
 {
@@ -46,4 +48,25 @@ public class SessionData
 	//	Bundle request
 	//
 	public NorskHelsenettUpload.ProvideDocumentBundleRequest? BundleRequest { get; set; } //= new NorskHelsenettUpload.ProvideDocumentBundleRequest();	
+
+	//public int UploadWizardOpenSteps { get; set; }  // How many wizard steps have been opened (how many steps from the start we can navigate directly to)
+
+	//public List<string> UploadWizardOpenSteps { get; set; } = new List<string>(); // Patient, Source, UploadDocument, Classification, Submission, FinalizeSubmission, SubmissionConfirmation, 
+	public List<int> UploadWizardOpenSteps { get; set; } = new List<int>(); // Patient, Source, UploadDocument, Classification, Submission, FinalizeSubmission, SubmissionConfirmation, 
+
+	/*public void AddWizardOpenStep(WizardStepsEnum step)
+	{
+		if (!UploadWizardOpenSteps.Contains(step.ToString()))
+		{
+			UploadWizardOpenSteps.Add(step.ToString());
+		}
+	}*/
+	public void AddWizardOpenStep(int step)
+	{
+		if (!UploadWizardOpenSteps.Contains(step))
+		{
+			UploadWizardOpenSteps.Add(step);
+		}
+	}
 }
+

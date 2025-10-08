@@ -36,29 +36,35 @@ public static class HttpClientExtensions
     {
         httpClientBuilder.AddHttpMessageHandler(serviceProvider =>
         {
-            // Should we validate some options here or leave that to TokenService and DPoPProofCreator?
-            var options = serviceProvider.GetRequiredService<IOptions<HelseIdOptions>>();
-            ArgumentNullException.ThrowIfNull(options);
-            ArgumentNullException.ThrowIfNull(options.Value);
+			var baseOptions = serviceProvider.GetRequiredService<IOptions<HelseIdOptions>>().Value;
 
-            var settings = options.Value;
-            if (configureClient is not null)
-            {
-                configureClient(settings);
-            }
+			// Clone so that each client gets its own independent copy
+			var clientOptions = new HelseIdOptions
+			{
+				PrivateJwk = baseOptions.PrivateJwk,
+				ClientId = baseOptions.ClientId,
+				TokenEndpoint = baseOptions.TokenEndpoint,
+				Audience = baseOptions.Audience,
+				Scopes = baseOptions.Scopes
+			};
 
-            ArgumentException.ThrowIfNullOrWhiteSpace(settings.PrivateJwk);
-            ArgumentException.ThrowIfNullOrWhiteSpace(settings.ClientId);
-            ArgumentException.ThrowIfNullOrWhiteSpace(settings.TokenEndpoint);
-            ArgumentException.ThrowIfNullOrWhiteSpace(settings.Scopes);
+			// Apply per-client overrides
+			configureClient?.Invoke(clientOptions);
 
-            var opt = Options.Create(settings);
-            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            var dPoPProofCreator = new DPoPProofCreator(opt, loggerFactory.CreateLogger<DPoPProofCreator>());
-            var tokenService = new TokenService(opt, loggerFactory.CreateLogger<TokenService>(), httpClientFactory, dPoPProofCreator);
+			// Validate
+			ArgumentException.ThrowIfNullOrWhiteSpace(clientOptions.PrivateJwk);
+			ArgumentException.ThrowIfNullOrWhiteSpace(clientOptions.ClientId);
+			ArgumentException.ThrowIfNullOrWhiteSpace(clientOptions.TokenEndpoint);
+			ArgumentException.ThrowIfNullOrWhiteSpace(clientOptions.Scopes);
 
-            return new HelseIdDelegatingHandler(dPoPProofCreator, tokenService);
+			// Construct handler dependencies using cloned options
+			var opt = Options.Create(clientOptions);
+			var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+			var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+			var dPoPProofCreator = new DPoPProofCreator(opt, loggerFactory.CreateLogger<DPoPProofCreator>());
+			var tokenService = new TokenService(opt, loggerFactory.CreateLogger<TokenService>(), httpClientFactory, dPoPProofCreator);
+
+			return new HelseIdDelegatingHandler(dPoPProofCreator, tokenService);
         });
         return httpClientBuilder;
     }

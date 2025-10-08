@@ -1,5 +1,6 @@
 public enum NavigationAction // Used in the wizard when uploading documents
 {
+	None, // If page is just submitted to update data
 	Previous,
 	Next
 }

@@ -5,15 +5,20 @@ using NorskHelsenettUpload.Ihe.Mhd.Models;
 using NorskHelsenettUpload.Models;
 using System.Globalization;
 using System.Numerics;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace NorskHelsenettUpload.Ihe.Mhd.Services
 {
 	public class BundleCreator : IBundleCreator
 	{
-		public string CreateFhirBundle(ProvideDocumentBundleRequest model, string type)
-		{
+		public const string REMOVED_FOR_DISPLAY_TEXT = "REMOVED_FOR_DISPLAY";
+		public const string REMOVED_FOR_DISPLAY_TEXT_BASE64 = "UkVNT1ZFRF9GT1JfRElTUExBWQ=="; // Must be base64 encoded value of the value in REMOVED_FOR_DISPLAY_TEXT
+
+		public string CreateFhirBundle(ProvideDocumentBundleRequest model, string type, bool removeBinaryDataForDisplay = false)
+		{		
 			model.SetPatientOnAllDocuments();  // Set the SourcePatientInfo instance on all documents
 
 			// NOTE: This implements the Comprehensive Provide Document Bundle (ITI-65).
@@ -48,7 +53,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			// ---------- 3) Per-document: Binary + DocumentReference ----------
 			var docRefFullUrls = new List<string>();
 
-			foreach (var doc in model.DocumentCollection.Documents)
+			foreach (var (doc, index) in model.DocumentCollection.Documents.Select((doc, index) => (doc, index)))
 			{
 				// Binary (only if we have in-memory content; if URL is provided, we can skip Binary)
 				string? binaryFullUrl = null;
@@ -57,6 +62,22 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 					var binaryId = Guid.NewGuid().ToString();
 					binaryFullUrl = $"urn:uuid:{binaryId}";
 					var binaryEntry = BuildBinaryEntry(doc, binaryId);
+
+					if (removeBinaryDataForDisplay && index > 0)
+					{
+						// If we're going to display the serialized submission bundle as a JSON string to the end user (as in Patient Health Records Test EPJ)
+						// then we can remove the binary data to keep the string short
+						// When serialized then the Data property will be base64 encoded so in our user interface we can replace the base64 encoded string (saved in REMOVED_FOR_DISPLAY_TEXT_BASE64)
+						// with anything, such as "...removed for display..." so it is clear to the user what has happened
+
+						// We will only replace data for all documents with index > 0 (so, not the first document) 
+
+						var displayText = REMOVED_FOR_DISPLAY_TEXT; 
+						var displayTextData = Encoding.UTF8.GetBytes(displayText);
+						var binary = (binaryEntry.Resource as Binary);
+						binary.Data = displayTextData; // binary.Data will be a base64 encoded string when we serialize the submission bundle, the same as REMOVED_FOR_DISPLAY_TEXT_BASE64
+					}
+
 					bundle.Entry.Add(binaryEntry);
 				}
 
@@ -320,6 +341,18 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			foreach (var r in containedAuthors) docRef.Contained.Add(r);
 			docRef.Author.AddRange(authorRefs);
 
+			// Add authorInstitution(s) from recordTarget/providerOrganization
+			if (m.ProviderOrganization is not null)
+			{
+				var orgResources = BuildAuthorInstitutionContained(m.ProviderOrganization);
+				foreach (var o in orgResources)
+				{
+					docRef.Contained.Add(o);
+					// Optionally: link one of them directly as Author organization
+					docRef.Author.Add(new ResourceReference { Reference = "#" + o.Id, Type = "Organization" });
+				}
+			}
+
 			// Legal authenticator (contained, optional)
 			var authenticator = BuildLegalAuthenticatorContained(m.LegalAuthenticator);
 			if (authenticator is not null)
@@ -471,6 +504,52 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 
 			return (contained, refs);
 		}
+		
+		private static List<Organization> BuildAuthorInstitutionContained(ProviderOrganization orgModel)
+		{
+			var result = new List<Organization>();
+
+			// Primary organization (providerOrganization)
+			var providerOrg = new Organization
+			{
+				Id = Guid.NewGuid().ToString(),
+				Name = orgModel.Name,
+				Identifier = string.IsNullOrWhiteSpace(orgModel.Identifier)
+					? null
+					: new List<Identifier> {
+				new Identifier {
+					Value = orgModel.Identifier,
+					System = "urn:oid:" + orgModel.AssigningAuthority
+				}
+					  }
+			};
+			result.Add(providerOrg);
+
+			// Handle parent (asOrganizationPartOf)
+			if (orgModel.ParentOrganization is not null)
+			{
+				var parentOrg = new Organization
+				{
+					Id = Guid.NewGuid().ToString(),
+					Name = orgModel.ParentOrganization.Name,
+					Identifier = string.IsNullOrWhiteSpace(orgModel.ParentOrganization.Identifier)
+						? null
+						: new List<Identifier> {
+					new Identifier {
+						Value = orgModel.ParentOrganization.Identifier,
+						System = "urn:oid:" + orgModel.ParentOrganization.AssigningAuthority
+					}
+						  }
+				};
+
+				// Represent hierarchical link
+				providerOrg.PartOf = new ResourceReference { Reference = "#" + parentOrg.Id };
+				result.Add(parentOrg);
+			}
+
+			return result;
+		}
+
 
 		//private static Practitioner? BuildLegalAuthenticatorContained(PersonName? person)
 		private static Practitioner? BuildLegalAuthenticatorContained(Xcn? person)

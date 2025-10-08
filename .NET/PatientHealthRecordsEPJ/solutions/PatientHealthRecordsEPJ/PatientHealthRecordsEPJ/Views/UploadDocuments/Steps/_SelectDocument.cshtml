@@ -1,0 +1,79 @@
+﻿@{
+	var sessionData = Context.Session.SessionData();	
+}
+
+<style>
+	.documents {
+		background-color: #f6f6f6;
+		border-radius: 6px;
+	}
+
+	.selected {
+		background-color: lightskyblue;
+	}
+
+	.btn-remove
+	{
+		border:none; 
+		background:none; 
+		color:red; 
+	}
+</style>
+
+<h4><i class="bi bi-file-earmark fs-1 text-primary"></i> Choose document:</h4>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th></th>
+			<th>Filename</th>
+			<th>Title</th>
+			<th></th>			
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+
+		@foreach (var document in sessionData.BundleRequest.DocumentCollection.Documents)
+		{
+			var extension = System.IO.Path.GetExtension(document.Filename)!.ToLower();
+
+			var fileTypeIcon = extension switch
+			{
+				".pdf" => "bi-filetype-pdf",
+				".xml" => "bi-filetype-xml",
+				_ => ""
+			};
+
+			var selectedClass = "";
+			if (document.Metadata.UniqueId == Model.SelectedDocument.Metadata.UniqueId)
+			{
+				selectedClass = "selected";
+			}
+
+			<tr class="@selectedClass">
+				<td><i class="bi fs-5 @fileTypeIcon"></i> </td>
+				<td>@document.Filename</td>
+				<td>@document.Title</td>
+				<td>
+					@if (document.Metadata.UniqueId != Model.SelectedDocument.Metadata.UniqueId)
+					{
+						<button type="submit" name="selectedFileUniqueId" value="@document.Metadata.UniqueId" class="btn btn-primary">Velg</button>
+					}
+					else
+					{
+						<button class="btn btn-primary disabled">Velg</button>
+					}
+
+					
+				</td>
+				<td>
+					<button type="submit" name="selectedFileUniqueId" value="remove, @document.Metadata.UniqueId" class="btn-remove fs-5" title="Remove"><i class="bi bi-x-square"></i></button>
+				</td>
+			</tr>
+		}
+
+	</tbody>
+</table>
+
+<button type="submit" name="selectedFileUniqueId" value="remove_all" class="btn-remove fs-5" title="Remove"><i class="bi bi-x-square"></i> Remove all</button>

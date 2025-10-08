@@ -1,7 +1,7 @@
 ﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
 @model FinalizeSubmissionViewModel
 
-<partial name="_WizardHeaderPartial" model="5" />
+<partial name="_WizardHeaderPartial" model="6" />
 
 @{
 	string SystemCodeWithColors(string codeAndSystemAndDisplay)
@@ -49,9 +49,24 @@
 		color: darkolivegreen;
 	}
 
+	.error {
+		padding: 10px;
+		color: red;
+		margin: 5px;
+		background-color: #ddd;
+		border: 1px solid red;
+	}
+
 </style>
 
 <div class="container-fluid max">
+
+	@if (Model.IsError)
+	{
+		<div class="error">
+			@Model.ErrorMessage
+		</div>
+	}
 
 	<h3>Verify content before submission to repository - @Model.Upload.DocumentCollection.Documents.Count document(s)</h3>
 	<br />
@@ -306,7 +321,23 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 						</tr>
 						<tr>
 							<td>Submission SourceId:</td>
-							<td>@Model.Upload.Submission.SourceId</td>
+							<td>
+								@Model.Upload.Submission.SourceId
+
+								@{
+									var sourceId = Model.Upload.Submission.SourceId;
+								}
+
+								@if (!string.IsNullOrEmpty(sourceId))
+								{
+									var kilde = KildeInfo.KildeList.First(x => x.HomeCommunityId == sourceId);
+
+									<span class="display">
+										(@kilde.Name)
+									</span>
+								}
+
+							</td>
 						</tr>
 						<tr>
 							<td>PatientId:</td>

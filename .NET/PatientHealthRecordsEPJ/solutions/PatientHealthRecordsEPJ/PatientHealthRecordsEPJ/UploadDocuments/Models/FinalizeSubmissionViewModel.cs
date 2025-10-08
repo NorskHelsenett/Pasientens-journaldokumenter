@@ -7,5 +7,8 @@ namespace PatientHealthRecordsEPJ.UploadDocuments.Models
 		public NorskHelsenettUpload.ProvideDocumentBundleRequest Upload { get; set; } = default!;
 
 		public string? JsonBundleDocument { get; set; }
+
+		public bool IsError { get; set; }
+		public string ErrorMessage { get; set; }
 	}
 }

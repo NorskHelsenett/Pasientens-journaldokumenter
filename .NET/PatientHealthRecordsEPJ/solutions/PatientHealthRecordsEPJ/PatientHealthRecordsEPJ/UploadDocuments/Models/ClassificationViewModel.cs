@@ -1,18 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using NorskHelsenettUpload.Ihe.Mhd.Models;
 
 namespace PatientHealthRecordsEPJ.UploadDocuments.Models
 {
 	public class ClassificationViewModel
-	{
-		//public NorskHelsenettUpload.ProvideDocumentBundleRequest BundleRequest { get; set; } = default!; 
-		public NorskHelsenettUpload.Ihe.Mhd.Models.DocumentEntryMetadata? Metadata { get; set; } = default!;
+	{	
+		public Document? SelectedDocument { get; set; } = default!;
+		public DocumentEntryMetadata? Metadata { get; set; } = default!;
 
 		// Encounter information
 		public SelectList SelectHealthcareFacilityList { get; set; } = default!;
-		public SelectList SelectPracticeSettingCodeList { get; set; } = default!;
-
-		public string  Test {  get; set; }
-
+		public SelectList SelectPracticeSettingCodeList { get; set; } = default!;		
 
 		// Document classification 
 		public SelectList SelectClassificationList { get; set; } = default!;
