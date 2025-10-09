@@ -748,7 +748,9 @@ public class UploadDocumentsController : BaseController
 
 		var files = testDataDocuments.Select(file => System.IO.File.ReadAllBytes(file)).ToList();
 
-		var generatedTestRegistryObjects = TestDataGeneratorService.GenerateRegistryObjectsFromTestData(jsonTestData, entriesToGenerate);
+		var creationTime = DateTime.Now;
+
+		var generatedTestRegistryObjects = TestDataGeneratorService.GenerateRegistryObjectsFromTestData(jsonTestData, entriesToGenerate, creationTime);
 
 		var files2 = jsonTestData.Documents.Select(file => Convert.FromBase64String(file));
 		

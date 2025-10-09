@@ -8,16 +8,27 @@ namespace XcaXds.Commons.Services;
 
 public static class TestDataGeneratorService
 {
-    public static List<RegistryObjectDto> GenerateRegistryObjectsFromTestData(Test_DocumentReference documentEntryValues, int amount)
+    public static List<RegistryObjectDto> GenerateRegistryObjectsFromTestData(Test_DocumentReference documentEntryValues, int amount, DateTime? creationTime = null, int maxSecondsIntoPast = 100_000_000)
     {
         var registryObjects = new List<RegistryObjectDto>();
 
         int maxCount = 0;
 
-        while (maxCount < amount)
+		var randomCreationTime = creationTime == null;        
+
+		while (maxCount < amount)
         {
-            var rng = new Random();
-            var creationTime = DateTime.UtcNow.AddSeconds(-rng.Next(100_000_000));
+            var rng = new Random();            
+
+            if (randomCreationTime)
+            {
+                creationTime = DateTime.UtcNow.AddSeconds(-rng.Next(maxSecondsIntoPast));
+            }
+            else
+            {
+                // If we have a submission with a set of documents, then make sure each document will have a creation time 10 seconds apart
+                creationTime = creationTime.Value.AddSeconds(10);
+            }
 
             var documentEntry = new DocumentEntryDto()
             {
@@ -25,7 +36,7 @@ public static class TestDataGeneratorService
                 AvailabilityStatus = PickRandom(documentEntryValues.PossibleDocumentEntryValues.AvailabilityStatuses),
                 ClassCode = PickRandom(documentEntryValues.PossibleDocumentEntryValues.ClassCodes),
                 ConfidentialityCode = PickRandomAmount(documentEntryValues.PossibleDocumentEntryValues.ConfidentialityCodes, Random.Shared.Next(3) + 1)?.Distinct().ToList(),
-                CreationTime = creationTime.AddSeconds(-rng.Next(10_000)),
+                CreationTime = randomCreationTime ? creationTime.Value.AddSeconds(-rng.Next(10_000)) : creationTime.Value,
                 EventCodeList = PickRandom(documentEntryValues.PossibleDocumentEntryValues.EventCodeLists),
                 FormatCode = PickRandom(documentEntryValues.PossibleDocumentEntryValues.FormatCodes),
                 Hash = SHA256.Create().ToString(),
@@ -38,8 +49,8 @@ public static class TestDataGeneratorService
                 ObjectType = PickRandom(documentEntryValues.PossibleDocumentEntryValues.ObjectTypes),
                 PracticeSettingCode = PickRandom(documentEntryValues.PossibleDocumentEntryValues.PracticeSettingCodes),
                 RepositoryUniqueId = PickRandom(documentEntryValues.PossibleDocumentEntryValues.RepositoryUniqueIds),
-                ServiceStartTime = creationTime.AddSeconds(-rng.Next(10_000, 20_000)),
-                ServiceStopTime = creationTime.AddSeconds(-rng.Next(10_000)),
+                ServiceStartTime = creationTime.Value.AddSeconds(-rng.Next(10_000, 20_000)),
+                ServiceStopTime = creationTime.Value.AddSeconds(-rng.Next(10_000)),
                 Size = "32768",
                 SourcePatientInfo = PickRandom(documentEntryValues.PossibleDocumentEntryValues.SourcePatientInfos),
                 Title = PickRandom(documentEntryValues.PossibleDocumentEntryValues.Titles),
@@ -53,7 +64,7 @@ public static class TestDataGeneratorService
                 AvailabilityStatus = PickRandom(documentEntryValues.PossibleDocumentEntryValues.AvailabilityStatuses),
                 HomeCommunityId = documentEntry.HomeCommunityId,
                 Id = Guid.NewGuid().ToString(),
-                SubmissionTime = creationTime.AddSeconds(-rng.Next(1000)),
+                SubmissionTime = creationTime.Value.AddSeconds(-rng.Next(1000)),
                 SourceId = documentEntry.HomeCommunityId + $".{new Random().Next(4096)}.{new Random().Next(4096)}.{new Random().Next(4096)}",
                 UniqueId = documentEntry.HomeCommunityId + $".{new Random().Next(4096)}.{new Random().Next(4096)}.{new Random().Next(4096)}",
                 Title = PickRandom(documentEntryValues.PossibleDocumentEntryValues.Titles)
