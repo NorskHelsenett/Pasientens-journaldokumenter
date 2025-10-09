@@ -98,7 +98,7 @@
 					<div class="row mb-3">
 						<label for="inputCreationTime" class="col-sm-2 col-form-label">Created: </label>
 						<div class="col-sm-10">
-							<input asp-for="SelectedDocument.CreationTime" type="date" class="form-control" id="inputCreationTime">
+							<input asp-for="SelectedDocument.CreationTime" type="datetime-local" class="form-control" id="inputCreationTime" step="1" value="@Model.SelectedDocument.CreationTime.ToString("yyyy-MM-ddTHH:mm:ss")">
 						</div>
 					</div>
 
