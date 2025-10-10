@@ -118,8 +118,8 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			var spi = model.Patient;
 			var identifierType = spi?.NinType switch
 			{
-				"Dnumber" => "urn:oid:2.16.578.1.12.4.1.4.2",
-				"NationalIdentityNumber" => "urn:oid:2.16.578.1.12.4.1.4.1",
+				NinType.NinTypeDnumber => "urn:oid:2.16.578.1.12.4.1.4.2",
+				NinType.NinTypeNationalIdentityNumber => "urn:oid:2.16.578.1.12.4.1.4.1",
 				_ => null
 			};
 

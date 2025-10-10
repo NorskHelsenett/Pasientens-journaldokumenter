@@ -3,7 +3,7 @@
     public class NinType
     {
 		public const string NinTypeNationalIdentityNumber = "NationalIdentityNumber";
-		public const string NinTypeDnumber = "Dnumber";
+		public const string NinTypeDnumber = "DNumber";
 	}
 
     public class SourcePatientInfo
@@ -12,7 +12,7 @@
         public DateTime DateOfBirth { get; set; } //PID-7 => "PID-7|19650715"
         public string? Gender { get; set; } // PID-8 => "PID-8|M"
         public string? NIN { get; set; } // Personal identifier
-        public string? NinType { get; set; } // F-number or others (D-number, FHNumber), value: "Dnumber" | "NationalIdentityNumber"
+        public string? NinType { get; set; } // F-number or others (D-number, FHNumber), value: "DNumber" | "NationalIdentityNumber"
 		public string? XdsGlobalIdentifier { get; set; } // Unique global identifier from XDS-environment
         public string? XdsHomeCommunity { get; set; } // Known OID by XDS-environmemt
 
