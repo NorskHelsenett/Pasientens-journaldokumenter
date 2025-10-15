@@ -169,7 +169,7 @@ public class HomeController : BaseController
 			switch (model.DocumentListScopeId)
 			{
 				case (int)DocumentListScopeEnum.HelsepersonellovenParagraf45:
-					sessionData.DocumentListScopeName = "Helsepersonelloven § 45";
+					sessionData.DocumentListScopeName = "Helsepersonelloven \u00A7 45";
 					break;
 
 				case (int)DocumentListScopeEnum.Kjernejournalforskriften:
@@ -273,7 +273,7 @@ public class HomeController : BaseController
 			switch (model.DocumentListScopeId)
 			{
 				case (int)DocumentListScopeEnum.HelsepersonellovenParagraf45:
-					sessionData.DocumentListScopeName = "Helsepersonelloven § 45";
+					sessionData.DocumentListScopeName = "Helsepersonelloven \u00A7 45";
 					break;
 
 				case (int)DocumentListScopeEnum.Kjernejournalforskriften:
