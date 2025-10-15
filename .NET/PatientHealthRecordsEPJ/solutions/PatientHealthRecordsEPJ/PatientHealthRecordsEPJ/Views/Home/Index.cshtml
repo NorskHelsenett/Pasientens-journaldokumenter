@@ -16,13 +16,38 @@
 
 				<div class="row">
 					<div class="col-md-12">
-						<h5>1. Velg miljø (TEST og QA er tilgjengelig): </h5>
+						<h5>1. Velg miljø @* (<span class="environment test">TEST</span> og <span class="environment qa">QA</span> er tilgjengelig):  *@</h5>
 
 						<div>
-							<select asp-for="EnvironmentId"
+							@* <select asp-for="EnvironmentId"
 									asp-items="@(new SelectList(PasientvalgViewModel.EnvironmentList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
 									class="w-100">
-							</select>
+							</select> *@
+
+							@foreach (var env in PasientvalgViewModel.EnvironmentList)
+							{
+								var info = env.Id switch
+								{
+									"test" => "api.pjd.test.nhn.no => pjd.ehs.test.nhn.no",
+									"qa" => "api.pjd.qa.nhn.no => pjd.ehs.qa.nhn.no",
+									_ => ""
+								}; 
+								
+								<div class="form-check">
+									<input class="form-check-input"
+										   type="radio"
+										   asp-for="EnvironmentId"
+										   value="@env.Id"
+										   id="env_@env.Id" />
+
+									<label class="form-check-label environment @env.Id" for="env_@env.Id">
+										@env.Label  (@info)
+									</label>
+								</div>
+							}
+
+							@* <span asp-validation-for="EnvironmentId" class="text-danger"></span> *@
+
 						</div>
 
 					</div>
@@ -176,7 +201,7 @@ else
 				}
 				else
 				{
-					
+
 				}
 
 				<div class="text-center fs-3">

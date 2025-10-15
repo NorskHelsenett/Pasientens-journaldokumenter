@@ -26,8 +26,7 @@ public class DocumentController : BaseController
 		ILogger<HomeController> logger, 
 		IHttpContextAccessor httpContextAccessor, 
 		IMemoryCache memoryCache, 
-		IWebHostEnvironment webHostEnvironment,
-		PhrApiOptions apiOptions,
+		IWebHostEnvironment webHostEnvironment,		
 		IOidcClientService oidcClientService) : base(sessionOptions)
 	{
 		_logger = logger;

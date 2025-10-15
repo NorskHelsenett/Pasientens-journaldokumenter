@@ -28,7 +28,7 @@ public interface IPhrApiService
 /// Service class for Patient Health Records API operations
 /// </summary>
 /// <param name="httpClient">client to make the server calls</param>
-public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, PhrApiOptions _apiOptions) : IPhrApiService
+public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, IPhrApiEnvironmentProvider _phrApiEnvironmentProvider) : IPhrApiService
 {
 	/// <summary>
 	/// Post new document, including document reference's metainformation to repository in Norsk helsenett via BFF
@@ -48,8 +48,10 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ"));
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
+		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment(); 
+
 		//var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl;
-		var apiUrl = _apiOptions.ProvideDocumentBundleUrl;
+		var apiUrl = _apiEnvironment.ProvideDocumentBundleUrl;
 		
 		StringContent stringContent = new StringContent(content, Encoding.UTF8, mediaType: "application/fhir+json"); 
 
@@ -86,8 +88,10 @@ public class PhrApiService(HttpClient _httpClient, IPhrApiCaller _apiCaller, Phr
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ"));
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
+		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment(); 
+
 		//var apiUrl = _apiUrlSettings.GetDocumentReferencesApiUrl;
-		var apiUrl = _apiOptions.GetDocumentReferencesApiUrl;
+		var apiUrl = _apiEnvironment.GetDocumentReferencesApiUrl;
 
 		/*var urlencodedContent = new FormUrlEncodedContent([
 			new("patient.identifier", sessionLoginResult.PatientId),

@@ -2,6 +2,13 @@
 
 public class PhrApiOptions
 {
+	public string? ActiveEnvironment { get; set; } = default!; // test, qa
+	public List<PhrApiEnvironment> Environments { get; set; } = default!;
+}
+
+public class PhrApiEnvironment
+{
+	public string Environment { get; set; } = default!;	
 	public string GetDocumentReferencesApiUrl { get; set; } = default!;
 	public string GetDocumentApiUrl { get; set; } = default!;
 	public string GetSamlAssertionUrl { get; set; } = default!;

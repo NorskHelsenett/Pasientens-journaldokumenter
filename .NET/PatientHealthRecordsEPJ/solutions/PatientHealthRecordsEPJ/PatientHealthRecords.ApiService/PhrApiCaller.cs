@@ -34,7 +34,7 @@ public interface IPhrApiCaller
 		); 
 }
 
-public class PhrApiCaller(PhrApiOptions apiOptions) : IPhrApiCaller
+public class PhrApiCaller(IPhrApiEnvironmentProvider phrApiEnvironmentProvider) : IPhrApiCaller
 {
 	// Call Get Document References or Get Document api endpoints, with accesstoken and DPoP 
 	public async Task<ApiResult> CallApi(

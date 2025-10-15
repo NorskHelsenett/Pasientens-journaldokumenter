@@ -13,7 +13,11 @@ AppContext.SetSwitch("Switch.System.Xml.AllowDefaultResolver", true);
 var builder = WebApplication.CreateBuilder(args);
 
 var apiOptions = builder.Configuration.GetSection("ApiOptions").Get<PhrApiOptions>()!;
+
 builder.Services.AddSingleton(apiOptions);
+builder.Services.AddSingleton(apiOptions.Environments);
+
+builder.Services.AddScoped<IPhrApiEnvironmentProvider, PhrApiEnvironmentProvider>();
 
 builder.Services
 	.AddOptions<HelseIdOptions>()

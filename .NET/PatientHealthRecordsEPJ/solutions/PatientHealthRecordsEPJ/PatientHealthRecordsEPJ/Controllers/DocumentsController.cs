@@ -17,7 +17,7 @@ public class DocumentsController : BaseController
 	private ISession session => _httpContextAccessor.HttpContext!.Session;
 	private readonly IMemoryCache _memoryCache;
 	private readonly IOidcClientService _oidcClientService;
-	private readonly PhrApiOptions _apiOptions; 
+	private readonly IPhrApiEnvironmentProvider _phrApiEnvironmentProvider;
 
 	SessionData sessionLoginResult;
 
@@ -43,13 +43,13 @@ public class DocumentsController : BaseController
 		ILogger<HomeController> logger, 
 		IHttpContextAccessor httpContextAccessor, 
 		IMemoryCache memoryCache,
-		PhrApiOptions apiOptions, 
+		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		IOidcClientService oidcClientService) : base(sessionOptions)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
 		_memoryCache = memoryCache;
-		_apiOptions = apiOptions;
+		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 		_oidcClientService = oidcClientService;
 	}
 
@@ -126,7 +126,10 @@ public class DocumentsController : BaseController
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ"));
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
-		var apiUrl = _apiOptions.GetDocumentReferencesApiUrl;
+
+		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment(); 
+
+		var apiUrl = _apiEnvironment.GetDocumentReferencesApiUrl;
 
 		var urlencodedContent = new FormUrlEncodedContent([
 			new("patient.identifier", sessionLoginResult.SourcePatientInfo?.NIN),

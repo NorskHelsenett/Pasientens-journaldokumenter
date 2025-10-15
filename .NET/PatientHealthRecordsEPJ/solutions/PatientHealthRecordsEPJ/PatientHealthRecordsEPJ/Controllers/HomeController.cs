@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using NorskHelsenettUpload.Models;
+using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Models;
 using PatientHealthRecordsEPJ.Services;
 using System.Diagnostics;
@@ -27,7 +28,8 @@ public class HomeController : BaseController
 	private ISession session => _httpContextAccessor.HttpContext!.Session;
 	private readonly IMemoryCache _memoryCache;
 	private readonly IOidcClientService _oidcClientService;
-	private readonly OrganizationService _organizationService; 
+	private readonly OrganizationService _organizationService;
+	private readonly IPhrApiEnvironmentProvider _phrApiEnvironmentProvider; 
 
 	public const string ClientId = "2141d734-7604-42ca-a377-27f1b712f4e6"; // "Patient Health Records API EPJ". Privatnøkkel ligger i Constants.cs
 
@@ -62,6 +64,7 @@ public class HomeController : BaseController
 		IHttpContextAccessor httpContextAccessor, 
 		IMemoryCache memoryCache, 
 		IOidcClientService oidcClientService,
+		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		OrganizationService organizationService
 		) : base(sessionOptions)
 	{
@@ -70,6 +73,7 @@ public class HomeController : BaseController
 		_memoryCache = memoryCache;
 		_oidcClientService = oidcClientService;
 		_organizationService = organizationService; 
+		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
 	
 	public IActionResult Index()
@@ -402,6 +406,8 @@ public class HomeController : BaseController
 			var pid = jsonIdentityToken.Claims.FirstOrDefault(c => c.Type == "helseid://claims/identity/pid")?.Value;
 
 			//var sessionLoginResult = session.SessionLoginResult(); // Vi har allerede opprettet en instans i LoginStep1 for å lagre autorisasjon
+
+			_phrApiEnvironmentProvider.SetCurrentEnvironment(sessionData.EnvironmentId!);
 
 			sessionData.IsAuthenticated = true;
 			sessionData.IdentityToken = loginResult.IdentityToken;
