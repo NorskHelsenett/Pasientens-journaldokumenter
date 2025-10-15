@@ -23,7 +23,7 @@ public class PasientvalgViewModel
 
 	public static List<OptionPair> DocumentListScopeList { get; set; } = new List<OptionPair>()
 	{
-		new OptionPair() { Id = ((int)DocumentListScopeEnum.HelsepersonellovenParagraf45).ToString(), Label = "Helsepersonelloven § 45 (krever ikke grunnlag/access-basis, ingen filtrering)" },
+		new OptionPair() { Id = ((int)DocumentListScopeEnum.HelsepersonellovenParagraf45).ToString(), Label = "Helsepersonelloven \u00A7 45 (krever ikke grunnlag/access-basis, ingen filtrering)" },
 		new OptionPair() { Id = ((int)DocumentListScopeEnum.Kjernejournalforskriften).ToString(), Label = "Kjernejournalforskriften (krever grunnlag/access-basis, har filtrering)" },
 	};
 
