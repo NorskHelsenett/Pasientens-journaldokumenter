@@ -175,6 +175,11 @@ public class UploadDocumentsController : BaseController
 			return RedirectToAction("PasientValg", "Patient"); 
 		}
 
+		if (sessionData.EnvironmentId == "qa")
+		{
+			return View("QA"); 
+		}
+
 		if (sessionData.BundleRequest == null)
 		{
 			var bundleRequest = new ProvideDocumentBundleRequest();
