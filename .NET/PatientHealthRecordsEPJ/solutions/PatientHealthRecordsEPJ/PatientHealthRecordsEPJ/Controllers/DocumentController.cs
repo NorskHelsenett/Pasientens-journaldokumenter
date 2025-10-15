@@ -253,9 +253,18 @@ public class DocumentController : BaseController
 		}
 	}
 
+	public static string GetBaseUrl(HttpRequest request)
+	{
+		var baseUrl = $"{request.Scheme}://{request.Host.Value}";
+#if !DEBUG
+        baseUrl = baseUrl.Replace("http://", "https://");  // When inside a pod in the cluster we'll just get http as the scheme, but we need https for consumers of the api
+#endif
+		return baseUrl;
+	}
+
 	public async Task<byte[]> GetPdfFromTxtAsync(string base64Text)
 	{
-		var baseUrl = $"{Request.Scheme}://{Request.Host}/api/"; 
+		var baseUrl = GetBaseUrl(Request) + "/api/"; 
 
 		var httpClient = new HttpClient();
 		httpClient.BaseAddress = new Uri(baseUrl + "mediaProcessorCreator/text2pdf");
@@ -269,7 +278,7 @@ public class DocumentController : BaseController
 	//public async Task<byte[]> GetHtmlFromRtfAsync(string base64Text)
 	public async Task<string> GetHtmlFromRtfAsync(string base64Text)
 	{
-		var baseUrl = $"{Request.Scheme}://{Request.Host}/api/";
+		var baseUrl = GetBaseUrl(Request) + "/api/";
 
 		var httpClient = new HttpClient();
 		httpClient.BaseAddress = new Uri(baseUrl + "mediaProcessorCreator/rtf2html");
