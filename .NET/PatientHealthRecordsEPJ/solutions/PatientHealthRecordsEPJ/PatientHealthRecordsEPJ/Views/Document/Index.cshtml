@@ -20,6 +20,15 @@
 		display: none;
 	}
 
+	iframe
+	{
+		width:100%;
+		height:800px; 
+
+		/* border:none;  */
+		border: 1px solid #aaa; 
+	}
+
 </style>
 
 <script>
@@ -111,19 +120,13 @@
 
 					@if (Model.ContentType == "application/pdf")
 					{
-						<iframe src="data:application/pdf;base64,@Model.PdfBase64String"
-								width="100%"
-								height="800px"
-								style="border: none;">
+						<iframe src="data:application/pdf;base64,@Model.PdfBase64String">
 						</iframe>
 					}
 
-					@if (Model.ContentType == "application/xml")
+					@if (Model.ContentType == "application/xml" || Model.ContentType == "text/plain" || Model.ContentType == "application/rtf")
 					{
-						<iframe id="contentIframe"
-								width="100%"
-								height="800px"
-								style="border: none;">
+						<iframe id="contentIframe">
 						</iframe>
 
 						<script type="text/javascript">

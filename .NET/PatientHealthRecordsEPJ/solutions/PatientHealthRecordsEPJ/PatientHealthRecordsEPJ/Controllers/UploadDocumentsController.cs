@@ -14,15 +14,18 @@ using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Services;
 using PatientHealthRecordsEPJ.UploadDocuments.Lists;
 using PatientHealthRecordsEPJ.UploadDocuments.Models;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml;
 using XcaXds.Commons.Commons;
 using XcaXds.Commons.Models.Custom.RegistryDtos;
 using XcaXds.Commons.Models.Custom.RegistryDtos.TestData;
 using XcaXds.Commons.Serializers;
 using XcaXds.Commons.Services;
+using static Hl7.Fhir.Model.Composition;
 
 
 namespace PatientHealthRecordsEPJ.Controllers;
@@ -166,6 +169,11 @@ public class UploadDocumentsController : BaseController
 	public async Task<IActionResult> Patient()
 	{
 		var sessionData = session.SessionData();
+
+		if (string.IsNullOrEmpty(sessionData.PatientId))
+		{
+			return RedirectToAction("PasientValg", "Patient"); 
+		}
 
 		if (sessionData.BundleRequest == null)
 		{
@@ -426,7 +434,7 @@ public class UploadDocumentsController : BaseController
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> UploadFiles(List<IFormFile> files, string fileCreationDates)
+	public async Task<IActionResult> UploadFiles(List<IFormFile> files, string fileCreationDates, string dateType)
 	{	
 		if (files == null || files.Count == 0)
 			return BadRequest("No files uploaded.");
@@ -458,7 +466,30 @@ public class UploadDocumentsController : BaseController
 				bytes = ms.ToArray();
 			}
 
-			var document = await CreateDocument(file.FileName, file.ContentType, bytes, fileDate!.lastModified);
+			DateTime creationTime = fileDate!.lastModified;
+
+			var extension = Path.GetExtension(file.FileName);
+
+			if (extension.ToLower() != ".xml")
+			{
+				switch (dateType)
+				{
+					// Use current date and time as document date
+					case "now":
+						creationTime = DateTime.Now;
+						break;
+
+					// Use file date as document date
+					case "filedate":
+						creationTime = fileDate!.lastModified;
+						break;
+
+					default:
+						break;
+				}
+			}
+
+			var document = await CreateDocument(file.FileName, file.ContentType, bytes, creationTime);
 
 			request.DocumentCollection.WithDocument(document, selectDocument: true);
 
@@ -673,6 +704,14 @@ public class UploadDocumentsController : BaseController
 				break;
 
 			default:
+				var fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+				
+				document.WithTitle(ToPascalCase(fileNameNoExtension));
+
+				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == "N");
+
+				document.Metadata.WithConfidentialityCode(confidentiality);
+			
 				break;
 		}
 
@@ -701,6 +740,26 @@ public class UploadDocumentsController : BaseController
 			document.Metadata.WithPracticeSettingCode(practiceSettingCode); 
 		}
 		return document; 
+	}
+
+	private static string ToPascalCase(string s)
+	{
+		if (string.IsNullOrWhiteSpace(s))
+			return string.Empty;
+
+		// Replace separators (underscore, dash, or space) with a single space
+		s = Regex.Replace(s, @"[_\-\s]+", " ");
+
+		// Split into words, capitalize each, then concatenate
+		TextInfo textInfo = CultureInfo.InvariantCulture.TextInfo;
+		var words = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+		for (int i = 0; i < words.Length; i++)
+		{
+			words[i] = textInfo.ToTitleCase(words[i].ToLowerInvariant());
+		}
+
+		return string.Concat(words);
 	}
 
 	private static string NormalizeMime(string contentType, string extension)
@@ -804,7 +863,7 @@ public class UploadDocumentsController : BaseController
 					fileName,
 					contentType,
 					cdaXmlBytes,
-					generatedTestObject.CreationTime!.Value,
+					generatedTestObject.CreationTime!.Value,					
 					createRandom: true
 					);
 

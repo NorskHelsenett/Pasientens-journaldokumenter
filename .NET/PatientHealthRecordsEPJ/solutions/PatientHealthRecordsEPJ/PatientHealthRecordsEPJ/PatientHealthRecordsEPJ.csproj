@@ -37,6 +37,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\FileFormatConversionLibrary\FileFormatConversionLibrary.csproj" />
 	  <ProjectReference Include="..\NorskHelsenettUpload\NorskHelsenettUpload.csproj" />
 	  <ProjectReference Include="..\PatientHealthRecords.ApiService\PatientHealthRecords.ApiService.csproj" />
 	  <ProjectReference Include="..\TestDataGenerator\TestDataGenerator.csproj" />

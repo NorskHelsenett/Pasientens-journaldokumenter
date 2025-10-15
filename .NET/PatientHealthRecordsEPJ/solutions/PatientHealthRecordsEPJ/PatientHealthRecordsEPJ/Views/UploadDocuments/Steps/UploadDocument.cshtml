@@ -8,6 +8,14 @@
 
 <partial name="_WizardHeaderPartial" model="3" />
 
+<style>
+	.options
+	{
+		background-color: #eaeaea;
+		border-radius:6px; 
+	}
+</style>
+
 <div class="container-fluid max">
 
 	<div class="row">
@@ -22,11 +30,20 @@
 					</div>
 				</div>
 
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-12 options">
+						Options for non-CDA (.xml) documents: <strong>.rtf, .pdf, .txt</strong>, etc:<br />
+						<label><input type="radio" id="dateType" name="dateType" value="now" checked> Use current date and time as document date @* (will be sorted at the top of list as default) *@</label><br />
+						<label><input type="radio" id="dateType" name="dateType" value="filedate"> Use file date as document date</label>
+					</div>
+				</div>
+
 				<!-- This is set with the Javascript snippet at the bottom -->
 				<!-- This will hold an array of fileCreationDates as JSON -->
 				<input type="hidden" id="fileCreationDates" name="fileCreationDates">
 
-				<button type="submit" class="btn btn-primary">Submit - Add document(s) to submission set</button>
+				<button type="submit" class="btn btn-primary">Add document(s) to submission set</button>
 			</form>
 
 			<br>
@@ -52,7 +69,7 @@
 					</div>
 				</div>
 
-				<button type="submit" class="btn btn-primary">Submit - Generate random test document(s) for submission set</button>
+				<button type="submit" class="btn btn-primary">Generate random test document(s) for submission set</button>
 			</form>
 
 			<br />

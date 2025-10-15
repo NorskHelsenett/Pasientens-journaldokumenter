@@ -129,41 +129,76 @@ public class DocumentController : BaseController
 
 							var textNode = doc.DocumentElement!.SelectSingleNode("//hl7:component/hl7:nonXMLBody/hl7:text", namespaceManager);
 
+							var removeTextNodeForDisplay = false; 
+
 							if (textNode is not null)
 							{
 								var mediaType = textNode.Attributes["mediaType"]?.Value;
 								var representation = textNode.Attributes["representation"]?.Value;
-
+								
 								if (mediaType == "application/pdf" && representation == "B64")
 								{
+									removeTextNodeForDisplay = true;
+
 									model.PdfBase64String = textNode.InnerText;
 									model.ContentType = "application/pdf";
 
 									// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
 									// "DownloadPdf" action method and point the IFRAME src to that instead? 
 									//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
+																	
+									model.IsSuccess = true;									
+								}
+								else if (mediaType == "application/rtf" && representation == "B64")
+								{
+									removeTextNodeForDisplay = true;
+
+									model.Html = await GetHtmlFromRtfAsync(textNode.InnerText); 
 									
-									textNode.InnerText = "...removed for display...";
+									model.ContentType = "application/rtf";	
 
-									model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
-									model.IsShowClinicalDocumentXml = true;										
-
-									model.IsSuccess = true;
-
-									return model;
+									model.IsSuccess = true;									
 								}
 								else if (mediaType == "application/xml")
 								{
+									removeTextNodeForDisplay = true;
+
 									// Extract KITH xml from ClinicalDocument
 
-									xml = string.Empty; 
-									
+									xml = string.Empty;
+
 									xml = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
 
-									doc.LoadXml(xml); 
+									doc.LoadXml(xml);
 
 									// Fall through to displaying KITH xml below
 								}
+								else if (mediaType == "text/plain")
+								{
+									var text = string.Empty;
+
+									text = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
+
+									model.Html = text;
+
+									model.ContentType = "text/plain";
+
+									model.IsSuccess = true;																	
+								}
+
+								if (removeTextNodeForDisplay)
+								{
+									textNode.InnerText = "...removed for display...";
+								}
+
+								model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
+								model.IsShowClinicalDocumentXml = true;
+
+								if (model.IsSuccess)
+								{
+									return model; 
+								}
+
 							}
 						}
 						
@@ -216,6 +251,34 @@ public class DocumentController : BaseController
 			model.ErrorMessage = "Could not retreive document";
 			return model;
 		}
+	}
+
+	public async Task<byte[]> GetPdfFromTxtAsync(string base64Text)
+	{
+		var baseUrl = $"{Request.Scheme}://{Request.Host}/api/"; 
+
+		var httpClient = new HttpClient();
+		httpClient.BaseAddress = new Uri(baseUrl + "mediaProcessorCreator/text2pdf");
+
+		var httpContent = new StringContent(base64Text, Encoding.UTF8, "text/plain");
+		var result = await httpClient.PostAsync(httpClient.BaseAddress, httpContent);
+
+		return await result.Content.ReadAsByteArrayAsync();
+	}
+
+	//public async Task<byte[]> GetHtmlFromRtfAsync(string base64Text)
+	public async Task<string> GetHtmlFromRtfAsync(string base64Text)
+	{
+		var baseUrl = $"{Request.Scheme}://{Request.Host}/api/";
+
+		var httpClient = new HttpClient();
+		httpClient.BaseAddress = new Uri(baseUrl + "mediaProcessorCreator/rtf2html");
+
+		var httpContent = new StringContent(base64Text, Encoding.UTF8, "text/plain");
+		var result = await httpClient.PostAsync(httpClient.BaseAddress, httpContent);
+
+		//return await result.Content.ReadAsByteArrayAsync();
+		return await result.Content.ReadAsStringAsync();
 	}
 
 	public static string PrettyPrintXml(string xml)

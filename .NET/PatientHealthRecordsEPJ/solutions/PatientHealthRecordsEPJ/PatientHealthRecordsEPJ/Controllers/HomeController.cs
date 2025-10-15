@@ -29,6 +29,7 @@ public class HomeController : BaseController
 	private readonly IMemoryCache _memoryCache;
 	private readonly IOidcClientService _oidcClientService;
 	private readonly OrganizationService _organizationService;
+	private readonly PhrApiOptions _phrApiOptions;
 	private readonly IPhrApiEnvironmentProvider _phrApiEnvironmentProvider; 
 
 	public const string ClientId = "2141d734-7604-42ca-a377-27f1b712f4e6"; // "Patient Health Records API EPJ". Privatnøkkel ligger i Constants.cs
@@ -64,6 +65,7 @@ public class HomeController : BaseController
 		IHttpContextAccessor httpContextAccessor, 
 		IMemoryCache memoryCache, 
 		IOidcClientService oidcClientService,
+		PhrApiOptions phrApiOptions,
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		OrganizationService organizationService
 		) : base(sessionOptions)
@@ -73,6 +75,7 @@ public class HomeController : BaseController
 		_memoryCache = memoryCache;
 		_oidcClientService = oidcClientService;
 		_organizationService = organizationService; 
+		_phrApiOptions = phrApiOptions;
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
 	
@@ -407,7 +410,9 @@ public class HomeController : BaseController
 
 			//var sessionLoginResult = session.SessionLoginResult(); // Vi har allerede opprettet en instans i LoginStep1 for å lagre autorisasjon
 
-			_phrApiEnvironmentProvider.SetCurrentEnvironment(sessionData.EnvironmentId!);
+			var environmentId = !string.IsNullOrEmpty(_phrApiOptions.ActiveEnvironment) ? _phrApiOptions.ActiveEnvironment : sessionData.EnvironmentId!; 
+
+			_phrApiEnvironmentProvider.SetCurrentEnvironment(environmentId);
 
 			sessionData.IsAuthenticated = true;
 			sessionData.IdentityToken = loginResult.IdentityToken;

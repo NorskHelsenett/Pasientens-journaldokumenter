@@ -7,7 +7,6 @@ public class RichTextDocument
 {
     public static byte[] GetRendered(string text)
     {
-
         var html = CreateHtmlFromRtf(text);
 
         return Encoding.UTF8.GetBytes(html);

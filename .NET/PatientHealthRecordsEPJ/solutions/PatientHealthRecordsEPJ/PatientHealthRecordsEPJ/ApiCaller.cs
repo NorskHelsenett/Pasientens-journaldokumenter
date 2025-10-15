@@ -113,7 +113,7 @@ public class ApiCaller
 			}
 			else
 			{
-				var responseBytes = await response.Content.ReadAsByteArrayAsync();
+				var responseBytes = await response.Content.ReadAsByteArrayAsync();				
 
 				return new ApiResult()
 				{
