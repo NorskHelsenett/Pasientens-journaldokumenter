@@ -27,7 +27,14 @@
 
 		@if (!string.IsNullOrEmpty(sourceId))
 		{
-			var kilde = KildeInfo.KildeList.First(x => x.HomeCommunityId == sourceId);
+			KildeInfo? kilde = default!;
+
+			kilde = sessionData.EnvironmentId switch
+			{
+				"test" => KildeInfo.KildeListTest.First(x => x.HomeCommunityId == sourceId),
+				"qa" => KildeInfo.KildeListQA.First(x => x.HomeCommunityId == sourceId),
+				_ => null
+			}; 
 
 			<h5>
 				Currently selected source: @kilde.Name (@kilde.HomeCommunityId), @kilde.AppName
@@ -51,7 +58,16 @@
 				</tr>
 			</thead>
 			<tbody>
-				@foreach (var kilde in KildeInfo.KildeList)
+				@{
+					List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+					{
+						"test" => KildeInfo.KildeListTest,
+						"qa" => KildeInfo.KildeListQA,
+						_ => null
+					};
+				}				
+										
+				@foreach (var kilde in kildeList)
 				{
 					var selectedClass = "";
 					if (kilde.HomeCommunityId == sourceId)

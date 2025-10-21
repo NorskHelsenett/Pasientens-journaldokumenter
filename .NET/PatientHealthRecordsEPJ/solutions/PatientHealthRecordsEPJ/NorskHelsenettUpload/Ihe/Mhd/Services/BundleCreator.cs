@@ -14,6 +14,8 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 {
 	public class BundleCreator : IBundleCreator
 	{
+		public const string COMPREHENSIVE = "Comprehensive";		
+
 		public const string REMOVED_FOR_DISPLAY_TEXT = "REMOVED_FOR_DISPLAY";
 		public const string REMOVED_FOR_DISPLAY_TEXT_BASE64 = "UkVNT1ZFRF9GT1JfRElTUExBWQ=="; // Must be base64 encoded value of the value in REMOVED_FOR_DISPLAY_TEXT
 

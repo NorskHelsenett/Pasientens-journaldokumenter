@@ -724,22 +724,10 @@ public class UploadDocumentsController : BaseController
 		{
 			// Healthcare facility type and practice setting code cannot (currently?) be read from CDA
 			// TODO: generate more data randomly? 
-
-			var healthCareFacilityTypes = HealthcareFacilityTypeList.HealthcareFacilityTypes.Select(c =>
-				new TextValue(
-					$"{c.System}|{c.Code}|{c.Display}", // Value in select list
-					$"{c.Display} [{c.Code}]"           // What the user sees
-				)).ToList();
-
-			var healthCareFacilityType = healthCareFacilityTypes[Random.Shared.Next(healthCareFacilityTypes.Count)].Value;
-
-			var practiceSettingCodes = PracticeSettingCodeList.PracticeSettingCodes.Select(c =>
-				new TextValue(
-					$"{c.System}|{c.Code}|{c.Display}",
-					$"{c.Display} [{c.Code}]"
-				)).ToList();
-
-			var practiceSettingCode = practiceSettingCodes[Random.Shared.Next(practiceSettingCodes.Count)].Value;
+			
+			var healthCareFacilityType = HealthcareFacilityTypeList.HealthcareFacilityTypes[Random.Shared.Next(HealthcareFacilityTypeList.HealthcareFacilityTypes.Count)];
+			
+			var practiceSettingCode = PracticeSettingCodeList.PracticeSettingCodes[Random.Shared.Next(PracticeSettingCodeList.PracticeSettingCodes.Count)];
 
 			document.Metadata.WithHealthCareFacilityType(healthCareFacilityType);
 			document.Metadata.WithPracticeSettingCode(practiceSettingCode); 

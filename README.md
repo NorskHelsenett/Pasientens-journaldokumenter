@@ -39,9 +39,11 @@ Demonstrates the following features
 - Show document
   - PDF
   - XML, labsvar, Kith, visningsfil
+  - RTF (automatically converted to HTML)
+  - TXT
 - Show count of restricted documents (with confidentiality code NORS)
 - Show the SAML assertion (only possible in test environment)
-
+- Upload document(s) to NHN national repository instances via our Bundle endpoint
 
 The APIs are protected by HelseId. This requires a HelseId client definition, which can be established in NHN's self service portal.
 Please contact NHN.
@@ -53,3 +55,14 @@ Please contact NHN.
 - Retreiving a document list for a patient  
 - Retreiving a document  
 - Retreiving a SAML assertion (only possible in test environment)
+
+### PatientHealthRecordsEPJ.ConsoleUploadDocument:
+
+- Simple console application demonstrating how to upload document(s) to NHN national repository via Bundle endpoint 
+  - Uses NorskHelsenettUpload library with fluid extensions
+- Log on with HelseID using pushed authorization request
+- Create a ProvideDocumentBundle request with a submission set and a set of documents
+- Calling the PHR API bundle endpoint to upload a document submission set
+
+
+<p></p>

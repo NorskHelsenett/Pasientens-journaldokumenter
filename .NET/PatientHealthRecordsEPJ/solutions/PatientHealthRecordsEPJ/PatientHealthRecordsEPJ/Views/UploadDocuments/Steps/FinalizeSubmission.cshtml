@@ -1,6 +1,10 @@
 ﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
 @model FinalizeSubmissionViewModel
 
+@{
+	var sessionData = Context.Session.SessionData();
+}
+
 <partial name="_WizardHeaderPartial" model="6" />
 
 @{
@@ -329,8 +333,16 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 								}
 
 								@if (!string.IsNullOrEmpty(sourceId))
-								{
-									var kilde = KildeInfo.KildeList.First(x => x.HomeCommunityId == sourceId);
+								{									
+									List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+									{
+										"test" => KildeInfo.KildeListTest,
+										"qa" => KildeInfo.KildeListQA,
+										_ => null
+									};
+													
+
+									var kilde = kildeList.First(x => x.HomeCommunityId == sourceId);
 
 									<span class="display">
 										(@kilde.Name)

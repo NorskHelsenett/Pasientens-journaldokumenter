@@ -15,12 +15,12 @@ public interface IPhrApiEnvironmentProvider
 
 public class PhrApiEnvironmentProvider : IPhrApiEnvironmentProvider
 {
-	private readonly IHttpContextAccessor _httpContextAccessor;
+	private readonly IHttpContextAccessor? _httpContextAccessor;
 	private readonly PhrApiOptions _options;
 
 	private const string SessionKey = "SelectedEnvironment";
 
-	public PhrApiEnvironmentProvider(IHttpContextAccessor httpContextAccessor, PhrApiOptions options)
+	public PhrApiEnvironmentProvider(IHttpContextAccessor? httpContextAccessor, PhrApiOptions options)
 	{
 		_httpContextAccessor = httpContextAccessor;
 		_options = options;

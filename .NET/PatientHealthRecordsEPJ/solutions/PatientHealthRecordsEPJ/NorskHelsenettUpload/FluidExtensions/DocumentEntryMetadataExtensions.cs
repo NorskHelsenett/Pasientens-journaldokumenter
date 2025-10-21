@@ -81,7 +81,7 @@ public static class DocumentEntryMetadataExtensions
 		return metadata;
 	}
 
-	public static DocumentEntryMetadata WithHealthCareFacilityType(this DocumentEntryMetadata metadata, string healthCareFacilityType)
+	/*public static DocumentEntryMetadata WithHealthCareFacilityType(this DocumentEntryMetadata metadata, string healthCareFacilityType)
 	{
 		metadata.HealthCareFacilityType = healthCareFacilityType;
 		return metadata;
@@ -90,6 +90,18 @@ public static class DocumentEntryMetadataExtensions
 	public static DocumentEntryMetadata WithPracticeSettingCode(this DocumentEntryMetadata metadata, string practiceSettingCode)
 	{
 		metadata.PracticeSettingCode = practiceSettingCode;
+		return metadata;
+	}*/
+
+	public static DocumentEntryMetadata WithHealthCareFacilityType(this DocumentEntryMetadata metadata, SimpleCoding healthCareFacilityTypeCode)
+	{
+		metadata.HealthCareFacilityType = healthCareFacilityTypeCode.ToValueString();
+		return metadata;
+	}
+
+	public static DocumentEntryMetadata WithPracticeSettingCode(this DocumentEntryMetadata metadata, SimpleCoding practiceSettingCode)
+	{
+		metadata.PracticeSettingCode = practiceSettingCode.ToValueString();
 		return metadata;
 	}
 
