@@ -12,6 +12,16 @@
 		return system?.Replace("urn:oid:", string.Empty) == oid;
 	}
 
+	string NoUrn(string input)
+	{
+		if (string.IsNullOrEmpty(input))
+		{
+			return input;
+		}
+
+		return input.Replace("urn:uuid:", "").Replace("urn:oid:", "");
+	}
+
 	string GetInstitutionName(DocumentReference document)
 	{
 		foreach (var author in document.Author)
@@ -91,6 +101,31 @@
 		}
 		return "-"; // Ikke Tilgjengelig
 	}	
+
+	string? GetHomeCommunityId(DocumentReference document)
+	{		
+		var homeCommunityIdExtension = document.Extension.FirstOrDefault(x => x.Url == "http://ihe.net/fhir/StructureDefinition/ihe-homeCommunityId"); 
+
+		var homeCommunityId = homeCommunityIdExtension?.Value.ToString();
+
+		return homeCommunityId;
+	}
+
+	string? GetRepositoryUniqueId(DocumentReference document)
+	{
+		var contentComponent = document.Content.FirstOrDefault();
+
+		if (contentComponent == null)
+			return string.Empty;
+
+		var attachment = contentComponent.Attachment;
+
+		var repositoryUniqueIdExtension = attachment.Extension.FirstOrDefault(x => x.Url == "http://ihe.net/fhir/StructureDefinition/ihe-repositoryUniqueId");
+
+		var repositoryUniqueId = repositoryUniqueIdExtension?.Value.ToString();
+
+		return repositoryUniqueId;
+	}
 }
 
 <style>
@@ -233,6 +268,10 @@
 						</div>
 					}
 
+					@{
+						var haveAnyNasjonaltLager = false;
+					}
+
 					<table class="table table-striped table-hover table-sm">
 						<thead>
 							<tr>
@@ -296,6 +335,9 @@
 									</a>
 
 								</th>
+								<th>									
+									Kilde 
+								</th>
 								<th>
 									<a href="@nameSortUrl">
 										Dokumentnavn @Html.Raw(SortIcon("name", ascending))
@@ -351,6 +393,9 @@
 
 								var securityLabels = document.SecurityLabel;
 
+								var homeCommunityId = GetHomeCommunityId(document);
+								var repositoryUniqueId = GetRepositoryUniqueId(document);
+
 								var rowId = Guid.NewGuid().ToString();
 
 								<tr class="document-item" data-id="@rowId" onclick="onDocumentRowClick(event)">
@@ -361,6 +406,33 @@
 												@DateTime.Parse(attachment.Creation).ToShortDateString()
 											</div>
 										}
+									</td>
+									<td>
+										@{
+											var kildeType = "";
+											var kilde = "";
+
+											List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+											{
+												"test" => KildeInfo.KildeListTest,
+												"qa" => KildeInfo.KildeListQA,
+												_ => null
+											};
+
+											var kildeInfo = kildeList.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId)); 
+																					
+											if (kildeInfo != null)
+											{
+												//kildeType = "Nasjonalt lager";
+												kildeType = "NL";
+												kilde = kildeInfo.Name;
+
+												haveAnyNasjonaltLager = true; 
+
+												<div>@kildeType <span style="color:darkolivegreen">(@kilde)</span></div>
+											}
+										}
+										
 									</td>
 									<td>
 										@attachment.Title
@@ -486,19 +558,7 @@
 												</div>
 
 												<div>
-
-													@{
-														// DocumentReference har ikke noe konsept for "Repository Unique ID" så foreløpig henter vi det ut fra master identifier / document unique ID
-														var s = document.MasterIdentifier.Value.Split("^").ToList(); 
-
-														if (s.Count > 1)
-														{
-																<div>
-																	@s[0]
-																</div>
-														}
-													}
-													
+													@repositoryUniqueId													
 												</div>
 											</div>
 
@@ -510,7 +570,7 @@
 												</div>
 
 												<div>
-													@document.MasterIdentifier.Value
+													@NoUrn(document.MasterIdentifier.Value) 
 												</div>
 
 											</div>
@@ -563,6 +623,15 @@
 						<tfoot>
 						</tfoot>
 					</table>
+
+					@{
+						if (haveAnyNasjonaltLager)
+						{
+							<div>
+								<strong>Kilde: NL = Nasjonalt lager</strong>
+							</div>
+						}
+					}
 
 					@* @Html.PagedListPager(Model.Bundle.Entry, page => Url.Action("Index", "Document", new { page, sort = Model.SortExpression, pageSize = Model.PageSize }), PagedListRenderOptions.ClassicPlusFirstAndLast) *@
 
