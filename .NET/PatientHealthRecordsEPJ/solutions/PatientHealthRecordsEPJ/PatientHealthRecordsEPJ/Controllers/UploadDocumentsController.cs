@@ -257,7 +257,7 @@ public class UploadDocumentsController : BaseController
 		{
 			request.Patient = sessionData
 				.SourcePatientInfo!
-				.WithXdsGlobalIdentifier("1.2.3")
+				.WithXdsGlobalIdentifier("1.2.3") // If we fix/change this, also fix in PatientController
 				.WithXdsHomeCommunity("1.2.3")
 				;
 

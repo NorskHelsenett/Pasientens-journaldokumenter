@@ -1,6 +1,8 @@
+using Hl7.Fhir.Model.CdsHooks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using NorskHelsenettUpload.FluidExtensions;
 using NorskHelsenettUpload.Ihe.Mhd.Models;
 using PatientHealthRecordsEPJ.Models;
 using PatientHealthRecordsEPJ.Services;
@@ -66,7 +68,7 @@ public class PatientController : BaseController
 	[HttpPost]
 	public async Task<IActionResult> VelgPasient(PasientvalgViewModel model, string nin)
 	{
-		var sessionLoginResult = session.SessionData();
+		var sessionData = session.SessionData();
 
 		if (!string.IsNullOrEmpty(nin))
 		{
@@ -86,16 +88,32 @@ public class PatientController : BaseController
 
 		PersontjenestenSearchParams search = new();	
 
-		sessionLoginResult.SourcePatientInfo = patient;
-		sessionLoginResult.PatientId = model.PatientId;
-		sessionLoginResult.PatientName = patient?.Name.ToString(); 
+		sessionData.SourcePatientInfo = patient;
+		sessionData.PatientId = model.PatientId;
+		sessionData.PatientName = patient?.Name.ToString(); 
 				
-		sessionLoginResult.GrunnlagId = model.GrunnlagId;
-		sessionLoginResult.GrunnlagName = PasientvalgViewModel.GrunnlagList.FirstOrDefault(x => x.Id == model.GrunnlagId)?.Label;
+		sessionData.GrunnlagId = model.GrunnlagId;
+		sessionData.GrunnlagName = PasientvalgViewModel.GrunnlagList.FirstOrDefault(x => x.Id == model.GrunnlagId)?.Label;
 		//sessionLoginResult.EnvironmentId = model.EnvironmentId;
 		//sessionLoginResult.EnvironmentName = PasientvalgViewModel.EnvironmentList .FirstOrDefault(x => x.Id == model.EnvironmentId)?.Label;
 
-		sessionLoginResult.SaveToSession(session);
+		// Change patient in provide document bundle submission set, if there is one
+
+		if (sessionData.BundleRequest != null)
+		{
+			var bundleRequest = sessionData.BundleRequest;
+
+			bundleRequest.Submission
+				.WithPatientId(sessionData.PatientId);
+
+			bundleRequest.Patient = sessionData
+				.SourcePatientInfo!
+				.WithXdsGlobalIdentifier("1.2.3") // If we fix/change this, also fix in UploadDocumentsController
+				.WithXdsHomeCommunity("1.2.3")
+				;
+		}
+
+		sessionData.SaveToSession(session);
 
 		return Redirect("/");
 	}
@@ -133,7 +151,7 @@ public class PatientController : BaseController
 		else patient.Name.MiddleName = "";
 
 		patient.Gender = person!.gender.LastOrDefault()!.gender;
-		patient.DateOfBirth = person!.birth.LastOrDefault()!.birthDate;
+		patient.DateOfBirth = person!.birth.LastOrDefault()!.birthDate;		
 
 		return patient;
 	}
