@@ -38,8 +38,8 @@ public class HomeController : BaseController
 	public const string StsUrl = "https://helseid-sts.test.nhn.no";
 			
 	// This is the scope of the API you want to call (get an access token for)		
-	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference";
-	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference";
+	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:phr/status";
+	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:phr/status";
 	
 	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:hgd-persontjenesten-api/full-access";
 	//private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:hgd-persontjenesten-api/full-access";

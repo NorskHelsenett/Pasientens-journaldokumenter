@@ -145,7 +145,7 @@ public class DocumentsController : BaseController
 			document: false,
 			headerKeyValues: headerKeyValues,
 			acceptHeaderValues: ["application/fhir+json; fhirVersion=4.0"], // Only empty accept header, or 'application/fhir+json' is allowed				
-			formUrlEncodedContent: urlencodedContent
+			content: urlencodedContent
 			);
 
 		if (apiResult.IsSuccess)

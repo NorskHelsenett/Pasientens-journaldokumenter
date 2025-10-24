@@ -15,4 +15,6 @@ public class PhrApiEnvironment
 	//public string CreateDocumentReferenceUrl { get; set; } = default!;
 	public string GenerateDocumentReferenceMetadataUrl { get; set; } = default!;
 	public string ProvideDocumentBundleUrl { get; set; } = default!;
+	public string StatusUrl { get; set; } = default!;
+	public string StatusPvkUrl { get; set; } = default!; // Raw PVK info for debugging purposes
 }

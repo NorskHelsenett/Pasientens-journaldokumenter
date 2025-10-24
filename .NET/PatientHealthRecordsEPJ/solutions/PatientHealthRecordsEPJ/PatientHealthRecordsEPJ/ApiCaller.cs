@@ -24,15 +24,17 @@ public class ApiCaller
 		bool document,
 		List<KeyValuePair<string, string>> headerKeyValues = null!,
 		List<string> acceptHeaderValues = null!,
-		FormUrlEncodedContent formUrlEncodedContent = null!)
+		HttpContent content = null!, 
+		bool isStatus = false
+		)
 	{
 		var request = method == "GET" ? new HttpRequestMessage(HttpMethod.Get, url) : new HttpRequestMessage(HttpMethod.Post, url);
 
 		request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("nb-NO"));
 
-		if (formUrlEncodedContent != null)
+		if (content != null)
 		{
-			request.Content = formUrlEncodedContent;
+			request.Content = content;
 		}
 
 		var proofRequest = new DPoPProofRequest
@@ -91,7 +93,19 @@ public class ApiCaller
 
 		if (response.IsSuccessStatusCode)
 		{
-			if (!document)
+			if (isStatus)
+			{
+				var responseBody = await response.Content.ReadAsStringAsync();
+
+				return new ApiResult()
+				{
+					IsSuccess = true,
+					StatusCode = (int)response.StatusCode,
+					Body = responseBody,
+					ContentType = response.Content.Headers.ContentType!.ToString(),
+				};
+			}
+			else if (!document)
 			{
 				int norsCount = 0;
 
@@ -113,7 +127,7 @@ public class ApiCaller
 			}
 			else
 			{
-				var responseBytes = await response.Content.ReadAsByteArrayAsync();				
+				var responseBytes = await response.Content.ReadAsByteArrayAsync();
 
 				return new ApiResult()
 				{
