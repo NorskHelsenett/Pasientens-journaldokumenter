@@ -48,7 +48,7 @@ public class PatientController : BaseController
 		PasientvalgViewModel model = new PasientvalgViewModel();
 
 		model.EnvironmentId = "test";
-		model.GrunnlagId = "akutt";
+		model.GrunnlagId = "samtykke";
 
 		var sessionLoginResult = session.SessionData();
 
