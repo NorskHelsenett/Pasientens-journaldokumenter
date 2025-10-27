@@ -9,17 +9,22 @@
 	{
 		if (string.IsNullOrEmpty(json))
 		{
-			return "- ingen data -"; 
+			return "- ingen data -";
 		}
 		else
 		{
-			return json; 
+			return json;
 		}
 	}
 
 	string Active(bool? active)
 	{
-		return active == true ? "<span class='active'>AKTIV</div>": "<span class='inactive'>IKKE AKTIV</span>"; 
+		return active == true ? "<span class='active'>AKTIV</span>" : "<span class='inactive'>IKKE AKTIV</span>";
+	}
+
+	string Blocked(bool? blocked)
+	{
+		return blocked == true ? "<span class='active'>JA, ER BLOKKERT</span>" : "<span class='inactive'>NEI, IKKE BLOKKERT</span>";
 	}
 }
 
@@ -37,32 +42,26 @@
 		display: none;
 	}
 
-	iframe
-	{
-		width:100%;
-		height:800px; 
-
+	iframe {
+		width: 100%;
+		height: 800px;
 		/* border:none;  */
-		border: 1px solid #aaa; 
+		border: 1px solid #aaa;
 	}
 
-	textarea
-	{
-		position:relative; 
-		color:black; 
-		height:auto; 
+	textarea {
+		position: relative;
+		color: black;
+		height: auto;
 	}
 
-	.active
-	{
-		color:green; 
+	.active {
+		color: green;
 	}
 
-	.inactive
-	{
-		color:red; 
+	.inactive {
+		color: red;
 	}
-
 
 </style>
 
@@ -88,7 +87,7 @@
 			</div>
 		</div>
 	</div>
-	
+
 	<br />
 
 	<h4>Respons fra status-endepunkt i REST API: </h4>
@@ -107,19 +106,20 @@
 	{
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-4">
+				<div class="col-md-6">
 					<table class="table">
 						<tr>
 							<td>hasReservationKjernejournal</td>
 							<td><strong>@Model.Status.PrivacySetting.HasReservationKjernejournal.ToString()</strong></td>
 						</tr>
-						<tr>							
+						<tr>
 							<td>isRestricted</td>
 							<td><strong>@Model.Status.PrivacySetting.IsRestricted.ToString()</strong></td>
 						</tr>
-						<tr>							
+						<tr>
 							<td>isBlocked</td>
-							<td><strong>@Model.Status.PrivacySetting.IsBlocked.ToString()</strong></td>
+							<td><strong>@Model.Status.PrivacySetting.IsBlocked.ToString()</strong></td>							
+							<td>Sjekk for @sessionData.Name (HPR: @sessionData.HprNumber) eller alt helsepersonell</td>							
 						</tr>
 					</table>
 				</div>
@@ -129,7 +129,7 @@
 		<div>
 			<h4>PVK innstillinger cachet i REST API brukt som grunnlag:</h4>
 		</div>
-		
+
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-md-12">
@@ -140,13 +140,13 @@
 					</div>
 
 					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Kjernejournal_Reservasjon_Json)</textarea>
-				
+
 				</div>
 			</div>
 
 			<div class="row">
 				<div class="col-md-12">
-					
+
 					<hr />
 
 					<h5>Kjernejournal - sperre tilgang til alt helsepersonell, partKode 'KJ' (86f64955-fb61-4e5e-8a0c-7d7728363891)</h5>
@@ -166,9 +166,28 @@
 					<hr />
 
 					<h5>Kjernejournal - blokkere for individuelt helsepersonell, partKode 'KJ' (36870d8a-b37b-4386-8689-c656005cb296)</h5>
+					
+					@if (Model.NavngittHelsepersoner?.Count > 0)
+					{
+						<h6>Liste i innstillinger:</h6>
+
+						<table class="table w-auto">
+							<tbody>
+								@foreach (var person in Model.NavngittHelsepersoner)
+								{
+									<tr><td>@person.HprNummer</td><td>@person.Navn</td></tr>
+								}
+							</tbody>
+						</table>
+					}
+
 					<div>
-						@Html.Raw(Active(Model.StatusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Active))
+						Er innstilling aktiv for valgt pasient? @Html.Raw(Active(Model.StatusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Active))
 					</div>
+					
+					<div>
+						Er innlogget helsepersonell (@sessionData.Name) blokkert?: @Html.Raw(Blocked(Model.IsHprNumberBlocked))
+					</div>										
 
 					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json)</textarea>
 
@@ -186,7 +205,7 @@
 					</div>
 
 					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json)</textarea>
-				
+
 				</div>
 			</div>
 
@@ -201,7 +220,7 @@
 					</div>
 
 					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Json)</textarea>
-				
+
 				</div>
 			</div>
 
@@ -216,11 +235,11 @@
 					</div>
 
 					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Json)</textarea>
-				
+
 				</div>
 			</div>
-			
-		</div>				
+
+		</div>
 	}
 </div>
 

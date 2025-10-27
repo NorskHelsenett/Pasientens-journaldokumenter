@@ -385,7 +385,8 @@ public class HomeController : BaseController
 
 			var handler = new JwtSecurityTokenHandler();
 			var jsonIdentityToken = handler.ReadToken(loginResult.IdentityToken) as JwtSecurityToken;
-			
+			var jsonAccessToken = handler.ReadToken(loginResult.AccessToken) as JwtSecurityToken;
+
 			if (jsonIdentityToken != null)
 			{
 				foreach (var claim in jsonIdentityToken.Claims)
@@ -420,11 +421,12 @@ public class HomeController : BaseController
 			sessionData.RefreshToken = loginResult.RefreshToken;
 			sessionData.Name = loginResult.User.Identity!.Name!;
 			sessionData.PersonId = pid;
+			sessionData.HprNumber = jsonAccessToken.Claims.FirstOrDefault(c => c.Type == "helseid://claims/hpr/hpr_number")?.Value;
 
 			var orgName = string.Empty;
 			var orgIdentifier = string.Empty;
-			var orgAssignOid = string.Empty;
-
+			var orgAssignOid = string.Empty;			
+			
 			//var givenName = loginResult.User.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname").First().Value;
 			var givenName = loginResult.User.Claims.Where(x => x.Type == "given_name").First().Value;
 			var middleName = loginResult.User.Claims.Where(x => x.Type == "middle_name").First().Value;
@@ -450,10 +452,7 @@ public class HomeController : BaseController
 			Console.WriteLine();
 			Console.WriteLine("New Access Token after using Refresh Token:");
 			Console.WriteLine(refreshTokenResult.AccessToken);
-
-		
-			var jsonAccessToken = handler.ReadToken(loginResult.AccessToken) as JwtSecurityToken;
-			
+								
 			// Retrieve submission's AUTHOR-ORG details
 			//var org = new Hl7.Fhir.Model.Organization();
 

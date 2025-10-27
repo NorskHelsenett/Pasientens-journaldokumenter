@@ -1,3 +1,5 @@
+using PatientHealthRecordsEPJ.Personverninnstillinger;
+
 namespace PatientHealthRecordsEPJ.Models;
 
 public class StatusViewModel
@@ -8,6 +10,9 @@ public class StatusViewModel
 
 	public StatusResult? Status { get; set; }
 	public StatusPvkResult? StatusPvk { get; set; } // Raw PVK settings
+
+	public bool IsHprNumberBlocked { get; set; }
+	public List<Navngitthelseperson>? NavngittHelsepersoner { get; set; } = null!;
 
 	public string? JsonStatus { get; set; }
 

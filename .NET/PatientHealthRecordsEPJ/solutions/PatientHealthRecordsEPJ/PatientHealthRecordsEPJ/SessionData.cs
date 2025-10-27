@@ -14,6 +14,7 @@ public class SessionData
 	public string RefreshToken { get; set; } = default!;
 
 	public string PersonId { get; set; } = default!; // Helsepersonell fødselsnummer
+	public string? HprNumber { get; set; } = default!;
 	public string Name { get; set; } = default!;
 	public string GivenName { get; set; } = default!;
 	public string MiddleName { get; set; } = default!;

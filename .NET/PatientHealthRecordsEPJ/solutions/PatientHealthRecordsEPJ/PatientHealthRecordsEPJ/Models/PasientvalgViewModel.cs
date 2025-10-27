@@ -38,8 +38,10 @@ public class PasientvalgViewModel
 	{
 		new OptionPair() { Id = "13116900216" , Label = "Line Danser"},
 		new OptionPair() { Id = "12119000465" , Label = "Malin Fos Bogen"},
-		new OptionPair() { Id = "08077000292" , Label = "Harry Handel"},
-		new OptionPair() { Id = "22876699307" , Label = "Livsglad Kreps"},
+		new OptionPair() { Id = "08077000292" , Label = "Harry Handel"},		
+		new OptionPair() { Id = "23077200290" , Label = "Else Nett"},
+		new OptionPair() { Id = "15076500565" , Label = "Roland (Kith) Gundersen"},
+		new OptionPair() { Id = "23077200290" , Label = "Else Nett"},
 	};
 }
 

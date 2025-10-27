@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Mapper.Xml;
 using PatientHealthRecordsEPJ.Models;
+using PatientHealthRecordsEPJ.Personverninnstillinger;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
@@ -81,6 +82,11 @@ public class StatusController : BaseController
 			return Redirect("/");
 		}
 
+		if (sessionData.SourcePatientInfo == null) 
+		{
+			return RedirectToAction(nameof(PatientController.Pasientvalg), "Patient");
+		}
+
 		await RefreshToken();
 
 		this.sessionData = session.SessionData();
@@ -148,6 +154,33 @@ public class StatusController : BaseController
 					statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Active = statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json?.ToLower().Contains("status\": \"tbo\"");
 					statusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Active = statusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Json?.ToLower().Contains("status\": \"tbo\"");
 					statusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Active = statusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Json?.ToLower().Contains("status\": \"tbo\"");
+
+					if (!string.IsNullOrEmpty(statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json))
+					{
+						var Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Settings = JsonSerializer.Deserialize<PersonvernDataType>(statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json);
+
+						if (Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Settings != null)
+						{
+							var settings = Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Settings; 
+							
+							if (settings.Status.ToLower() == "tbo")
+							{
+								var omfangElementer = settings.TilgangsbegrensningMetadata?.TbFasteMetadata?.OmfangElementer; 
+
+								if (omfangElementer?.Any(omfang => omfang.OmfangKode == "BL" && omfang.LogiskOmfang == "Angitte") == true)
+								{
+									var navngittePersoner = settings.TilgangsbegrensningMetadata?.TbInnbyggerMetadata?.DetaljertAngivelse.NavngittHelsepersoner;
+
+									model.NavngittHelsepersoner = navngittePersoner; 
+
+									if (navngittePersoner?.Any(hpr => hpr.HprNummer == sessionData.HprNumber) == true)
+									{
+										model.IsHprNumberBlocked = true; 
+									}
+								}
+							}
+						}
+					}
 				}
 				
 				model.IsSuccess = true; 

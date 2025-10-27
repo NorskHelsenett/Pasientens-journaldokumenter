@@ -79,11 +79,20 @@ public class PatientController : BaseController
 
 		if (patient == null)
 		{
-			// Ikke syntetisk patient (e.g. Malin Fos Bogen)
 			patient = new SourcePatientInfo()
 			{
 				NIN = model.PatientId
-			}; 
+			};
+
+			// Ikke syntetisk patient (e.g. Malin Fos Bogen)
+			var nonSyntpopPatient = PasientvalgViewModel.PatientMappingList.FirstOrDefault(x => x.Id == model.PatientId);
+
+			if (nonSyntpopPatient != null)
+			{
+				var firstName = nonSyntpopPatient.Label.Substring(0, nonSyntpopPatient.Label.IndexOf(" "));
+				var lastName = nonSyntpopPatient.Label.Substring(nonSyntpopPatient.Label.IndexOf(" ") + 1);
+				patient = patient.WithName(new PersonName() { FirstName = firstName, FamilyName = lastName }); 
+			}			
 		}
 
 		PersontjenestenSearchParams search = new();	
