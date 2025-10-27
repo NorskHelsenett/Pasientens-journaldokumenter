@@ -236,6 +236,18 @@
 							@Model.ApiResult.Body
 						</pre>
 					</p>
+
+					@if (Model.ApiResult.Body?.Contains("Can be elevated") == true) // hack: just string compare for now
+					{
+						<p>
+							Du kan prøve på nytt med forhøyet samtykke eller forhøyet akutt som grunnlag. 
+
+							<br />
+							<br />
+
+							<a asp-controller="Patient" asp-action="Pasientvalg" class="btn btn-primary"> Velg nytt grunnlag her &rarr;</a>
+						</p>
+					}
 				</div>
 			</div>
 		</div>

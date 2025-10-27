@@ -29,9 +29,11 @@ public class PasientvalgViewModel
 
 	public static List<OptionPair> GrunnlagList { get; set; } = new List<OptionPair>()
 	{
-		new OptionPair() { Id = "akutt" , Label = "Akutt" },
 		new OptionPair() { Id = "samtykke" , Label = "Samtykke" },
+		new OptionPair() { Id = "akutt" , Label = "Akutt" },		
 		new OptionPair() { Id = "unntak" , Label = "Unntak" },
+		new OptionPair() { Id = "forhoyet_akutt" , Label = "Forhøyet akutt" },
+		new OptionPair() { Id = "forhoyet_samtykke" , Label = "Forhøyet samtykke" }		
 	};
 
 	public static List<OptionPair> PatientMappingList { get; set; } = new List<OptionPair>()

@@ -214,7 +214,7 @@ public class DocumentsController : BaseController
 		else
 		{
 			model.IsSuccess = false;
-			model.ErrorMessage = "Could not retreive documents";
+			model.ErrorMessage = "Could not retrieve documents";			
 			model.ApiResult = apiResult;
 			model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
 			return model;
