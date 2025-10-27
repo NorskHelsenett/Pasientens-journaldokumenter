@@ -144,15 +144,13 @@ public class StatusController : BaseController
 					statusPvk.Kjernejournal_Reservasjon_Json = statusPvk.Kjernejournal_Reservasjon_Json.PrettifyJson();
 					statusPvk.Kjernejournal_Sperre_Tilgang_Alt_Helsepersonell_Json = statusPvk.Kjernejournal_Sperre_Tilgang_Alt_Helsepersonell_Json.PrettifyJson();
 					statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json = statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json.PrettifyJson();
-					statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json = statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json.PrettifyJson();
-					statusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Json = statusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Json.PrettifyJson();
+					statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json = statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json.PrettifyJson();					
 					statusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Json = statusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Json.PrettifyJson();
 
 					statusPvk.Kjernejournal_Reservasjon_Active = statusPvk.Kjernejournal_Reservasjon_Json?.ToLower().Contains("status\": \"res\""); 
 					statusPvk.Kjernejournal_Sperre_Tilgang_Alt_Helsepersonell_Active = statusPvk.Kjernejournal_Sperre_Tilgang_Alt_Helsepersonell_Json?.ToLower().Contains("status\": \"tbo\"");
 					statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Active = statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json?.ToLower().Contains("status\": \"tbo\"");
 					statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Active = statusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json?.ToLower().Contains("status\": \"tbo\"");
-					statusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Active = statusPvk.Besokshistorikk_Sperre_Tilgang_Alt_Helsepersonell_Json?.ToLower().Contains("status\": \"tbo\"");
 					statusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Active = statusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Json?.ToLower().Contains("status\": \"tbo\"");
 
 					if (!string.IsNullOrEmpty(statusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json))
