@@ -17,9 +17,9 @@ public class GetDocumentReferencesViewModel
 
 	public Pagination Pagination { get; set; }
 
-        public ApiResult ApiResult { get; set; }
+	public ApiResult ApiResult { get; set; }
 
-        public int? NorsCount { get; set; } // Antall sperrede dokumenter
+    public int? NorsCount { get; set; } // Antall sperrede dokumenter
 
 	public List<UnavailableLocation> UnavailableLocations { get; set; } = new List<UnavailableLocation>(); 
 }
@@ -38,6 +38,8 @@ public class GetDocumentViewModel
 	public string SortExpression { get; set; }
 
 	public int BlockedCount { get; set; }
+
+	public ApiResult ApiResult { get; set; }
 
 	public Pagination Pagination { get; set; }
 

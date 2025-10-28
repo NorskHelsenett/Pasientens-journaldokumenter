@@ -95,14 +95,24 @@ public class DocumentController : BaseController
 	{
 		GetDocumentViewModel model = new GetDocumentViewModel();
 
-		// We send the patient Id in the header as X-Patient-Id to avoid having the patient Id in the URL.             
-		var headerKeyValues = new List<KeyValuePair<string, string>>()
-		{
-			new KeyValuePair<string, string>("nhn-patient-nin", patient),
-			new KeyValuePair<string, string>("nhn-source-system", patient),
-			new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())
-		};
+		var headerKeyValues = new List<KeyValuePair<string, string>>();
 
+		if (sessionLoginResult.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+		{
+			// Only send access basis if using scope 'nhn:phr/mhd/read-documentreferences/kjernejournalforskriften', and only if FORHOYET_SAMTYKKE or FORHOYET_AKUTT
+
+			if (sessionLoginResult.GrunnlagId?.Contains("forhoyet") == true)
+			{
+				headerKeyValues.Add(new KeyValuePair<string, string>("nhn-access-basis", sessionLoginResult.GrunnlagId ?? string.Empty));
+			}
+		}
+
+		// We send the patient Id in the header as nhn-patient-nin to avoid having the patient Id in the URL.             
+
+		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-patient-nin", patient));
+		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", patient));
+		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())); 
+		
 		var apiResult = await ApiCaller.CallApi("GET", url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
 
 		if (apiResult.IsSuccess)
@@ -249,6 +259,7 @@ public class DocumentController : BaseController
 		{
 			model.IsSuccess = false;
 			model.ErrorMessage = "Could not retreive document";
+			model.ApiResult = apiResult;
 			return model;
 		}
 	}

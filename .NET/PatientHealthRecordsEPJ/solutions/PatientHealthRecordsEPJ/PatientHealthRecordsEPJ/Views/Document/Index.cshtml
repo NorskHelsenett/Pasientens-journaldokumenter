@@ -90,7 +90,18 @@
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-md-12">
+					<p>
 					Error: @Model.ErrorMessage
+					</p>
+					<p>
+						API response status code: @Model.ApiResult.StatusCode
+					</p>
+					<p>
+						API response body:
+						<pre>
+								@Model.ApiResult.Body
+							</pre>
+					</p>
 				</div>
 			</div>
 		</div>
