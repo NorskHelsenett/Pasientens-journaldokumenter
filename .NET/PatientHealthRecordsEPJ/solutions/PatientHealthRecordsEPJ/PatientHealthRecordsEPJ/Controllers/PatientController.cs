@@ -75,34 +75,43 @@ public class PatientController : BaseController
 			model.PatientId = nin; 
 		}
 
-		var patient = await FindPersonAsync(model.PatientId);
+		return RedirectToAction(nameof(ChoosePasient), new { patientId = model.PatientId, grunnlag = model.GrunnlagId });		
+	}
+	
+	public async Task<IActionResult> ChoosePasient(string patientId, string grunnlag)
+	{
+		// Method is also called from HomeController if client sends query parameter ?patientIdentifier=... or ?pid=...
+
+		var sessionData = session.SessionData();
+		
+		var patient = await FindPersonAsync(patientId);
 
 		if (patient == null)
 		{
 			patient = new SourcePatientInfo()
 			{
-				NIN = model.PatientId
+				NIN = patientId
 			};
 
 			// Ikke syntetisk patient (e.g. Malin Fos Bogen)
-			var nonSyntpopPatient = PasientvalgViewModel.PatientMappingList.FirstOrDefault(x => x.Id == model.PatientId);
+			var nonSyntpopPatient = PasientvalgViewModel.PatientMappingList.FirstOrDefault(x => x.Id == patientId);
 
 			if (nonSyntpopPatient != null)
 			{
 				var firstName = nonSyntpopPatient.Label.Substring(0, nonSyntpopPatient.Label.IndexOf(" "));
 				var lastName = nonSyntpopPatient.Label.Substring(nonSyntpopPatient.Label.IndexOf(" ") + 1);
-				patient = patient.WithName(new PersonName() { FirstName = firstName, FamilyName = lastName }); 
-			}			
+				patient = patient.WithName(new PersonName() { FirstName = firstName, FamilyName = lastName });
+			}
 		}
 
-		PersontjenestenSearchParams search = new();	
+		PersontjenestenSearchParams search = new();
 
 		sessionData.SourcePatientInfo = patient;
-		sessionData.PatientId = model.PatientId;
-		sessionData.PatientName = patient?.Name.ToString(); 
-				
-		sessionData.GrunnlagId = model.GrunnlagId;
-		sessionData.GrunnlagName = PasientvalgViewModel.GrunnlagList.FirstOrDefault(x => x.Id == model.GrunnlagId)?.Label;
+		sessionData.PatientId = patientId;
+		sessionData.PatientName = patient?.Name.ToString();
+
+		sessionData.GrunnlagId = grunnlag;
+		sessionData.GrunnlagName = PasientvalgViewModel.GrunnlagList.FirstOrDefault(x => x.Id == grunnlag)?.Label;
 		//sessionLoginResult.EnvironmentId = model.EnvironmentId;
 		//sessionLoginResult.EnvironmentName = PasientvalgViewModel.EnvironmentList .FirstOrDefault(x => x.Id == model.EnvironmentId)?.Label;
 

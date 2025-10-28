@@ -79,7 +79,7 @@ public class HomeController : BaseController
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
 	
-	public IActionResult Index()
+	public IActionResult Index(string patientIdentifier, string pid, string grunnlag) // Both "?patientIdentifier=..." and "?pid=..." can be used to set patient context
 	{
 		HomeViewModel model = new HomeViewModel();
 
@@ -87,12 +87,27 @@ public class HomeController : BaseController
 
         var sessionData = session.SessionData(); 
 
+		if (!string.IsNullOrEmpty(pid))
+		{
+			patientIdentifier = pid; 
+		}
+
+		if (!string.IsNullOrEmpty(patientIdentifier))
+		{			
+			return RedirectToAction(nameof(PatientController.ChoosePasient), "Patient", new { patientId = patientIdentifier, grunnlag = grunnlag });
+		}
+
 		if (sessionData.IsAuthenticated && sessionData.SourcePatientInfo?.NIN is null)
 		{
 			return RedirectToAction(nameof(PatientController.Pasientvalg), "Patient");		
 		}
 
-		model.AuthorizationId = "LE"; // Default authorization - Lege
+		model.AuthorizationId = sessionData.AuthorizationId;
+
+		if (string.IsNullOrEmpty(model.AuthorizationId))
+		{
+			model.AuthorizationId = "LE"; // Default authorization - Lege
+		}
 
 		return View(model);
 	}

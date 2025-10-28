@@ -8,7 +8,7 @@ public class HomeViewModel
 	public string HealthcarePersonellUserId { get; set; } = default!; // Helsepersonell fnr
 
 	public string AuthorizationName { get; set; } = default!;
-	public string AuthorizationId { get; set; } = default!;
+	public string? AuthorizationId { get; set; } = default!;
 	
 	public string AttestJson { get; set; } = default!;
 

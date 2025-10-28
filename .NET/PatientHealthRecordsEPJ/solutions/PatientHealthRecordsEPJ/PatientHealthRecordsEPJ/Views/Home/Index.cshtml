@@ -114,6 +114,41 @@
 					</div>
 				</div>
 
+				@if (sessionData.SourcePatientInfo != null)
+				{
+					<br />
+					<h5>Pasient: </h5>
+					<div>
+						<table class="table w-auto">
+							<tr>
+								<td>Navn: </td>
+								<td>@sessionData.SourcePatientInfo?.Name.ToString()</td>
+							</tr>
+							<tr>
+								<td>Fødselsnummer: </td>
+								<td>@sessionData.SourcePatientInfo?.NIN</td>
+							</tr>
+							<tr>
+								<td>
+									Bursdag:
+								</td>
+								<td>
+									@if (sessionData.SourcePatientInfo?.DateOfBirth != default)
+									{
+										<span>
+											@sessionData.SourcePatientInfo!.DateOfBirth.ToString("yyyy-MM-dd")
+										</span>
+									}
+								</td>
+							</tr>						
+							<tr>
+								<td>Kjønn: </td>
+								<td>@sessionData.SourcePatientInfo?.Gender</td>
+							</tr>
+						</table>
+					</div>
+				}
+
 				<div class="row">
 					<div class="col-md-12 text-center pt-3">
 						<button type="submit" class="btn btn-primary" formaction="/Home/Login">Logg inn med HelseID @* <i class="bi-box-arrow-in-right"></i>  &rarr; *@ </button> eller
