@@ -45,6 +45,8 @@ public class SessionData
 	// Used to keep state before and after login
 	public string? AuthorizeState { get; set; } = default!;
 
+	public bool IsUploadAvailable { get; set; } = default!;	// Set to true if correct upload password (Constants.UploadPassword) has been entered
+
 	//
 	//	Bundle request
 	//

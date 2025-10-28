@@ -43,6 +43,12 @@ class FileDateInfo
 	public DateTime lastModified { get; set; }
 }
 
+public class PasswordModel
+{
+	public bool IsPasswordInvalid { get; set; }
+	public string Password { get; set; }
+}
+
 public class UploadDocumentsController : BaseController
 {
 	private readonly ILogger<HomeController> _logger;
@@ -58,9 +64,9 @@ public class UploadDocumentsController : BaseController
 
 	public UploadDocumentsController(
 		IOptions<SessionOptions> sessionOptions,
-		ILogger<HomeController> logger, 
-		IHttpContextAccessor httpContextAccessor, 
-		IMemoryCache memoryCache, 
+		ILogger<HomeController> logger,
+		IHttpContextAccessor httpContextAccessor,
+		IMemoryCache memoryCache,
 		PhrApiOptions apiOptions,
 		IPhrApiService phrApiService,
 		IBundleCreator bundleCreator,
@@ -71,12 +77,12 @@ public class UploadDocumentsController : BaseController
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
 		_memoryCache = memoryCache;
-		_apiOptions = apiOptions; 
+		_apiOptions = apiOptions;
 		_oidcClientService = oidcClientService;
 
 		_phrApiService = phrApiService;
 		_bundleCreator = bundleCreator;
-		_organizationService = organizationService; 
+		_organizationService = organizationService;
 	}
 
 	private void SaveToSession(ProvideDocumentBundleRequest bundleRequest)
@@ -89,13 +95,13 @@ public class UploadDocumentsController : BaseController
 	private void SaveMetadataToSession(DocumentEntryMetadata? metaData)
 	{
 		var sessionData = session.SessionData();
-		var request = sessionData.BundleRequest; 
+		var request = sessionData.BundleRequest;
 
 		if (request?.DocumentCollection?.SelectedDocument?.Metadata != null)
 		{
 			// Make sure to not overwrite authors to empty array
 
-			metaData.Authors = request.DocumentCollection.SelectedDocument.Metadata.Authors; 
+			metaData.Authors = request.DocumentCollection.SelectedDocument.Metadata.Authors;
 
 			// Save to session (including authors we already had in the session):
 			request.DocumentCollection.SelectedDocument.Metadata = metaData;
@@ -116,13 +122,13 @@ public class UploadDocumentsController : BaseController
 	private void SaveDocumentToSession(Document? document, string formatCode)
 	{
 		var sessionData = session.SessionData();
-		var selectedDocument = sessionData.BundleRequest?.DocumentCollection?.SelectedDocument; 
+		var selectedDocument = sessionData.BundleRequest?.DocumentCollection?.SelectedDocument;
 
 		if (selectedDocument != null && document != null)
 		{
 			selectedDocument.Update(document);
 
-			selectedDocument.Metadata.FormatCode = formatCode; 
+			selectedDocument.Metadata.FormatCode = formatCode;
 		}
 
 		sessionData.SaveToSession(session);
@@ -140,14 +146,14 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> RefreshToken()
 	{
-		var redirectUrl = GetRedirectUrl(); 
+		var redirectUrl = GetRedirectUrl();
 
-		await _oidcClientService.InitializeAsync(redirectUrl); 
+		await _oidcClientService.InitializeAsync(redirectUrl);
 
 		var loginResult = session.SessionData();
 
 		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-		
+
 		if (result.IsError)
 		{
 			throw new Exception($"{result.Error}: {result.ErrorDescription}");
@@ -155,15 +161,48 @@ public class UploadDocumentsController : BaseController
 
 		loginResult.AccessToken = result.AccessToken;
 		loginResult.RefreshToken = result.RefreshToken;
-		loginResult.SaveToSession(session); 
+		loginResult.SaveToSession(session);
 
 		return Ok(result.AccessToken);
 	}
 
 	public async Task<IActionResult> Index()
 	{
-		//return View();
-		return RedirectToAction(nameof(Patient)); 
+		var sessionData = session.SessionData();
+
+		if (!sessionData.IsUploadAvailable)
+		{
+			return RedirectToAction(nameof(Password));
+		}
+
+		return RedirectToAction(nameof(Patient));
+	}
+
+	public async Task<IActionResult> Password()	
+	{
+		PasswordModel model = new PasswordModel();
+
+		return View(model);
+	}
+
+	[HttpPost]
+	public IActionResult Password(PasswordModel model)
+	{
+		var sessionData = session.SessionData();
+
+		if (model.Password == Constants.UploadPassword)
+		{
+			sessionData.IsUploadAvailable = true;
+			sessionData.SaveToSession(session);
+
+			return RedirectToAction(nameof(Index)); 
+		}
+		else
+		{
+			model.IsPasswordInvalid = true; 
+		}
+
+		return View(model);
 	}
 
 	public async Task<IActionResult> Patient()
@@ -175,10 +214,10 @@ public class UploadDocumentsController : BaseController
 			return RedirectToAction("PasientValg", "Patient"); 
 		}
 
-		if (sessionData.EnvironmentId == "qa")
+		/*if (sessionData.EnvironmentId == "qa")
 		{
 			return View("QA"); 
-		}
+		}*/
 
 		if (sessionData.BundleRequest == null)
 		{

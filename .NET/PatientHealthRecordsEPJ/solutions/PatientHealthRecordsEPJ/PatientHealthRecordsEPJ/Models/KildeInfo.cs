@@ -28,6 +28,10 @@ public class KildeInfo
 	};
 
 	public static List<KildeInfo> KildeListQA { get; set; } = new List<KildeInfo>()
-	{		
+	{
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.15", Name = "Bjarne sykehus", AppName = "bjarne-sykehus", Url = "https://bjarne-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.16", Name = "Tim sykehus", AppName = "tim-sykehus", Url = "https://tim-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.17", Name = "Kurt sykehus", AppName = "kurt-sykehus", Url = "https://kurt-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.18", Name = "Rex sykehus", AppName = "rex-sykehus", Url = "https://rex-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 	};
 }
