@@ -118,7 +118,7 @@ public class StatusController : BaseController
 
 		var apiUrl = _apiEnvironment.StatusUrl;
 
-		var jsonContent = System.Text.Json.JsonSerializer.Serialize(new { nin = patient });
+		var jsonContent = JsonSerializer.Serialize(new { nin = patient });
 
 		var content = new StringContent(jsonContent, Encoding.UTF8, "application/json"); 
 

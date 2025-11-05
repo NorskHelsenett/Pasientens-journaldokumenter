@@ -1143,15 +1143,18 @@ public class UploadDocumentsController : BaseController
 		return View("Steps/FinalizeSubmission", model);
 	}
 
-	public IActionResult ViewJsonFhirBundle()
+	public IActionResult ViewJsonFhirBundle(bool removeBinaryDataForDisplay = true)
 	{	
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;		
 
-		var bundleDocumentJsonString = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: true);
+		var bundleDocumentJsonString = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: removeBinaryDataForDisplay);
 
-		// Replace the base64 encoded embedded data with just text "...removed for display..." (only done for documents with index > 0 if there are more than 1 document)
-		bundleDocumentJsonString = bundleDocumentJsonString.Replace(BundleCreator.REMOVED_FOR_DISPLAY_TEXT_BASE64, "...removed for display..."); 
+		if (removeBinaryDataForDisplay)
+		{
+			// Replace the base64 encoded embedded data with just text "...removed for display..." (only done for documents with index > 0 if there are more than 1 document)
+			bundleDocumentJsonString = bundleDocumentJsonString.Replace(BundleCreator.REMOVED_FOR_DISPLAY_TEXT_BASE64, "...removed for display...");
+		}
 
 		return Content(bundleDocumentJsonString, "application/json"); 
 	}

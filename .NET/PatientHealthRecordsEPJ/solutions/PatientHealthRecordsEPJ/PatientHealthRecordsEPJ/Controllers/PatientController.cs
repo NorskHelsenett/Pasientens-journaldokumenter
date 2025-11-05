@@ -1,11 +1,8 @@
-using Hl7.Fhir.Model.CdsHooks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NorskHelsenettUpload.FluidExtensions;
 using NorskHelsenettUpload.Ihe.Mhd.Models;
 using PatientHealthRecordsEPJ.Models;
-using PatientHealthRecordsEPJ.Services;
 using PJD.Services.Persontjenesten;
 
 namespace PatientHealthRecordsEPJ.Controllers;
@@ -19,27 +16,18 @@ public class PatientController : BaseController
 {
 	private readonly ILogger<HomeController> _logger;
 	private readonly IHttpContextAccessor _httpContextAccessor;
-	private ISession session => _httpContextAccessor.HttpContext!.Session;
-	private readonly IMemoryCache _memoryCache;
-	private readonly IOidcClientService _oidcClientService;
-	private readonly OrganizationService _organizationService;
+	private ISession session => _httpContextAccessor.HttpContext!.Session;	
 	private readonly PersonApiService _personApiService; 	
 
 	public PatientController(
 		IOptions<SessionOptions> sessionOptions,
 		ILogger<HomeController> logger,
-		IHttpContextAccessor httpContextAccessor,
-		IMemoryCache memoryCache,
-		IOidcClientService oidcClientService,
-		OrganizationService organizationService,
+		IHttpContextAccessor httpContextAccessor,		
 		PersonApiService personApiService
 		) : base(sessionOptions)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
-		_memoryCache = memoryCache;
-		_oidcClientService = oidcClientService;
-		_organizationService = organizationService;
 		_personApiService = personApiService; 
 	}
 

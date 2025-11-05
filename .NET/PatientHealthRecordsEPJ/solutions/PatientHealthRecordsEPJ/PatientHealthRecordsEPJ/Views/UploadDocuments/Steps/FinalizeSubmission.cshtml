@@ -446,8 +446,14 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 			<div class="col-md-12">
 
 				<br />
-				<h5>Created FHIR JSON bundle, ready for submission: (<a asp-action="ViewJsonFhirBundle" target="_blank">Open in new tab</a>)</h5>
+				<h5>Created FHIR JSON bundle, ready for submission: (<a asp-action="ViewJsonFhirBundle" asp-route-removeBinaryDataForDisplay="false" target="_blank">Open full bundle in new tab</a>)</h5>
 
+				@if (Model.Upload.DocumentCollection.Documents.Count > 1)
+				{
+					<div style="color:goldenrod">
+						<em>Note: base64 encoded content has been removed for all but the first document in this textarea to keep page size smaller</em>
+					</div>
+				}
 				<textarea class="w-100 normal" rows="20">@Model.JsonBundleDocument</textarea>
 
 				@* <div class="textarea-container">

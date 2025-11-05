@@ -83,7 +83,7 @@ var PatientPointOfCareOrg = organizationIdentifier;
 
 //var hl7Organization = _organizationService.GetHl7OrganizationDetailFromOrganization(sessionData.OrgRegOrganization);
 
-var homeCommunityId = "2.16.578.1.12.4.5.100.15";  // Bjarne sykehus, test environment
+var homeCommunityId = "2.16.578.1.12.4.5.100.3.15";  // Bjarne sykehus, test environment
 
 
 /*
