@@ -98,7 +98,8 @@ public class DocumentController : BaseController
 		Uri uri = new Uri(url);
 		var query = QueryHelpers.ParseQuery(uri.Query);
 		var documentUniqueId = query["documentUniqueId"];
-		var folder = Path.Combine(_webHostEnvironment.WebRootPath, "documents", patient);
+		var tempDocs = Path.Combine(Path.GetTempPath(), "documents");	// In Program.cs there's a UseStaticFiles which serves from this path
+		var folder = Path.Combine(tempDocs, patient);
 		Directory.CreateDirectory(folder);	 // For storing documents which will be displayed
 
 		GetDocumentViewModel model = new GetDocumentViewModel();

@@ -1,5 +1,6 @@
 // override XmlException: Resolving of external URIs was prohibited.
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.FileProviders;
 using NorskHelsenettUpload.Ihe.Mhd.Interfaces;
 using NorskHelsenettUpload.Ihe.Mhd.Services;
 using PatientHealthRecords.ApiService;
@@ -105,6 +106,16 @@ app.UseSession();
 app.UseMiddleware<SessionActivityMiddleware>();
 
 app.UseHttpsRedirection();
+
+var tempDocs = Path.Combine(Path.GetTempPath(), "documents");
+Directory.CreateDirectory(tempDocs);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+	FileProvider = new PhysicalFileProvider(tempDocs),
+	RequestPath = "/documents"
+});
+
 app.UseStaticFiles();
 
 app.UseRouting();

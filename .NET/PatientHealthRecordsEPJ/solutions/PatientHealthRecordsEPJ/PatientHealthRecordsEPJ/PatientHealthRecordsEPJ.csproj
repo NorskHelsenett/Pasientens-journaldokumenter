@@ -327,8 +327,4 @@
 	  </None>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="wwwroot\documents\" />
-	</ItemGroup>
-
 </Project>
