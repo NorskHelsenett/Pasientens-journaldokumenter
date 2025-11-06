@@ -32,6 +32,8 @@
 
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
 
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+
 		<PackageReference Include="System.Formats.Asn1" Version="9.0.8" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 	</ItemGroup>
@@ -323,6 +325,10 @@
 	  <None Update="Resources\xsl\xsl\svarrapport_v1_2_2html.xsl">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="wwwroot\documents\" />
 	</ItemGroup>
 
 </Project>

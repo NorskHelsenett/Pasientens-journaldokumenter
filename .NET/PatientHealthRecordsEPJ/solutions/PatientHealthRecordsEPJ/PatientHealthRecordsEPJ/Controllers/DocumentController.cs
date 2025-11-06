@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
+using PatientHealthRecordsEPJ.ImageConversion;
 using PatientHealthRecordsEPJ.Mapper.Xml;
 using PatientHealthRecordsEPJ.Models;
 using System.Diagnostics;
@@ -93,6 +95,12 @@ public class DocumentController : BaseController
 		string url
 		)
 	{
+		Uri uri = new Uri(url);
+		var query = QueryHelpers.ParseQuery(uri.Query);
+		var documentUniqueId = query["documentUniqueId"];
+		var folder = Path.Combine(_webHostEnvironment.WebRootPath, "documents", patient);
+		Directory.CreateDirectory(folder);	 // For storing documents which will be displayed
+
 		GetDocumentViewModel model = new GetDocumentViewModel();
 
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
@@ -149,15 +157,14 @@ public class DocumentController : BaseController
 								if (mediaType == "application/pdf" && representation == "B64")
 								{
 									removeTextNodeForDisplay = true;
+																
+									var filePath = Path.Combine(folder, documentUniqueId!) + ".pdf";
+									System.IO.File.WriteAllBytes(filePath, Convert.FromBase64String(textNode.InnerText));
 
-									model.PdfBase64String = textNode.InnerText;
+									model.DocumentUrl = $"/documents/{patient}/{documentUniqueId}.pdf";
 									model.ContentType = "application/pdf";
-
-									// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
-									// "DownloadPdf" action method and point the IFRAME src to that instead? 
-									//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
-																	
-									model.IsSuccess = true;									
+																										
+									model.IsSuccess = true;
 								}
 								else if (mediaType == "application/rtf" && representation == "B64")
 								{
@@ -168,6 +175,56 @@ public class DocumentController : BaseController
 									model.ContentType = "application/rtf";	
 
 									model.IsSuccess = true;									
+								}
+								else if (mediaType == "image/tiff" && representation == "B64")
+								{
+									// Browsers can't display TIFF, so convert it to PNG
+
+									removeTextNodeForDisplay = true;
+									
+									string pngBase64 = ImageBase64Converter.TiffBase64ToPngBase64(
+										textNode.InnerText,
+										pageIndex: 0,
+										pngCompressionLevel: SixLabors.ImageSharp.Formats.Png.PngCompressionLevel.Level9 // smallest size, slowest
+									);
+
+									//File.WriteAllBytes("output.png", Convert.FromBase64String(pngBase64));
+									
+									model.ImageBase64String = pngBase64;
+									//model.ContentType = "image/tiff";
+									model.ContentType = "image/png";
+
+									model.IsSuccess = true;
+								}
+								else if (mediaType == "image/jpg" && representation == "B64")
+								{
+									removeTextNodeForDisplay = true;
+
+									model.ImageBase64String = textNode.InnerText;
+
+									model.ContentType = "image/jpg";
+
+									model.IsSuccess = true;
+								}
+								else if (mediaType == "image/png" && representation == "B64")
+								{
+									removeTextNodeForDisplay = true;
+
+									model.ImageBase64String = textNode.InnerText;
+
+									model.ContentType = "image/png";
+
+									model.IsSuccess = true;
+								}
+								else if (mediaType == "image/gif" && representation == "B64")
+								{
+									removeTextNodeForDisplay = true;
+
+									model.ImageBase64String = textNode.InnerText;
+
+									model.ContentType = "image/gif";
+
+									model.IsSuccess = true;
 								}
 								else if (mediaType == "application/xml")
 								{
@@ -231,10 +288,16 @@ public class DocumentController : BaseController
 
 						break;
 
-					case "application/pdf": // PDF not from within a ClinicalDocument
-						model.PdfBase64String = Convert.ToBase64String(apiResult.Data!);
-						model.ContentType = "application/pdf";
-						model.IsSuccess = true;
+					case "application/pdf": // PDF not from within a ClinicalDocument	
+						{
+							var filePath = Path.Combine(folder, documentUniqueId!) + ".pdf";
+							System.IO.File.WriteAllBytes(filePath, apiResult.Data!);
+
+							model.DocumentUrl = $"/documents/{patient}/{documentUniqueId}.pdf";
+							model.ContentType = "application/pdf";
+
+							model.IsSuccess = true;
+						}
 						break;
 
 					default:

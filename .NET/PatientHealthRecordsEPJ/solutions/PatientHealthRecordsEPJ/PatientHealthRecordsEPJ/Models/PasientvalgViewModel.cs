@@ -44,6 +44,7 @@ public class PasientvalgViewModel
 		new OptionPair() { Id = "23077200290" , Label = "Else Nett"},
 		new OptionPair() { Id = "15076500565" , Label = "Roland (Kith) Gundersen"},
 		new OptionPair() { Id = "23077200290" , Label = "Else Nett"},
+		new OptionPair() { Id = "70019950032" , Label = "Andine And"},
 	};
 }
 

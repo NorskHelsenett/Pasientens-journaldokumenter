@@ -129,9 +129,15 @@
 			<div class="row">
 				<div class="col-md-12">
 
-					@if (Model.ContentType == "application/pdf")
+					@* @if (Model.ContentType == "application/pdf")
 					{
 						<iframe src="data:application/pdf;base64,@Model.PdfBase64String">
+						</iframe>
+					} *@
+
+					@if (Model.ContentType == "application/pdf")
+					{
+						<iframe src="@Model.DocumentUrl">
 						</iframe>
 					}
 
@@ -143,6 +149,11 @@
 						<script type="text/javascript">
 							setIframeContent('contentIframe', `@Html.Raw(Model.Html)`);
 						</script>
+					}
+
+					@if (Model.ContentType?.StartsWith("image") == true)
+					{
+						<img src="data:@Model.ContentType;base64,@Model.ImageBase64String">						
 					}
 
 					@* @Html.PagedListPager(Model.Bundle.Entry, page => Url.Action("Index", "Document", new { page, sort = Model.SortExpression, pageSize = Model.PageSize }), PagedListRenderOptions.ClassicPlusFirstAndLast) *@

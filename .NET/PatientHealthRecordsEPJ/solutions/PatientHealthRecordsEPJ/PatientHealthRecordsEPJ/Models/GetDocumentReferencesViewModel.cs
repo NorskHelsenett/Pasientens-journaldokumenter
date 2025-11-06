@@ -44,9 +44,10 @@ public class GetDocumentViewModel
 	public Pagination Pagination { get; set; }
 
 	public string? ContentType { get; set; }
-	public string? Html { get; set; }
-	public string? PdfBase64String { get; set; }
-    }
+	public string? Html { get; set; }	
+	public string? ImageBase64String { get; set; }
+	public string? DocumentUrl { get; set; }
+}
 
 public class UnavailableLocation
 {
