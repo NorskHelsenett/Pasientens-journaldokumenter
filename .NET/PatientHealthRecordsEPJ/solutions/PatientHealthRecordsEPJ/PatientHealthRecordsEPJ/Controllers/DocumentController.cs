@@ -167,8 +167,8 @@ public class DocumentController : BaseController
 																										
 									model.IsSuccess = true;
 								}
-								else if (mediaType == "application/rtf" && representation == "B64")
-								{
+								else if ((mediaType == "application/rtf" || mediaType == "text/rtf") && representation == "B64")
+								{ 
 									removeTextNodeForDisplay = true;
 
 									model.Html = await GetHtmlFromRtfAsync(textNode.InnerText); 
