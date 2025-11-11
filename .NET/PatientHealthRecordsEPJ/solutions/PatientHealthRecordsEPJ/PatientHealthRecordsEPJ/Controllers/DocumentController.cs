@@ -122,7 +122,7 @@ public class DocumentController : BaseController
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", patient));
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())); 
 		
-		var apiResult = await ApiCaller.CallApi("GET", url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Get, url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
 
 		if (apiResult.IsSuccess)
 		{

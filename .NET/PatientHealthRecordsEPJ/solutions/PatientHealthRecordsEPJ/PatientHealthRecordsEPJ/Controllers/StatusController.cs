@@ -122,7 +122,7 @@ public class StatusController : BaseController
 
 		var content = new StringContent(jsonContent, Encoding.UTF8, "application/json"); 
 
-		var apiResult = await ApiCaller.CallApi("POST", apiUrl, sessionData.AccessToken!, document: false, headerKeyValues: headerKeyValues, content: content, isStatus: true);
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Post, apiUrl, sessionData.AccessToken!, document: false, headerKeyValues: headerKeyValues, content: content, isStatus: true);
 
 		if (apiResult.IsSuccess)
 		{
@@ -133,7 +133,7 @@ public class StatusController : BaseController
 				// Call /statuspvk endpoint to get raw pvk settings 
 
 				var statusPvkUrl = _apiEnvironment.StatusPvkUrl;
-				apiResult = await ApiCaller.CallApi("POST", statusPvkUrl, sessionData.AccessToken!, document: false, headerKeyValues: headerKeyValues, content: content, isStatus: true);
+				apiResult = await ApiCaller.CallApi(HttpMethod.Post, statusPvkUrl, sessionData.AccessToken!, document: false, headerKeyValues: headerKeyValues, content: content, isStatus: true);
 
 				StatusPvkResult? statusPvk = JsonSerializer.Deserialize<StatusPvkResult>(apiResult.Body, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 

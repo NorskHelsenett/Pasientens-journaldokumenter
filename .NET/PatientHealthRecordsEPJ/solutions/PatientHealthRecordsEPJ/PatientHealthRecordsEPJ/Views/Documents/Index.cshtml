@@ -405,8 +405,21 @@
 
 								var securityLabels = document.SecurityLabel;
 
+								var documentUniqueId = document.MasterIdentifier.Value; 
 								var homeCommunityId = GetHomeCommunityId(document);
 								var repositoryUniqueId = GetRepositoryUniqueId(document);
+
+								var kildeType = "";
+								var kilde = "";
+
+								List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+								{
+									"test" => KildeInfo.KildeListTest,
+									"qa" => KildeInfo.KildeListQA,
+									_ => null
+								};
+
+								var kildeInfo = kildeList.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId));
 
 								var rowId = Guid.NewGuid().ToString();
 
@@ -420,19 +433,7 @@
 										}
 									</td>
 									<td>
-										@{
-											var kildeType = "";
-											var kilde = "";
-
-											List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
-											{
-												"test" => KildeInfo.KildeListTest,
-												"qa" => KildeInfo.KildeListQA,
-												_ => null
-											};
-
-											var kildeInfo = kildeList.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId)); 
-																					
+										@{																																
 											if (kildeInfo != null)
 											{
 												//kildeType = "Nasjonalt lager";
@@ -582,7 +583,7 @@
 												</div>
 
 												<div>
-													@NoUrn(document.MasterIdentifier.Value) 
+													@NoUrn(documentUniqueId)
 												</div>
 
 											</div>
@@ -619,9 +620,16 @@
 
 												//var openUrl = $"document{uri.Query}"; // Kaller DocumentController->Index metoden for å vise dokument
 												var openUrl = $"document?url={System.Web.HttpUtility.UrlEncode(uri.ToString())}"; // Kaller DocumentController->Index metoden for å vise dokument
+												var deleteUrl = $"documents/DeleteDocument?documentUniqueId={documentUniqueId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->Delete metoden for å slette dokument
 											}
 											<div>
-												<a class="btn btn-primary" href="@openUrl" target="_blank">Åpne</a><br />
+												<a class="btn btn-primary" href="@openUrl" target="_blank">Åpne</a>
+
+												@if (kildeInfo != null)
+												{
+													<span> | </span>
+													<a class="btn btn-primary" href="@deleteUrl" onclick="javascript:return confirm('Er du sikker på at du vil slette denne dokumentreferansen og dokumentet?')">Slett</a><br />
+												}
 												@* <button class="btn btn-primary">Kopier referanse</button><br /> *@
 											</div>
 

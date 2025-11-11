@@ -56,7 +56,7 @@ public class SamlController : Controller
 
 		var apiUrl = _apiEnvironment.GetSamlAssertionUrl + $"?patient.identifier={sessionLoginResult.PatientId}";
 
-		var apiResult = await ApiCaller.CallApi("POST", apiUrl, sessionLoginResult.AccessToken!, document: false);
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Post, apiUrl, sessionLoginResult.AccessToken!, document: false);
 
 		if (apiResult.IsSuccess)
 		{

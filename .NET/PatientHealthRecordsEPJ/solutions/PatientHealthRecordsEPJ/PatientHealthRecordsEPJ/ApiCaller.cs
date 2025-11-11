@@ -18,7 +18,7 @@ public class ApiResult
 public class ApiCaller
 {
 	// Call Get Document References or Get Document api endpoints, with accesstoken and DPoP 
-	public static async Task<ApiResult> CallApi(string method,
+	public static async Task<ApiResult> CallApi(HttpMethod method,
 		string url,
 		string accessToken,
 		bool document,
@@ -28,7 +28,7 @@ public class ApiCaller
 		bool isStatus = false
 		)
 	{
-		var request = method == "GET" ? new HttpRequestMessage(HttpMethod.Get, url) : new HttpRequestMessage(HttpMethod.Post, url);
+		var request = new HttpRequestMessage(method, url); 
 
 		request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("nb-NO"));
 
