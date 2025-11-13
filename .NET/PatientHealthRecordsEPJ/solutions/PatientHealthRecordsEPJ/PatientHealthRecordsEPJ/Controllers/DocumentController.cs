@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.ImageConversion;
 using PatientHealthRecordsEPJ.Mapper.Xml;
 using PatientHealthRecordsEPJ.Models;
@@ -16,7 +15,7 @@ namespace PatientHealthRecordsEPJ.Controllers;
 public class DocumentController : BaseController
 {
 	private readonly ILogger<HomeController> _logger;
-	private readonly IHttpContextAccessor _httpContextAccessor;
+	private readonly IHttpContextAccessor _httpContextAccessor;	
 	private ISession session => _httpContextAccessor.HttpContext!.Session;
 	private readonly IWebHostEnvironment _webHostEnvironment;
 	private readonly IOidcClientService _oidcClientService;
@@ -99,8 +98,9 @@ public class DocumentController : BaseController
 		var query = QueryHelpers.ParseQuery(uri.Query);
 		var documentUniqueId = query["documentUniqueId"];
 		var tempDocs = Path.Combine(Path.GetTempPath(), "documents");	// In Program.cs there's a UseStaticFiles which serves from this path
-		var folder = Path.Combine(tempDocs, patient);
-		Directory.CreateDirectory(folder);	 // For storing documents which will be displayed
+		var patientFolder = Path.Combine(tempDocs, patient);
+		var patientRelativePath = $"/documents/{patient}";		
+		Directory.CreateDirectory(patientFolder);	 // For storing documents which will be displayed
 
 		GetDocumentViewModel model = new GetDocumentViewModel();
 
@@ -128,6 +128,19 @@ public class DocumentController : BaseController
 		{
 			try
 			{
+				if (apiResult.ContentType != "application/xml")
+				{
+					var extension = GetExtension(apiResult.ContentType!);
+
+					var filename = documentUniqueId + extension;
+
+					var filePath = Path.Combine(patientFolder, filename);
+
+					System.IO.File.WriteAllBytes(filePath, apiResult.Data!);
+
+					model.DocumentUrl = $"{patientRelativePath}/{filename}";
+				}
+
 				switch (apiResult.ContentType)
 				{
 					case "application/xml":
@@ -143,6 +156,12 @@ public class DocumentController : BaseController
 							// TODO: in a real application you could properly deserialize the clinical document. 
 							// As an example we just read the base64 encoded PDF string, or the KITH xml string
 
+							var clinicalDocumentFileName = $"{documentUniqueId!}.xml";
+							var clinicalDocumentfilePath = Path.Combine(patientFolder, clinicalDocumentFileName); 
+							System.IO.File.WriteAllBytes(clinicalDocumentfilePath, apiResult.Data!);
+
+							model.ClinicalDocumentUrl = $"{patientRelativePath}/{clinicalDocumentFileName}";
+
 							var namespaceManager = new XmlNamespaceManager(doc.NameTable);
 							namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
 
@@ -154,15 +173,21 @@ public class DocumentController : BaseController
 							{
 								var mediaType = textNode.Attributes["mediaType"]?.Value;
 								var representation = textNode.Attributes["representation"]?.Value;
-								
+
+								var extension = GetExtension(mediaType!);
+
+								var filename = documentUniqueId + extension; 
+
+								var filePath = Path.Combine(patientFolder, filename);
+
+								System.IO.File.WriteAllBytes(filePath, Convert.FromBase64String(textNode.InnerText));
+
+								model.DocumentUrl = $"{patientRelativePath}/{filename}";
+
 								if (mediaType == "application/pdf" && representation == "B64")
 								{
 									removeTextNodeForDisplay = true;
-																
-									var filePath = Path.Combine(folder, documentUniqueId!) + ".pdf";
-									System.IO.File.WriteAllBytes(filePath, Convert.FromBase64String(textNode.InnerText));
-
-									model.DocumentUrl = $"/documents/{patient}/{documentUniqueId}.pdf";
+																																	
 									model.ContentType = "application/pdf";
 																										
 									model.IsSuccess = true;
@@ -291,7 +316,7 @@ public class DocumentController : BaseController
 
 					case "application/pdf": // PDF not from within a ClinicalDocument	
 						{
-							var filePath = Path.Combine(folder, documentUniqueId!) + ".pdf";
+							var filePath = Path.Combine(patientFolder, documentUniqueId!) + ".pdf";
 							System.IO.File.WriteAllBytes(filePath, apiResult.Data!);
 
 							model.DocumentUrl = $"/documents/{patient}/{documentUniqueId}.pdf";
@@ -387,4 +412,135 @@ public class DocumentController : BaseController
 			return stringWriter.GetStringBuilder().ToString();
 		}
 	}
+
+	public IActionResult Download(string file)
+	{
+		// This method is safe: it prevents directory traversal attacks by canonicalizing the path
+
+		if (string.IsNullOrWhiteSpace(file))
+			return BadRequest("Missing file.");
+
+		// Define a fixed root directory for documents
+		var rootDir = Path.Combine(Path.GetTempPath(), "documents");
+
+		// Normalize slashes and remove leading "/documents/"
+		var relative = file.Replace("/documents/", "")
+						   .Replace("\\", "/")
+						   .TrimStart('/');
+
+		// Combine the root directory with the relative path
+		var combinedPath = Path.Combine(rootDir, relative);
+
+		// Canonicalize the combined path (resolves ../ and symlinks)
+		var fullPath = Path.GetFullPath(combinedPath);
+
+		// Ensure the canonical path is still inside rootDir
+		var fullRoot = Path.GetFullPath(rootDir);
+		if (!fullPath.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
+		{
+			// Attempted directory traversal
+			return BadRequest("Invalid file path.");
+		}
+
+		// Check existence
+		if (!System.IO.File.Exists(fullPath))
+			return NotFound();
+
+		// Read file safely
+		var bytes = System.IO.File.ReadAllBytes(fullPath);
+
+		return new FileContentResult(bytes, "application/octet-stream")
+		{
+			FileDownloadName = Path.GetFileName(fullPath)
+		};
+	}
+
+
+	private static string GetExtension(string contentType)
+	{
+		return contentType switch
+		{
+			//
+			// CDA / HL7 Documents
+			//
+			"text/xml" => ".xml",
+			"application/xml" => ".xml",
+			"application/hl7-v3+xml" => ".xml",
+			"application/x-hl7-v3+xml" => ".xml",
+			"application/hl7-cda+xml" => ".xml",
+			"application/cda+xml" => ".xml",
+
+			//
+			// HL7 v2
+			//
+			"application/hl7-v2" => ".hl7",
+			"text/hl7" => ".hl7",
+			"x-application/hl7-v2" => ".hl7",
+
+			//
+			// CCR / CCD (old but still seen)
+			//
+			"application/x-ccr" => ".xml",
+			"application/ccr" => ".xml",
+			"application/xml+ccr" => ".xml",
+			"application/x-continuity-of-care-record+xml" => ".xml",
+			"application/xml+ccd" => ".xml",
+
+			//
+			// FHIR documents (rare in XDS but supported in MHD)
+			//
+			"application/fhir+xml" => ".xml",
+			"application/fhir+json" => ".json",
+
+			//
+			// DICOM
+			//
+			"application/dicom" => ".dcm",
+			"application/dicom+xml" => ".xml",
+			"application/dicom+json" => ".json",
+
+			//
+			// PDFs
+			//
+			"application/pdf" => ".pdf",
+
+			//
+			// Text formats
+			//
+			"text/plain" => ".txt",
+			"application/txt" => ".txt",
+			"text/csv" => ".csv",
+
+			//
+			// RTF / Word
+			//
+			"application/rtf" => ".rtf",
+			"text/rtf" => ".rtf",
+			"application/msword" => ".rtf",       // many scanners incorrectly use msword for RTF
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document" => ".docx",
+			"application/vnd.ms-word.document.macroEnabled.12" => ".docm",
+
+			//
+			// Images
+			//
+			"image/jpeg" => ".jpg",
+			"image/jpg" => ".jpg",
+			"image/png" => ".png",
+			"image/gif" => ".gif",
+			"image/tiff" => ".tif",
+			"image/bmp" => ".bmp",
+
+			//
+			// Zip / Binary
+			//
+			"application/zip" => ".zip",
+			"application/octet-stream" => ".bin",
+
+			//
+			// Default fallback: use the content type itself
+			//
+			_ => contentType
+		};
+	}
+
 }
