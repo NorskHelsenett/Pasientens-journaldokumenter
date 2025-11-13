@@ -156,7 +156,7 @@ public class DocumentController : BaseController
 							// TODO: in a real application you could properly deserialize the clinical document. 
 							// As an example we just read the base64 encoded PDF string, or the KITH xml string
 
-							var clinicalDocumentFileName = $"{documentUniqueId!}.xml";
+							var clinicalDocumentFileName = $"{documentUniqueId!}_ClinicalDocument.xml";
 							var clinicalDocumentfilePath = Path.Combine(patientFolder, clinicalDocumentFileName); 
 							System.IO.File.WriteAllBytes(clinicalDocumentfilePath, apiResult.Data!);
 
@@ -180,7 +180,9 @@ public class DocumentController : BaseController
 
 								var filePath = Path.Combine(patientFolder, filename);
 
-								System.IO.File.WriteAllBytes(filePath, Convert.FromBase64String(textNode.InnerText));
+								var bytes = representation == "B64" ? Convert.FromBase64String(textNode.InnerText) : Encoding.UTF8.GetBytes(textNode.InnerText);
+
+								System.IO.File.WriteAllBytes(filePath, bytes);
 
 								model.DocumentUrl = $"{patientRelativePath}/{filename}";
 
