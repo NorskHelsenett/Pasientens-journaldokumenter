@@ -48,6 +48,9 @@ public class GetDocumentViewModel
 	public string? ImageBase64String { get; set; }
 	public string? DocumentUrl { get; set; }
 	public string? ClinicalDocumentUrl { get; set; }
+	public bool IsConverted { get; set; }
+    public string? ConvertedFromType { get; set; }
+	public string? ConvertedToType { get; set; }
 }
 
 public class UnavailableLocation

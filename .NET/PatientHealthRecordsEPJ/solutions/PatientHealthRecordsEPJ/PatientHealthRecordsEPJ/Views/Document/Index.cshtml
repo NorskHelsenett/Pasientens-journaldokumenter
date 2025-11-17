@@ -141,8 +141,10 @@
 						}
 						else
 						{
-						<div>
-						</div>		
+						
+							<div>
+								<a href="@documentUrl" class="btn btn-primary"><i class="bi bi-download"></i> &nbsp; Last ned dokumentet</a>
+							</div>						
 						}
 					}
 					
@@ -159,6 +161,13 @@
 						<iframe src="data:application/pdf;base64,@Model.PdfBase64String">
 						</iframe>
 					} *@
+
+					@if (Model.IsConverted)
+					{
+						<div>
+							<em>@Model.ConvertedFromType has automatically been converted to @Model.ConvertedToType for display in the browser</em>
+						</div>
+					}
 
 					@if (Model.ContentType == "application/pdf")
 					{
@@ -177,7 +186,7 @@
 					}
 
 					@if (Model.ContentType?.StartsWith("image") == true)
-					{
+					{						
 						<img src="data:@Model.ContentType;base64,@Model.ImageBase64String">						
 					}
 

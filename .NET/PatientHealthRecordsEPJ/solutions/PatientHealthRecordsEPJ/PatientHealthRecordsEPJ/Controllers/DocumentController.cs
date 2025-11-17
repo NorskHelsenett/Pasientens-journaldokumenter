@@ -200,7 +200,11 @@ public class DocumentController : BaseController
 
 									model.Html = await GetHtmlFromRtfAsync(textNode.InnerText); 
 									
-									model.ContentType = "application/rtf";	
+									model.ContentType = "application/rtf";
+
+									model.IsConverted = true;
+									model.ConvertedFromType = "RTF";
+									model.ConvertedToType = "HTML";
 
 									model.IsSuccess = true;									
 								}
@@ -224,13 +228,13 @@ public class DocumentController : BaseController
 
 									model.IsSuccess = true;
 								}
-								else if (mediaType == "image/jpg" && representation == "B64")
+								else if ((mediaType == "image/jpeg" || mediaType == "image/jpg") && representation == "B64")
 								{
 									removeTextNodeForDisplay = true;
 
 									model.ImageBase64String = textNode.InnerText;
 
-									model.ContentType = "image/jpg";
+									model.ContentType = "image/jpeg";
 
 									model.IsSuccess = true;
 								}
@@ -323,6 +327,51 @@ public class DocumentController : BaseController
 
 							model.DocumentUrl = $"/documents/{patient}/{documentUniqueId}.pdf";
 							model.ContentType = "application/pdf";
+
+							model.IsSuccess = true;
+						}
+						break;
+
+					case "image/tif": // TIF not from within a ClinicalDocument	
+					case "image/tiff": // TIFF not from within a ClinicalDocument	
+						{							
+							var tifBase64 = Convert.ToBase64String(apiResult.Data!);
+
+							string pngBase64 = ImageBase64Converter.TiffBase64ToPngBase64(
+								tifBase64,
+								pageIndex: 0,
+								pngCompressionLevel: SixLabors.ImageSharp.Formats.Png.PngCompressionLevel.Level9 // smallest size, slowest
+							);
+
+							//File.WriteAllBytes("output.png", Convert.FromBase64String(pngBase64));
+
+							model.ImageBase64String = pngBase64;
+							//model.ContentType = "image/tiff";
+							model.ContentType = "image/png";
+							model.IsConverted = true;
+							model.ConvertedFromType = "TIFF";
+							model.ConvertedToType = "PNG"; 
+							model.IsSuccess = true;
+							break; 
+						}
+
+					case "image/png": // PNG not from within a ClinicalDocument	
+					case "image/jpg": // JPG not from within a ClinicalDocument	(some systems use image/jpg, although official MIME type is image/jpeg)
+					case "image/jpeg": // JPG not from within a ClinicalDocument						
+					case "image/gif": // GIF not from within a ClinicalDocument						
+						{
+							var imageBase64 = Convert.ToBase64String(apiResult.Data!);
+							
+							model.ImageBase64String = imageBase64;
+
+							/*var extension = GetExtension(apiResult.ContentType!);
+							var filePath = Path.Combine(patientFolder, documentUniqueId!) + extension;
+							System.IO.File.WriteAllBytes(filePath, apiResult.Data!);
+
+							model.DocumentUrl = $"/documents/{patient}/{documentUniqueId}{extension}";
+							model.ContentType = apiResult.ContentType;*/
+
+							model.ContentType = apiResult.ContentType;
 
 							model.IsSuccess = true;
 						}
@@ -526,7 +575,7 @@ public class DocumentController : BaseController
 			// Images
 			//
 			"image/jpeg" => ".jpg",
-			"image/jpg" => ".jpg",
+			"image/jpg" => ".jpg", // some systems use image/jpg
 			"image/png" => ".png",
 			"image/gif" => ".gif",
 			"image/tiff" => ".tif",

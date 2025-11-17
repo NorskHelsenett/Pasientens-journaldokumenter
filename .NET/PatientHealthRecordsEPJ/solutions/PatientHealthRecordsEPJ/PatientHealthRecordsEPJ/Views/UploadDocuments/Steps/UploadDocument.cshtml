@@ -33,7 +33,130 @@
 				<div class="row mb-3">
 					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
 					<div class="col-sm-12 options">
-						Options for non-CDA (.xml) documents: <strong>.rtf, .pdf, .txt</strong>, etc:<br />
+
+						<details>
+							<summary><strong>Du kan laste opp følgende formater (klikk for å se): </strong></summary>
+
+						<table class="table">
+							<thead>
+								<tr>
+									<th>
+										Filtype
+									</th>
+									<th>Beskrivelse</th>
+									<th>
+										Filtype inne i Clinical Document
+									</th>
+									<th>
+										Dokumentet er pakket i Clinical Document .xml? 
+									</th>
+								</tr>
+							</thead>
+							<tr>
+								<td>
+									.xml
+								</td>
+								<td>Clinical Document</td>
+								<td>.pdf, .rtf, .png, .jpg, .xml [KITH], m.fl.</td>
+								<td>Ja</td>
+							</tr>
+							<tr>
+								<td>
+									.xml
+								</td>
+								<td>KITH</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.pdf
+								</td>
+								<td>PDF @* Portable Document *@</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.rtf
+								</td>
+								<td>Rich-Text Format</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.txt
+								</td>
+								<td>Text File</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.png
+								</td>
+								<td>Image</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.jpg
+								</td>
+								<td>Image</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.tif/.tiff
+								</td>
+								<td>Image</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									[m.fl.]
+								</td>
+								<td>Hva som helst</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+						</table>
+
+						<p>
+							.xml hvor innholdet er av type KITH kan enten lastes opp direkte eller den kan ligge innpakket i en Clinical Document (også filtype .xml). 
+						</p>
+
+							<p>
+								KITH XML kan inneholde flere vedlegg, f.eks. PDF eller bilder, m.m. 
+							</p>
+
+							<p>
+								KITH XML transformeres til HTML v.h.a. visningsfil når den skal vises i Test EPJ, Kjernejournal portal eller Helsenorge. 
+							</p>
+
+						<p>
+								Innholdet i en Clinical Document XML starter alltid med &lt;ClinicalDocument&gt; og dokumentet som er pakket inn ligger som en lang kodet tekst-streng som ser f.eks. slik ut: RGV0dGUgZXIgZXQgZWtzZW1wZWwgcMO...
+						</p>
+						</details>
+
+					@* 	<ul>
+							<li>.xml (Clinical Document) som inneholder et dokument (.pdf, .rtf, .xml [KITH], m.m.)</li>
+							<li>.pdf, .rtf, .png, .jpg, .tif/.tiff, .gif, m.fl. <strong>Ikke</strong> wrappet i Clinical Document.</li>
+							<li>.xml (kith). <strong>Ikke</strong> wrappet i Clinical Document.</li>
+							<li>test</li>
+						</ul> *@
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-12 options">
+						Options used only for non-Clinical Documents (.xml): <strong>.rtf, .pdf, .txt, .png</strong>, etc:<br />						
+						Because uploading these files directly does not contain any metadata/date like .XML does. 
 						<label><input type="radio" id="dateType" name="dateType" value="now" checked> Use current date and time as document date @* (will be sorted at the top of list as default) *@</label><br />
 						<label><input type="radio" id="dateType" name="dateType" value="filedate"> Use file date as document date</label>
 					</div>
