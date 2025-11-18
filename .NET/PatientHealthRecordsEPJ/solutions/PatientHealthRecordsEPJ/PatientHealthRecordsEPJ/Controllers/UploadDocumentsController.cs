@@ -175,6 +175,8 @@ public class UploadDocumentsController : BaseController
 			return RedirectToAction(nameof(Password));
 		}
 
+		await RefreshToken();
+
 		return RedirectToAction(nameof(Patient));
 	}
 
@@ -207,6 +209,8 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> Patient()
 	{
+		await RefreshToken();
+
 		var sessionData = session.SessionData();
 
 		if (string.IsNullOrEmpty(sessionData.PatientId))
@@ -402,6 +406,8 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> UploadDocument()
 	{
+		await RefreshToken();
+
 		var model = new DocumentMetadataViewModel();
 
 		var sessionData = session.SessionData();
@@ -1125,6 +1131,8 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> FinalizeSubmission(string error)
 	{
+		await RefreshToken();
+
 		var model = new FinalizeSubmissionViewModel();
 
 		model.ErrorMessage = error;
