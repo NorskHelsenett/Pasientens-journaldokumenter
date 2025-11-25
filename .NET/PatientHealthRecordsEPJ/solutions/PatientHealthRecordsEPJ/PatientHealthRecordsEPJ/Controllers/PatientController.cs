@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using NorskHelsenettUpload.FluidExtensions;
 using NorskHelsenettUpload.Ihe.Mhd.Models;
 using PatientHealthRecordsEPJ.Models;
-using PJD.Services.Persontjenesten;
+using PatientHealthRecordsEPJ.Services;
 
 namespace PatientHealthRecordsEPJ.Controllers;
 

@@ -37,6 +37,12 @@ public static class SubmissionExtensions
 		return submission;
 	}
 
+	public static DocumentSubmissionMetadata WithHomeCommunityId(this DocumentSubmissionMetadata submission, string homeCommunityId)
+	{
+		submission.HomeCommunityId = homeCommunityId;
+		return submission;
+	}
+
 	public static DocumentSubmissionMetadata WithPatientId(this DocumentSubmissionMetadata submission, string patientId)
 	{
 		submission.PatientId = patientId;

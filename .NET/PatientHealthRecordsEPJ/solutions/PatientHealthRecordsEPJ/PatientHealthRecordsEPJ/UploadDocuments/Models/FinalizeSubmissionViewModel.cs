@@ -10,5 +10,9 @@ namespace PatientHealthRecordsEPJ.UploadDocuments.Models
 
 		public bool IsError { get; set; }
 		public string ErrorMessage { get; set; }
-	}
+
+		public string? ResponseBody { get; set; }
+
+        public string? RegistryRepositoryBaseUrl { get; set; }
+    }
 }

@@ -16,7 +16,10 @@ public class DocumentSubmissionMetadata
     public string AvailabilityStatus { get; set; }
 
     public string SourceId { get; set; }
-    [Required]
+
+	public string HomeCommunityId { get; set; }   // HomeCommunityId where the document will be stored, saved to DocumentReference.content.attachment.extension[homeCommunityId] in bundle
+
+	[Required]
     public string PatientId { get; set; }
 
     public string? Title { get; set; }

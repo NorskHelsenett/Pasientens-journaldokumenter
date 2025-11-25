@@ -6,7 +6,6 @@ using NorskHelsenettUpload.Ihe.Mhd.Services;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ;
 using PatientHealthRecordsEPJ.Services;
-using PJD.Services.Persontjenesten;
 using StackExchange.Redis;
 
 AppContext.SetSwitch("Switch.System.Xml.AllowDefaultResolver", true);
@@ -86,10 +85,21 @@ builder.Services.AddHttpClient("PersonApiClient", client =>
 {
 	client.DefaultRequestHeaders.Add("api-version", "3");
 	client.BaseAddress = new Uri(builder.Configuration["PersontjenestenEndpoints:test"]!);
-}).UseHelseIdDPoP(); 
+}).UseHelseIdDPoP();
+
+//builder.Services.AddHttpClient("CreateDocumentsWithReferenceApiClient", client => client.BaseAddress = new Uri(builder.Configuration["OrgRegEndpoints:Dev"]!))
+builder.Services.AddHttpClient("ProvideDocumentBundleApiClient", client => client.BaseAddress = new Uri("https://api.pjd.test.nhn.no"))
+	.UseHelseIdDPoP(configureClient =>
+	{
+		configureClient.Audience = "nhn:phr";
+		configureClient.Scopes = "nhn:phr/mhd/create-documents-with-reference";
+
+		// PrivateJwk, ClientId and TokenEndpoint is the same as for Persontjenesten
+	}); 
 
 builder.Services.AddScoped<OrganizationService>();	// Used to get organization name from Persontjenesten
-builder.Services.AddScoped<PersonApiService>();		// Used to get person from Persontjenesten
+builder.Services.AddScoped<PersonApiService>();     // Used to get person from Persontjenesten
+builder.Services.AddScoped<ProvideDocumentBundleApiService>();     // Used to provide document bundle to PHR API
 
 var app = builder.Build();
 

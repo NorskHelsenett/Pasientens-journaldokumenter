@@ -1,7 +1,7 @@
 using NorskHelsenettUpload.Models;
 using System.Text.Json;
 
-namespace PJD.Services.Persontjenesten;
+namespace PatientHealthRecordsEPJ.Services;
 
 public class FullAccess
 {        

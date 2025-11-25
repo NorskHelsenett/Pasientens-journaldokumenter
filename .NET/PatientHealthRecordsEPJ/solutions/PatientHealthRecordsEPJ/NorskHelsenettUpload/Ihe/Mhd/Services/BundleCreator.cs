@@ -21,7 +21,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 
 		public string CreateFhirBundle(ProvideDocumentBundleRequest model, string type, bool removeBinaryDataForDisplay = false)
 		{		
-			model.SetPatientOnAllDocuments();  // Set the SourcePatientInfo instance on all documents
+			//model.SetPatientOnAllDocuments();  // Set the SourcePatientInfo instance on all documents
 
 			// NOTE: This implements the Comprehensive Provide Document Bundle (ITI-65).
 			// Minimal and UnContained variants can be added later behind `type`.
@@ -254,6 +254,16 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			else if (!string.IsNullOrWhiteSpace(doc.Url))
 				attachment.Url = doc.Url;
 
+			var homeCommunityId = model.Submission.HomeCommunityId; 
+
+			if (!homeCommunityId.StartsWith("urn:oid:"))
+			{
+				homeCommunityId = "urn:oid:" + homeCommunityId;
+			}
+
+			// Add HomeCommunityId extension, which routes the document in IHE XDS environments				
+			attachment.AddExtension("https://profiles.ihe.net/ITI/MHD/StructureDefinition/ihe-homeCommunityId", new FhirUri(homeCommunityId));
+
 			var docRef = new DocumentReference
 			{
 				Id = docRefId,
@@ -314,7 +324,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 				}
 			};
 
-			docRef.Contained.Add(patient); 
+			//docRef.Contained.Add(patient);  // Deprecated; using patient reference instead
 
 			// Confidentiality
 			if (m.ConfidentialityCodeList?.Count > 0)

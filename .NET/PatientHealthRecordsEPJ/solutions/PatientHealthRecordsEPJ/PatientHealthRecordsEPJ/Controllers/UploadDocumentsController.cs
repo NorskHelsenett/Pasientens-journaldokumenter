@@ -62,6 +62,10 @@ public class UploadDocumentsController : BaseController
 	private readonly IBundleCreator _bundleCreator;
 	private readonly OrganizationService _organizationService;
 
+	private IPhrApiEnvironmentProvider _phrApiEnvironmentProvider; 
+	
+	private readonly ProvideDocumentBundleApiService _provideDocumentsBundleApiService; 
+
 	public UploadDocumentsController(
 		IOptions<SessionOptions> sessionOptions,
 		ILogger<HomeController> logger,
@@ -71,7 +75,9 @@ public class UploadDocumentsController : BaseController
 		IPhrApiService phrApiService,
 		IBundleCreator bundleCreator,
 		IOidcClientService oidcClientService,
-		OrganizationService organizationService
+		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
+		OrganizationService organizationService,
+		ProvideDocumentBundleApiService provideDocumentsBundleApiService
 		) : base(sessionOptions)
 	{
 		_logger = logger;
@@ -83,6 +89,8 @@ public class UploadDocumentsController : BaseController
 		_phrApiService = phrApiService;
 		_bundleCreator = bundleCreator;
 		_organizationService = organizationService;
+		_provideDocumentsBundleApiService =	provideDocumentsBundleApiService;
+		_phrApiEnvironmentProvider = phrApiEnvironmentProvider; 
 	}
 
 	private void SaveToSession(ProvideDocumentBundleRequest bundleRequest)
@@ -391,7 +399,8 @@ public class UploadDocumentsController : BaseController
 			var sessionData = session.SessionData();
 			var request = sessionData.BundleRequest;
 
-			request!.Submission.WithSourceId(selectedHomeCommunityId);
+			//request!.Submission.WithSourceId(selectedHomeCommunityId);
+			request!.Submission.WithHomeCommunityId(selectedHomeCommunityId);
 
 			sessionData.SaveToSession(session);
 		}
@@ -1178,21 +1187,29 @@ public class UploadDocumentsController : BaseController
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;
 
-		// Create document-object
-		//var bundleDocument = _bundleCreator.CreateFhirBundle(Model, "Comprehensive");
+		// Create document-object		
 		var bundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
-
-		var apiResult = await _phrApiService.ProvideDocumentBundleAsync(sessionData.AccessToken, Constants.JwkPrivateKey, bundleDocument);
-		//await _phrApiService.CreateDocumentReferenceAsync(bundleDocument); 
-
+		
+		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument);
+		
 		if (apiResult.IsSuccess)
 		{
+			var responseBody = apiResult.Body; 
+
 			return RedirectToAction(nameof(SubmissionConfirmation));
 		}
 		else
 		{
-			return RedirectToAction(nameof(FinalizeSubmission), new { error = "An error occurred trying to register document bundle"});
-		}		
+			model.ErrorMessage = "An error occurred trying to register document bundle";			
+			model.IsError = true; 
+			model.ResponseBody = apiResult.Body;
+			model.Upload = request;
+
+			model.JsonBundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: true);			
+			model.JsonBundleDocument = model.JsonBundleDocument.Replace(BundleCreator.REMOVED_FOR_DISPLAY_TEXT_BASE64, "...removed for display...");
+
+			return View("Steps/FinalizeSubmission", model);			
+		}
 	}	
 	public async Task<IActionResult> SubmissionConfirmation()
 	{
@@ -1202,6 +1219,14 @@ public class UploadDocumentsController : BaseController
 		var request = sessionData.BundleRequest;
 
 		model.Upload = request;
+
+		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+
+		var apiUrl = _apiEnvironment.ProvideDocumentBundleUrl;
+
+		var apiUri = new Uri(apiUrl); 
+
+		model.RegistryRepositoryBaseUrl = $"{apiUri.Scheme}://{apiUri.Authority}";	// Used to create links to /registry-repository/document-status urls etc
 
 		sessionData.BundleRequest = null;
 		sessionData.UploadWizardOpenSteps.Clear();

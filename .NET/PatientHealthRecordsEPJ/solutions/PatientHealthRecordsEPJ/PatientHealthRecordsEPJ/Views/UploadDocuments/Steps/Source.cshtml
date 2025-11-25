@@ -22,17 +22,17 @@
 		</h4>
 
 		@{
-			var sourceId = sessionData.BundleRequest.Submission.SourceId;
+			var homeCommunityId = sessionData.BundleRequest.Submission.HomeCommunityId;
 		}
 
-		@if (!string.IsNullOrEmpty(sourceId))
+		@if (!string.IsNullOrEmpty(homeCommunityId))
 		{
 			KildeInfo? kilde = default!;
 
 			kilde = sessionData.EnvironmentId switch
 			{
-				"test" => KildeInfo.KildeListTest.First(x => x.HomeCommunityId == sourceId),
-				"qa" => KildeInfo.KildeListQA.First(x => x.HomeCommunityId == sourceId),
+				"test" => KildeInfo.KildeListTest.First(x => x.HomeCommunityId == homeCommunityId),
+				"qa" => KildeInfo.KildeListQA.First(x => x.HomeCommunityId == homeCommunityId),
 				_ => null
 			}; 
 
@@ -70,7 +70,7 @@
 				@foreach (var kilde in kildeList)
 				{
 					var selectedClass = "";
-					if (kilde.HomeCommunityId == sourceId)
+					if (kilde.HomeCommunityId == homeCommunityId)
 					{
 						selectedClass = "selected";
 					}
@@ -97,7 +97,7 @@
 							}
 						</td>
 						<td>
-							@if (kilde.HomeCommunityId != sourceId)
+							@if (kilde.HomeCommunityId != homeCommunityId)
 							{
 								<button type="submit" name="selectedHomeCommunityId" value="@kilde.HomeCommunityId" class="btn btn-primary">Velg kilde</button>
 							}

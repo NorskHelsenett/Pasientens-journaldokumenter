@@ -68,7 +68,17 @@
 	@if (Model.IsError)
 	{
 		<div class="error">
-			@Model.ErrorMessage
+			<div>
+				@Model.ErrorMessage
+			</div>
+
+			<div>
+				<strong>Response from REST API:</strong>
+			</div>
+
+			<div>
+				<textarea class="w-100" rows="10">@Model.ResponseBody</textarea>
+			</div>
 		</div>
 	}
 
@@ -327,22 +337,28 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 							<td>Submission SourceId:</td>
 							<td>
 								@Model.Upload.Submission.SourceId
+							</td>
+						</tr>
+						<tr>
+							<td>Submission HomeCommunityId:</td>
+							<td>
+								@Model.Upload.Submission.HomeCommunityId
 
 								@{
-									var sourceId = Model.Upload.Submission.SourceId;
+									var homeCommunityId = Model.Upload.Submission.HomeCommunityId;
 								}
 
-								@if (!string.IsNullOrEmpty(sourceId))
-								{									
+								@if (!string.IsNullOrEmpty(homeCommunityId))
+								{
 									List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
 									{
 										"test" => KildeInfo.KildeListTest,
 										"qa" => KildeInfo.KildeListQA,
 										_ => null
 									};
-													
 
-									var kilde = kildeList.First(x => x.HomeCommunityId == sourceId);
+
+									var kilde = kildeList.First(x => x.HomeCommunityId == homeCommunityId);
 
 									<span class="display">
 										(@kilde.Name)
