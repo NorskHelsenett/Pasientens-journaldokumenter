@@ -1,4 +1,5 @@
-﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+﻿@using NorskHelsenettUpload.Ihe.Mhd.Models
+@using PatientHealthRecordsEPJ.UploadDocuments.Models
 @model FinalizeSubmissionViewModel
 
 @{
@@ -187,6 +188,10 @@
 								<div>Legal authenticator:&nbsp;</div>
 								document.Metadata!.LegalAuthenticator!.ToHl7String();
 							}
+
+							@{
+
+							}
 							<br />
 							<table class="table table-sm">
 								<tr>
@@ -219,26 +224,39 @@
 							<br />
 							Document SourcePatientIdInfo:<br />
 
+							@{
+								SourcePatientInfo? sourcePatientInfo = null!;
+
+								if (document.Metadata!.SourcePatientInfo?.NIN != null)
+								{
+									sourcePatientInfo = document.Metadata!.SourcePatientInfo; 
+								}
+								else
+								{
+									sourcePatientInfo = Model.Upload.Patient;
+								}
+							}
+
 							<table class="table table-sm">
 								<tr>
 									<td>&nbsp;&nbsp;&nbsp;Patient's family name:</td>
-									<td>@document.Metadata!.SourcePatientInfo!.Name!.FamilyName</td>
+									<td>@sourcePatientInfo!.Name!.FamilyName</td>
 								</tr>
 								<tr>
 									<td>&nbsp;&nbsp;&nbsp;Patient's first name:</td>
-									<td>@document.Metadata!.SourcePatientInfo!.Name!.FirstName</td>
+									<td>@sourcePatientInfo!.Name!.FirstName</td>
 								</tr>
 								<tr>
 									<td>&nbsp;&nbsp;&nbsp;Patient's middle name:</td>
-									<td>@document.Metadata!.SourcePatientInfo!.Name!.MiddleName</td>
+									<td>@sourcePatientInfo!.Name!.MiddleName</td>
 								</tr>
 								<tr>
 									<td>&nbsp;&nbsp;&nbsp;Patient's gender: </td>
-									<td>@document.Metadata!.SourcePatientInfo!.Gender</td>
+									<td>@sourcePatientInfo!.Gender</td>
 								</tr>
 								<tr>
 									<td>&nbsp;&nbsp;&nbsp;Patient's date of birth:</td>
-									<td>@document.Metadata!.SourcePatientInfo!.DateOfBirth</td>
+									<td>@sourcePatientInfo!.DateOfBirth</td>
 								</tr>
 
 							</table>
