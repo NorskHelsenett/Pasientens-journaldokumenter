@@ -54,7 +54,7 @@ public class ProvideBundle
 			IsSuccess = response.StatusCode == System.Net.HttpStatusCode.OK,
 			StatusCode = (int)response.StatusCode,
 			Body = responseBody,
-			ContentType = response.Content.Headers.ContentType!.ToString()			
+			ContentType = response.Content.Headers.ContentType?.ToString()
 		};		
     }
 }
