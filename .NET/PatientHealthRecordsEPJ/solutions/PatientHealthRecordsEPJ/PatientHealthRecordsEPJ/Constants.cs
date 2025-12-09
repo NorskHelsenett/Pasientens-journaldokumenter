@@ -1,8 +1,6 @@
 public class Constants
 {
-	public const string SessionDataKey = "sessionData";
-
-	public const string UploadPassword = "nhn-upload";
+	public const string SessionDataKey = "sessionData";	
 
 	public const long KB = 1024;
 	public const long MB = KB * 1024;

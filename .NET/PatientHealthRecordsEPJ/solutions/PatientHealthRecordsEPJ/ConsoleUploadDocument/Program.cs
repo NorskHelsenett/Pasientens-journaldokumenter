@@ -88,7 +88,7 @@ var sourceId = "1.1"; // TODO: what should sourceId be?
 
 
 /*
-	Log in with HelseID. This example uses user login (logged in user) to call the bundle endpoint, but we could also use client credentials flow.
+	Log in with HelseID. This example uses user login to call the bundle endpoint, but we could also use client credentials flow.
 */
 //private const int LocalhostPort = 8080;
 const int LocalhostPort = 8089;

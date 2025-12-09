@@ -61,10 +61,13 @@ public class UploadDocumentsController : BaseController
 	private readonly IPhrApiService _phrApiService;
 	private readonly IBundleCreator _bundleCreator;
 	private readonly OrganizationService _organizationService;
+	private readonly PhrEpjOptions _phrEpjOptions;
 
 	private IPhrApiEnvironmentProvider _phrApiEnvironmentProvider; 
 	
-	private readonly ProvideDocumentBundleApiService _provideDocumentsBundleApiService; 
+	private readonly ProvideDocumentBundleApiService _provideDocumentsBundleApiService;
+
+	public static List<string> Steps = ["patient", "source", "uploaddocument", "classification", "submission", "finalizesubmission", "submissionconfirmation"];
 
 	public UploadDocumentsController(
 		IOptions<SessionOptions> sessionOptions,
@@ -77,7 +80,8 @@ public class UploadDocumentsController : BaseController
 		IOidcClientService oidcClientService,
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		OrganizationService organizationService,
-		ProvideDocumentBundleApiService provideDocumentsBundleApiService
+		ProvideDocumentBundleApiService provideDocumentsBundleApiService,
+		PhrEpjOptions phrEpjOptions
 		) : base(sessionOptions)
 	{
 		_logger = logger;
@@ -91,13 +95,31 @@ public class UploadDocumentsController : BaseController
 		_organizationService = organizationService;
 		_provideDocumentsBundleApiService =	provideDocumentsBundleApiService;
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider; 
+		_phrEpjOptions = phrEpjOptions;
 	}
-
-	private void SaveToSession(ProvideDocumentBundleRequest bundleRequest)
+		
+	private IActionResult Navigate(NavigationAction nav, string current)
 	{
-		var sessionData = session.SessionData();
-		sessionData.BundleRequest = bundleRequest;
-		sessionData.SaveToSession(session);
+		string previous = null, next = null;
+
+		var stepIndex = Steps.FindIndex(step => step == current.ToLower());
+
+		if (stepIndex > 0)
+		{
+			previous = Steps[stepIndex - 1];
+		}
+
+		if (stepIndex < Steps.Count - 1)
+		{
+			next = Steps[stepIndex + 1];
+		}
+
+		return nav switch
+		{
+			NavigationAction.Previous => RedirectToAction(previous),
+			NavigationAction.Next => RedirectToAction(next),
+			_ => View()
+		};
 	}
 
 	private void SaveMetadataToSession(DocumentEntryMetadata? metaData)
@@ -200,7 +222,7 @@ public class UploadDocumentsController : BaseController
 	{
 		var sessionData = session.SessionData();
 
-		if (model.Password == Constants.UploadPassword)
+		if (model.Password == _phrEpjOptions.UploadPassword)
 		{
 			sessionData.IsUploadAvailable = true;
 			sessionData.SaveToSession(session);
@@ -243,9 +265,7 @@ public class UploadDocumentsController : BaseController
 				.WithUniqueId(Guid.NewGuid())
 				.WithAvailabilityStatus(DocumentSubmissionMetadata.AvailabilityStatusApproved)
 				.WithSubmissionTime(DateTime.Now)
-				//.WithSourceId("1.2.840.4711.815.1")
-				//.WithSourceId("2.16.578.1.12.4.5.100.1")
-				//.WithSourceId("2.16.578.1.12.4.5.100.15") // Source is selected on next page in wizard
+				.WithSourceId("1.1") // TODO: what to use as sourceId? For now just a hardcoded dummy. 
 				.WithPatientId(sessionData.PatientId)
 				.WithTitle(submissionTitle); 				
 
@@ -312,45 +332,7 @@ public class UploadDocumentsController : BaseController
 				.WithXdsHomeCommunity("1.2.3")
 				;
 
-
-
-			/*var s = sessionData.PatientName!.Split(" ");
-			var firstName = s[0];
-			var middleName = string.Empty; 
-			var lastName = string.Empty;
-
-			if (s.Length == 2)
-			{
-				lastName = s[1];
-			}
-			else if (s.Length >= 3)
-			{
-				middleName = s[1];
-				lastName = s[2];
-			} */
-
-			/*
-			 
-			request.Patient = new SourcePatientInfo();
-			var firstName = "Malin";
-			var middleName = string.Empty;
-			var lastName = "Fos Bogen";
-
-			request.Patient
-				.WithName(new PersonName() 
-				{ 
-					FirstName = firstName, 
-					MiddleName = middleName, 
-					FamilyName = lastName 
-				})
-				.WithNIN(sessionData.PatientId!, NinType.NinTypeNationalIdentityNumber)
-				.WithXdsGlobalIdentifier("1.2.3")
-				.WithXdsHomeCommunity("1.2.3")
-				.WithGender("F")
-				.WithDateOfBirth(new DateTime(1969, 11, 13));  */
-
-
-			sessionData.SaveToSession(session); 
+			sessionData.SaveToSession(session);  
 		}
 
 		return View("Steps/Patient");
@@ -359,17 +341,7 @@ public class UploadDocumentsController : BaseController
 	[HttpPost]
 	public async Task<IActionResult> Patient(NavigationAction navButton)
 	{
-		if (navButton == NavigationAction.Previous)
-		{			
-		}
-
-		if (navButton == NavigationAction.Next)
-		{
-			//return RedirectToAction(nameof(UploadDocument));
-			return RedirectToAction(nameof(Source));
-		}
-
-		return View(); 
+		return Navigate(navButton, current: nameof(Patient)); 
 	}
 
 	public async Task<IActionResult> Source()
@@ -389,28 +361,17 @@ public class UploadDocumentsController : BaseController
 			navButton = NavigationAction.Next; 
 		}
 
-		if (navButton == NavigationAction.Previous)
-		{
-			return RedirectToAction(nameof(Patient));
-		}		
-
 		if (!string.IsNullOrEmpty(selectedHomeCommunityId))
 		{
 			var sessionData = session.SessionData();
 			var request = sessionData.BundleRequest;
-
-			//request!.Submission.WithSourceId(selectedHomeCommunityId);
+			
 			request!.Submission.WithHomeCommunityId(selectedHomeCommunityId);
 
 			sessionData.SaveToSession(session);
 		}
 
-		if (navButton == NavigationAction.Next)
-		{
-			return RedirectToAction(nameof(UploadDocument));
-		}
-
-		return View();
+		return Navigate(navButton, current: nameof(Source));
 	}
 
 	public async Task<IActionResult> UploadDocument()
@@ -449,12 +410,7 @@ public class UploadDocumentsController : BaseController
 	public async Task<IActionResult> UploadDocument(DocumentMetadataViewModel model, string? selectedFileUniqueId, NavigationAction navButton)
 	{
 		var sessionData = session.SessionData();
-
-		if (navButton == NavigationAction.Previous)
-		{
-			return RedirectToAction(nameof(Source));
-		}		
-
+	
 		SaveDocumentToSession(model.SelectedDocument, model.SelectedDocument!.Metadata.FormatCode!);
 
 		if (!string.IsNullOrEmpty(selectedFileUniqueId))
@@ -484,12 +440,7 @@ public class UploadDocumentsController : BaseController
 			return RedirectToAction(nameof(UploadDocument));
 		}
 
-		if (navButton == NavigationAction.Next)
-		{		
-			return RedirectToAction(nameof(Classification));
-		}
-
-		return View();
+		return Navigate(navButton, current: nameof(UploadDocument));
 	}
 
 	[HttpPost]
@@ -575,10 +526,8 @@ public class UploadDocumentsController : BaseController
 			.WithUniqueId(Guid.NewGuid())
 			.WithFilename(fileName)
 			.WithContent(content, computeSha: true)
-			.WithMimeType(mimeType)
-			//.WithCreationTime(fileDate!.lastModified)
-			.WithCreationTime(lastModified)
-			//.WithSize((int)file.Length);        // TODO: make .Size property of type long? 
+			.WithMimeType(mimeType)			
+			.WithCreationTime(lastModified)			
 			.WithSize((int)content.Length);        // TODO: make .Size property of type long? 
 
 		//.WithLanguageCode("nb-NO");		// TODO: detect automatically? 
@@ -786,6 +735,7 @@ public class UploadDocumentsController : BaseController
 			document.Metadata.WithHealthCareFacilityType(healthCareFacilityType);
 			document.Metadata.WithPracticeSettingCode(practiceSettingCode); 
 		}
+
 		return document; 
 	}
 
@@ -1044,18 +994,7 @@ public class UploadDocumentsController : BaseController
 			return RedirectToAction(nameof(Classification));
 		}
 
-		if (navButton == NavigationAction.Previous)
-		{
-			return RedirectToAction(nameof(UploadDocument));
-		}
-
-		if (navButton == NavigationAction.Next)
-		{
-			return RedirectToAction(nameof(Submission));
-		}
-
-
-		return View(); 
+		return Navigate(navButton, current: nameof(Classification));
 	}	
 
 	public async Task<IActionResult> Submission()
@@ -1125,17 +1064,7 @@ public class UploadDocumentsController : BaseController
 
 		SaveSubmissionToSession(model.Submission);
 
-		if (navButton == NavigationAction.Previous)
-		{
-			return RedirectToAction(nameof(Classification));
-		}
-
-		if (navButton == NavigationAction.Next)
-		{
-			return RedirectToAction(nameof(FinalizeSubmission));
-		}
-
-		return View();
+		return Navigate(navButton, current: nameof(Submission));
 	}
 
 	public async Task<IActionResult> FinalizeSubmission(string error)
@@ -1181,7 +1110,7 @@ public class UploadDocumentsController : BaseController
 	{
 		if (navButton == NavigationAction.Previous)
 		{
-			return RedirectToAction(nameof(Submission));
+			return Navigate(navButton, current: nameof(FinalizeSubmission));
 		}
 
 		var sessionData = session.SessionData();
@@ -1189,9 +1118,7 @@ public class UploadDocumentsController : BaseController
 
 		// Create document-object		
 		var bundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
-		var filePath = @"C:\NHN\DEBUG\Origo\fhir-document-reference-test6.json";
-		//var bundleDocument = System.IO.File.ReadAllText(filePath);
-
+		
 		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument);
 		
 		if (apiResult.IsSuccess)
@@ -1213,6 +1140,7 @@ public class UploadDocumentsController : BaseController
 			return View("Steps/FinalizeSubmission", model);			
 		}
 	}	
+
 	public async Task<IActionResult> SubmissionConfirmation()
 	{
 		var model = new FinalizeSubmissionViewModel();

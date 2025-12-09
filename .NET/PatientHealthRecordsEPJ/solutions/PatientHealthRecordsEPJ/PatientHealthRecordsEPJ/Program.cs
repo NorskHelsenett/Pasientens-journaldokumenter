@@ -17,6 +17,9 @@ var apiOptions = builder.Configuration.GetSection("ApiOptions").Get<PhrApiOption
 builder.Services.AddSingleton(apiOptions);
 builder.Services.AddSingleton(apiOptions.Environments);
 
+var epjOptions = builder.Configuration.GetSection("PhrEpjOptions").Get<PhrEpjOptions>()!;
+builder.Services.AddSingleton(epjOptions);
+
 builder.Services.AddScoped<IPhrApiEnvironmentProvider, PhrApiEnvironmentProvider>();
 
 builder.Services

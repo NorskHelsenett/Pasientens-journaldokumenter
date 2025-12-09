@@ -1,9 +1,11 @@
-﻿@{
+﻿@using PatientHealthRecordsEPJ.Controllers
+@{
 	var sessionData = Context.Session.SessionData();
 
 	var root = "/uploaddocuments/"; 
 
-	List<string> steps = ["patient", "source", "uploaddocument", "classification", "submission", "finalizesubmission", "submissionconfirmation"];
+	//List<string> steps = UploadDocumentsController["patient", "source", "uploaddocument", "classification", "submission", "finalizesubmission", "submissionconfirmation"];
+	List<string> steps = UploadDocumentsController.Steps;
 
 	var path = Context.Request.Path.ToString().ToLower().Replace(root, "");
 

@@ -7,17 +7,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>    
-    <None Remove="Examples\ClinicalDocument_PUSLETE_PIKE.xml" />
+  <ItemGroup>
     <None Remove="Examples\example.rtf" />
     <None Remove="Examples\example.txt" />
   </ItemGroup>
 
   <ItemGroup>    
     <Content Include="Examples\ClinicalDocument_USNOBBET_KLOKKE.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    
-    <Content Include="Examples\ClinicalDocument_PUSLETE_PIKE.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Examples\example.rtf">
