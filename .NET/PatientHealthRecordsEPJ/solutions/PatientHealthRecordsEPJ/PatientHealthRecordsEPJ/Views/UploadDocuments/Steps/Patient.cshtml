@@ -1,0 +1,78 @@
+﻿@{
+	var sessionData = Context.Session.SessionData();
+
+	// Calculates age for given person-object
+	int GetAge(DateTime birthDate)
+	{
+		int age = 0;
+
+		var today = DateTime.Today;
+
+		var a = (today.Year * 100 + today.Month) * 100 + today.Day;
+		var b = (birthDate.Year * 100 + birthDate.Month) * 100 + birthDate.Day;
+
+		age = (a - b) / 10000;
+
+		return age;
+	}
+}
+
+<partial name="_WizardHeaderPartial" model="1" />
+
+@{
+	var patient = sessionData.BundleRequest?.Patient; 
+}
+
+<div class="container-fluid max">
+
+	<form method="post">
+		<h4>
+			<i id="AR1O9DG8K4UJK" class="bi bi-person-hearts fs-1 text-primary"></i> Patient information:
+		</h4>
+
+		<table class="table w-auto">
+			<tr>
+				<td>Navn: </td>
+				<td>@sessionData.BundleRequest.Patient?.Name.ToString()</td>
+			</tr>
+			<tr>
+				<td>Fødselsnummer: </td>
+				<td>@sessionData.BundleRequest.Patient?.NIN</td>
+			</tr>
+			<tr>
+				<td>Bursdag:
+					
+				</td>
+				<td>
+					@if (patient?.DateOfBirth != default)
+					{
+						<span>
+							@patient!.DateOfBirth.ToString("yyyy-MM-dd")
+						</span>
+					}
+				</td>
+			</tr>
+			<tr>
+				<td>Alder:					
+				</td>
+				<td>
+					@if (patient?.DateOfBirth != default)
+					{
+						<span>
+							@GetAge(patient!.DateOfBirth)
+						</span>
+					}
+				</td>
+			</tr>
+			<tr>
+				<td>Kjønn: </td>
+				<td>@patient?.Gender</td>
+			</tr>
+		</table>
+
+		<partial name="_PrevNextPartial" />
+
+	</form>
+
+</div>
+

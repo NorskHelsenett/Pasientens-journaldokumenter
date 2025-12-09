@@ -1,0 +1,270 @@
+﻿@using Hl7.Fhir.Model
+
+@model StatusViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+
+	string ShowJsonData(string json)
+	{
+		if (string.IsNullOrEmpty(json))
+		{
+			return "- ingen data -";
+		}
+		else
+		{
+			return json;
+		}
+	}
+
+	string Active(bool? active)
+	{
+		return active == true ? "<span class='active'>AKTIV</span>" : "<span class='inactive'>IKKE AKTIV</span>";
+	}
+
+	string Blocked(bool? blocked)
+	{
+		return blocked == true ? "<span class='active'>JA, ER BLOKKERT</span>" : "<span class='inactive'>NEI, IKKE BLOKKERT</span>";
+	}
+}
+
+<style>
+	.head {
+		font-size: 11px;
+		font-style: italic;
+	}
+
+	tr.document-item {
+		cursor: pointer;
+	}
+
+	tr.document-detail {
+		display: none;
+	}
+
+	iframe {
+		width: 100%;
+		height: 800px;
+		/* border:none;  */
+		border: 1px solid #aaa;
+	}
+
+	textarea {
+		position: relative;
+		color: black;
+		height: auto;
+	}
+
+	.active {
+		color: green;
+	}
+
+	.inactive {
+		color: red;
+	}
+
+</style>
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">Status endepunkt</h4>
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	<br />
+
+	<h4>Respons fra status-endepunkt i REST API: </h4>
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					Error: @Model.ErrorMessage
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6">
+					<table class="table">
+						<tr>
+							<td>hasReservationKjernejournal</td>
+							<td><strong>@Model.Status.PrivacySetting.HasReservationKjernejournal.ToString()</strong></td>
+						</tr>
+						<tr>
+							<td>isRestricted</td>
+							<td><strong>@Model.Status.PrivacySetting.IsRestricted.ToString()</strong></td>
+						</tr>
+						<tr>
+							<td>isBlocked</td>
+							<td><strong>@Model.Status.PrivacySetting.IsBlocked.ToString()</strong></td>							
+							<td>Dette er sjekket: @sessionData.Name (HPR: @sessionData.HprNumber) eller alt helsepersonell</td>	
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<h4>PVK innstillinger cachet i REST API brukt som grunnlag:</h4>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+
+					<h5>Kjernejournal - reservasjon mot å ha kjernejournal, partKode 'KJ' (b39f778a-07e3-41ea-99c7-eb332ad45c82)</h5>
+					<div>
+						@Html.Raw(Active(Model.StatusPvk.Kjernejournal_Reservasjon_Active))
+					</div>
+
+					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Kjernejournal_Reservasjon_Json)</textarea>
+
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<hr />
+
+					<h5>Kjernejournal - sperre tilgang til alt helsepersonell, partKode 'KJ' (86f64955-fb61-4e5e-8a0c-7d7728363891)</h5>
+					<div>
+						@Html.Raw(Active(Model.StatusPvk.Kjernejournal_Sperre_Tilgang_Alt_Helsepersonell_Active))
+					</div>
+
+					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Kjernejournal_Sperre_Tilgang_Alt_Helsepersonell_Json)</textarea>
+
+				</div>
+			</div>
+
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<hr />
+
+					<h5>Kjernejournal - blokkere for individuelt helsepersonell, partKode 'KJ' (36870d8a-b37b-4386-8689-c656005cb296)</h5>
+					
+					@if (Model.NavngittHelsepersoner?.Count > 0)
+					{
+						<h6>Liste i innstillinger:</h6>
+
+						<table class="table w-auto">
+							<tbody>
+								@foreach (var person in Model.NavngittHelsepersoner)
+								{
+									<tr><td>@person.HprNummer</td><td>@person.Navn</td></tr>
+								}
+							</tbody>
+						</table>
+					}
+
+					<div>
+						Er innstilling aktiv for valgt pasient? @Html.Raw(Active(Model.StatusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Active))
+					</div>
+					
+					<div>
+						Er innlogget helsepersonell (@sessionData.Name) blokkert?: @Html.Raw(Blocked(Model.IsHprNumberBlocked))
+					</div>										
+
+					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Kjernejournal_Blokkere_For_Individuelt_Helsepersonell_Json)</textarea>
+
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<hr />
+
+					<h5>Journaldokumenter - sperre tilgang til alt helsepersonell, partKode 'kj-journaldok' (f0a455c5-c95f-4382-9cf0-4481a732a694)</h5>
+					<div>
+						@Html.Raw(Active(Model.StatusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Active))
+					</div>
+
+					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Journaldokumenter_Sperre_Tilgang_Alt_Helsepersonell_Json)</textarea>
+
+				</div>
+			</div>		
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<hr />
+
+					<h5>Besøkshistorikk - blokkere for besøkshistorikk og journaldokumenter for alt helsepersonell, partKode 'kj-besokhist' (c8ed0076-7482-4566-81f9-a41f2179b0ae)</h5>
+					<div>
+						@Html.Raw(Active(Model.StatusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Active))
+					</div>
+
+					<textarea class="w-100" rows="10">@ShowJsonData(Model.StatusPvk.Besokshistorikk_Blokkere_For_Besokshistorikk_og_Journaldokumenter_Json)</textarea>
+
+				</div>
+			</div>
+
+		</div>
+	}
+</div>
+
+
+@* <script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+	const containerHighlighted = document.querySelector('.container-highlighted');
+
+	if (textarea !== undefined)
+	{
+		textarea.addEventListener('input', updateHighlighting);
+		textarea.addEventListener('scroll', syncScroll);
+
+		function updateHighlighting() {
+		const xml = textarea.value;
+		highlighted.innerHTML = applySyntaxHighlighting(xml);
+		}
+
+		function applySyntaxHighlighting(xml) {
+		return xml.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+		return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+		});
+		}
+
+		function highlightAttributes(attributes) {
+		return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+		return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+		});
+		}
+
+		function syncScroll() {
+		highlighted.scrollTop = textarea.scrollTop;
+		highlighted.scrollLeft = textarea.scrollLeft;
+		}
+
+		
+		updateHighlighting();
+	}
+</script>
+ *@

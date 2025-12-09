@@ -1,0 +1,109 @@
+﻿@inject IHttpContextAccessor _httpContextAccessor
+@model int 
+
+@{
+	var sessionData = Context.Session.SessionData();
+
+	var totalsteps = 7; // TODO: read Length from "steps" in _PrevNextPartial, move the steps table to somewhere else
+
+	var step = Model; 
+
+	var percent = (step * 100) / totalsteps;
+
+	var session = _httpContextAccessor.HttpContext.Session; 
+
+	sessionData.AddWizardOpenStep(step); // open up this wizard step so it can be clicked directly 
+	sessionData.SaveToSession(session); 
+
+	bool IsOpenStep(int step)
+	{
+		return sessionData.UploadWizardOpenSteps.Contains(step); 
+	}
+
+	string StepClasss(int step)
+	{
+		var isOpen = IsOpenStep(step); 
+		return isOpen ? "" : "disabled";
+	}
+}
+
+<style>
+	.progress-bar
+	{
+		background-color: #015945; 
+	}
+</style>
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<div class="container-fluid py-1">
+		<h3 class="mb-4">Lagre dokument(er) i NHN nasjonalt lager</h3>
+
+		<!-- Progress -->
+		<div class="progress mb-3" style="height: 8px;">
+			<div id="wizardProgress" class="progress-bar" role="progressbar" style="width: @percent%;"></div>
+		</div>
+
+		<!-- Step headers (pills) -->
+		<ul class="nav nav-pills justify-content-between mb-4" id="wizardNav" role="tablist">
+			@{
+				var cssClass = "";
+			}
+
+
+			<li class="nav-item" role="presentation">
+				@{
+					var stepClass = StepClasss(1); 
+					cssClass = step == 1 ? "active" : stepClass; 
+				}
+				<a asp-action="Patient"  class="nav-link @cssClass" role="tab">1. Pasient</a>
+			</li>
+			<li class="nav-item" role="presentation">
+				@{
+					stepClass = StepClasss(2);
+					cssClass = step == 2 ? "active" : stepClass;
+				}
+				<a asp-action="Source" class="nav-link @cssClass" id="step3-tab" tabindex="-1">2. Kilde</a>
+			</li>
+			<li class="nav-item" role="presentation">
+				@{
+					stepClass = StepClasss(3);
+					cssClass = step == 3 ? "active" : stepClass;
+				}
+				<a asp-action="UploadDocument" class="nav-link @cssClass" id="step3-tab" tabindex="-1">3. Dokumenter</a>
+			</li>
+			<li class="nav-item" role="presentation">
+				@{
+					stepClass = StepClasss(4);
+					cssClass = step == 4 ? "active" : stepClass;
+				}
+				<a asp-action="Classification" class="nav-link @cssClass" id="step2-tab" tabindex="-1">4. Klassifisering</a>
+			</li>
+			
+			<li class="nav-item" role="presentation">
+				@{
+					stepClass = StepClasss(5);
+					cssClass = step == 5 ? "active" : stepClass;
+				}
+				<a asp-action="Submission" class="nav-link @cssClass" id="step4-tab" tabindex="-1">5. Submission @* Innsending *@</a> <!-- Inkludert association metadata -->
+			</li>
+			<li class="nav-item" role="presentation">
+				@{
+					stepClass = StepClasss(6);
+					cssClass = step == 6 ? "active" : stepClass;
+				}
+				<a asp-action="FinalizeSubmission" class="nav-link @cssClass" id="step4-tab" tabindex="-1">6. Bekreft innsending</a>
+			</li>
+			<li class="nav-item" role="presentation">
+				@{
+					//stepClass = StepClasss(7);
+					cssClass = step == 7 ? "active" : "disabled";
+				}
+				<a asp-action="SubmissionConfirmation" class="nav-link @cssClass" id="step4-tab" tabindex="-1">7. Ferdig</a>
+			</li>
+		</ul>
+
+
+	</div>
+</div>
+

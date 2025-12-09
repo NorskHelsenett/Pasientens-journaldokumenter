@@ -1,0 +1,331 @@
+﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+@model DocumentMetadataViewModel
+
+@{
+	//var = Model.Upload;
+	var sessionData = Context.Session.SessionData();
+}
+
+<partial name="_WizardHeaderPartial" model="3" />
+
+<style>
+	.options
+	{
+		background-color: #eaeaea;
+		border-radius:6px; 
+	}
+</style>
+
+<div class="container-fluid max">
+
+	<div class="row">
+		<div class="col-md-5">
+			<h4><i class="bi bi-file-earmark-medical-fill fs-3 text-primary"></i> Select file(s) which should be uploaded to document repository:</h4>
+
+			<form method="post" asp-action="UploadFiles" enctype="multipart/form-data">
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-4">
+						<input type="file" multiple class="form-control" id="files" name="files">
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-12 options">
+
+						<details>
+							<summary><strong>Du kan laste opp følgende formater (klikk for å se): </strong></summary>
+
+						<table class="table">
+							<thead>
+								<tr>
+									<th>
+										Filtype
+									</th>
+									<th>Beskrivelse</th>
+									<th>
+										Filtype inne i Clinical Document
+									</th>
+									<th>
+										Dokumentet er pakket i Clinical Document .xml? 
+									</th>
+								</tr>
+							</thead>
+							<tr>
+								<td>
+									.xml
+								</td>
+								<td>Clinical Document</td>
+								<td>.pdf, .rtf, .png, .jpg, .xml [KITH], m.fl.</td>
+								<td>Ja</td>
+							</tr>
+							<tr>
+								<td>
+									.xml
+								</td>
+								<td>KITH</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.pdf
+								</td>
+								<td>PDF @* Portable Document *@</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.rtf
+								</td>
+								<td>Rich-Text Format</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.txt
+								</td>
+								<td>Text File</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.png
+								</td>
+								<td>Image</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.jpg
+								</td>
+								<td>Image</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									.tif/.tiff
+								</td>
+								<td>Image</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+							<tr>
+								<td>
+									[m.fl.]
+								</td>
+								<td>Hva som helst</td>
+								<td></td>
+								<td>Nei</td>
+							</tr>
+						</table>
+
+						<p>
+							.xml hvor innholdet er av type KITH kan enten lastes opp direkte eller den kan ligge innpakket i en Clinical Document (også filtype .xml). 
+						</p>
+
+							<p>
+								KITH XML kan inneholde flere vedlegg, f.eks. PDF eller bilder, m.m. 
+							</p>
+
+							<p>
+								KITH XML transformeres til HTML v.h.a. visningsfil når den skal vises i Test EPJ, Kjernejournal portal eller Helsenorge. 
+							</p>
+
+						<p>
+								Innholdet i en Clinical Document XML starter alltid med &lt;ClinicalDocument&gt; og dokumentet som er pakket inn ligger som en lang kodet tekst-streng som ser f.eks. slik ut: RGV0dGUgZXIgZXQgZWtzZW1wZWwgcMO...
+						</p>
+						</details>
+
+					@* 	<ul>
+							<li>.xml (Clinical Document) som inneholder et dokument (.pdf, .rtf, .xml [KITH], m.m.)</li>
+							<li>.pdf, .rtf, .png, .jpg, .tif/.tiff, .gif, m.fl. <strong>Ikke</strong> wrappet i Clinical Document.</li>
+							<li>.xml (kith). <strong>Ikke</strong> wrappet i Clinical Document.</li>
+							<li>test</li>
+						</ul> *@
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-12 options">
+						Options used only for non-Clinical Documents (.xml): <strong>.rtf, .pdf, .txt, .png</strong>, etc:<br />						
+						Because uploading these files directly does not contain any metadata/date like .XML does. 
+						<label><input type="radio" id="dateType" name="dateType" value="now" checked> Use current date and time as document date @* (will be sorted at the top of list as default) *@</label><br />
+						<label><input type="radio" id="dateType" name="dateType" value="filedate"> Use file date as document date</label>
+					</div>
+				</div>
+
+				<!-- This is set with the Javascript snippet at the bottom -->
+				<!-- This will hold an array of fileCreationDates as JSON -->
+				<input type="hidden" id="fileCreationDates" name="fileCreationDates">
+
+				<button type="submit" class="btn btn-primary">Add document(s) to submission set</button>
+			</form>
+
+			<br>
+
+		</div>
+
+		<div class="col-md-2">
+
+			<div class="fs-1 text-md-center">
+			- OR - 
+			</div>
+		</div>
+
+		<div class="col-md-5">
+
+			<h4><i class="bi bi-shuffle fs-3 text-primary"></i> Generate random test documents (max 10)</h4>
+
+			<form method="post" asp-action="GenerateRandomTestDocuments">
+				<div class="row mb-3">
+					@* <label for="file" class="col-sm-2 col-form-label">File(s):</label> *@
+					<div class="col-sm-4">
+						Number of documents: <input type="number" class="form-control" id="entriesToGenerate" name="entriesToGenerate" max="10" value="3">
+					</div>
+				</div>
+
+				<button type="submit" class="btn btn-primary">Generate random test document(s) for submission set</button>
+			</form>
+
+			<br />
+
+		</div>
+	</div>
+
+	<form method="post">
+
+		@if (Model.SelectedDocument != null)
+		{
+
+			<div class="row">
+				<div class="col-md-4 documents">
+
+					<partial name="Steps\_SelectDocument" />
+
+				</div>
+
+				<div class="col-md-8">
+
+					<h4><i id="AR1O9DG8K4UJM" class="bi bi-file-earmark-medical-fill fs-1 text-primary"></i> Document's metadata:</h4>
+
+					<!-- Filename -->
+					<div class="row mb-3">
+						<label for="inputFilename" class="col-sm-2 col-form-label">Filename:</label>
+						<div class="col-sm-10">
+							@* <input type="password" class="form-control" id="inputPassword3"> *@
+							<input asp-for="SelectedDocument.Filename" type="text" class="form-control" id="inputFilename">
+						</div>
+					</div>
+
+					<!-- Title -->
+					<div class="row mb-3">
+						<label for="inputTitle" class="col-sm-2 col-form-label">Title:</label>
+						<div class="col-sm-10">
+							@* <input type="password" class="form-control" id="inputPassword3"> *@
+							<input asp-for="SelectedDocument.Title" type="text" class="form-control" id="inputTitle">
+						</div>
+					</div>
+
+					<!-- Date created -->
+					<div class="row mb-3">
+						<label for="inputCreationTime" class="col-sm-2 col-form-label">Created: </label>
+						<div class="col-sm-10">
+							<input asp-for="SelectedDocument.CreationTime" type="datetime-local" class="form-control" id="inputCreationTime" step="1" value="@Model.SelectedDocument.CreationTime.ToString("yyyy-MM-ddTHH:mm:ss")">
+						</div>
+					</div>
+
+					<!-- Size -->
+
+					<input type="hidden" asp-for="SelectedDocument.Size" />
+
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Size:</label>
+						<div class="col-sm-10">
+							@Model.SelectedDocument?.Size.ToPrettySize()
+						</div>
+					</div>
+
+					<!-- Content Hash -->
+
+					<input type="hidden" asp-for="SelectedDocument.Hash" />
+
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Content # (SHA1):</label>
+						<div class="col-sm-10">
+							@if (Model.SelectedDocument?.Hash != null)
+							{
+								<div>
+									@BitConverter.ToString(Model.SelectedDocument.Hash!).Replace("-", String.Empty)
+								</div>
+							}
+						</div>
+					</div>
+
+					<!-- MimeType -->
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Media type (mime-type):</label>
+						<div class="col-sm-10">
+							<select asp-for="SelectedDocument.MimeType"
+									asp-items="Model.SelectMimeTypeList"
+									class="form-control">
+								<option value="">-- Select file format --</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- FormatCode -->
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Composition format:</label>
+						<div class="col-sm-10">
+							<select asp-for="SelectedDocument.Metadata.FormatCode"
+									asp-items="Model.SelectCompositionFormatList"
+									class="form-control">
+								<option value="">-- Select composition file format --</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- Language -->
+					<div class="row mb-3">
+						<label for="inputPassword3" class="col-sm-2 col-form-label">Language:</label>
+						<div class="col-sm-10">
+							<select asp-for="SelectedDocument.LanguageCode"
+									asp-items="Model.SelectLanguageList"
+									class="form-control">
+								<option value="">-- Select language --</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		}
+
+		<partial name="_PrevNextPartial" />
+
+	</form>
+
+</div>
+
+<script>
+	 document.getElementById('files').addEventListener('change', function (event) {
+		const files = Array.from(event.target.files);
+		const fileDates = files.map(f => ({
+			name: f.name,
+			lastModified: new Date(f.lastModified).toISOString()
+		}));
+
+		console.log("fileDates", fileDates);
+
+		// Store as JSON string
+		document.getElementById('fileCreationDates').value = JSON.stringify(fileDates);
+	});
+</script>

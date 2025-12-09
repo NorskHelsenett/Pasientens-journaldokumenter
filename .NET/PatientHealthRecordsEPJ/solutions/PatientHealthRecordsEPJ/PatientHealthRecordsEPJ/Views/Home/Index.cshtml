@@ -1,0 +1,275 @@
+﻿@model HomeViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+}
+
+
+@if (!sessionData.IsAuthenticated)
+
+{
+	@if (string.IsNullOrEmpty(Model.AttestJson))
+
+	{
+		<form method="post" asp-action="LoginStep1">
+			<div class="container">
+
+				<div class="row">
+					<div class="col-md-12">
+						<h5>1. Velg miljø @* (<span class="environment test">TEST</span> og <span class="environment qa">QA</span> er tilgjengelig):  *@</h5>
+
+						<div>
+							@* <select asp-for="EnvironmentId"
+									asp-items="@(new SelectList(PasientvalgViewModel.EnvironmentList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
+							</select> *@
+
+							@foreach (var env in PasientvalgViewModel.EnvironmentList)
+							{
+								var info = env.Id switch
+								{
+									"test" => "api.pjd.test.nhn.no => pjd.ehs.test.nhn.no",
+									"qa" => "api.pjd.qa.nhn.no => pjd.ehs.qa.nhn.no",
+									_ => ""
+								}; 
+								
+								<div class="form-check">
+									<input class="form-check-input"
+										   type="radio"
+										   asp-for="EnvironmentId"
+										   value="@env.Id"
+										   id="env_@env.Id" />
+
+									<label class="form-check-label environment @env.Id" for="env_@env.Id">
+										@env.Label  (@info)
+									</label>
+								</div>
+							}
+
+							@* <span asp-validation-for="EnvironmentId" class="text-danger"></span> *@
+
+						</div>
+
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<br />
+
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12">
+						<h5>2. Velg lovverk (scope for å hente dokumentliste): </h5>
+
+						<div>
+							<select asp-for="DocumentListScopeId"
+									asp-items="@(new SelectList(PasientvalgViewModel.DocumentListScopeList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
+							</select>
+						</div>
+
+					</div>
+				</div>
+
+
+				<div class="row">
+					<div class="col-md-12">
+						<br />
+						<h5>3. Velg: </h5>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div>
+							<strong>Virksomhet</strong>
+						</div>
+						<div>
+							<select asp-for="OrganizationId"
+									asp-items="@(new SelectList(HomeViewModel.OrganizationList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
+							</select>
+						</div>
+					</div>
+					@* <div class="col-md-4">
+			<div>
+			<strong>Bruker</strong>
+			</div>
+			<div>
+			<input asp-for="HealthcarePersonellUserId" class="w-100" value="22047800106" />
+			</div>
+			</div> *@
+					<div class="col-md-6">
+						<div>
+							<strong>Autorisasjon</strong>
+						</div>
+						<div>
+							<select asp-for="AuthorizationId"
+									asp-items="@(new SelectList(HomeViewModel.AuthorizationList, nameof(OptionPair.Id), nameof(OptionPair.Label)))"
+									class="w-100">
+							</select>
+						</div>
+					</div>
+				</div>
+
+				@if (sessionData.SourcePatientInfo != null)
+				{
+					<br />
+					<h5>Pasient: </h5>
+					<div>
+						<table class="table w-auto">
+							<tr>
+								<td>Navn: </td>
+								<td>@sessionData.SourcePatientInfo?.Name.ToString()</td>
+							</tr>
+							<tr>
+								<td>Fødselsnummer: </td>
+								<td>@sessionData.SourcePatientInfo?.NIN</td>
+							</tr>
+							<tr>
+								<td>
+									Bursdag:
+								</td>
+								<td>
+									@if (sessionData.SourcePatientInfo?.DateOfBirth != default)
+									{
+										<span>
+											@sessionData.SourcePatientInfo!.DateOfBirth.ToString("yyyy-MM-dd")
+										</span>
+									}
+								</td>
+							</tr>						
+							<tr>
+								<td>Kjønn: </td>
+								<td>@sessionData.SourcePatientInfo?.Gender</td>
+							</tr>
+						</table>
+					</div>
+				}
+
+				<div class="row">
+					<div class="col-md-12 text-center pt-3">
+						<button type="submit" class="btn btn-primary" formaction="/Home/Login">Logg inn med HelseID @* <i class="bi-box-arrow-in-right"></i>  &rarr; *@ </button> eller
+						<button type="submit" class="btn btn-primary">Rediger attest og Logg inn med HelseID  @* <i class="bi-box-arrow-in-right"></i>  &rarr; *@ </button>
+
+					</div>
+				</div>
+
+			</div>
+		</form>
+	}
+
+	else
+
+	{
+		@* Et unødvendig ekstra steg med mulighet til å redigere attesten direkte for man logger inn *@
+		<form method="post" asp-action="LoginWithCustomizedAttest">
+			<div class="container">
+
+				<div>
+					<h2 class="text-center">@Model.OrganizationName</h2>
+				</div>
+
+				<div class="fs-4">
+					Bruker: @Model.HealthcarePersonellUserId &nbsp;&nbsp; Autorisasjon: @Model.AuthorizationName
+				</div>
+
+				<div class="row">
+					<div class="col-md-12">
+						<br />
+
+						<p><strong>Attest:</strong></p>
+
+						<textarea name="attestJson" class="w-100" rows="20">@Model.AttestJson</textarea>
+
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12 text-center pt-3">
+						<a href="/" class="btn btn-primary"> &larr; Tilbake</a> &nbsp; &nbsp; &nbsp; &nbsp;
+						<button type="submit" class="btn btn-primary">Logg inn med HelseID @* <i class="bi-box-arrow-in-right"></i>  &rarr; *@ </button>
+					</div>
+				</div>
+			</div>
+		</form>
+	}
+}
+
+else
+
+{
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+
+				<div class="text-center fs-3">
+					Bruker: @sessionData.Name (@sessionData.PersonId)&nbsp;&nbsp;&nbsp; Autorisasjon: @sessionData.AuthorizationName
+				</div>
+
+				<div class="text-center fs-3">
+					Pasient:
+					@if (string.IsNullOrEmpty(sessionData.PatientName))
+					{
+						<span>
+							@sessionData.PatientId
+						</span>
+					}
+					else
+					{
+						<span>@sessionData.PatientName (@sessionData.PatientId)</span>
+					}
+
+				</div>
+
+				<div class="text-center fs-3">
+					Lovverk/scope for å hente dokumentliste: @sessionData.DocumentListScopeName
+				</div>
+
+				@if (sessionData.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+				{
+					<div class="text-center fs-3">
+						Grunnlag: @sessionData.GrunnlagName
+					</div>
+				}
+				else
+				{
+
+				}
+
+				<div class="text-center fs-3">
+					<p>
+						<a asp-asp-controller="patient" asp-controller="patient" asp-action="pasientvalg" class="btn btn-primary"> &larr; Bytt pasient </a>
+						<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName</a>
+						<a href="/UploadDocuments" class="btn btn-primary">Last opp dokumenter til nasjonalt lager i @sessionData.EnvironmentName</a>
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+				<div class="text-center fs-3">
+					<p>
+						<a asp-controller="Saml" asp-action="ShowSamlAssertion" class="btn btn-primary"> Vis SAML billett &rarr;</a>
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-12">
+				<div class="text-center fs-3">
+					<p>
+						<a asp-controller="Status" asp-action="Index" class="btn btn-primary"> Vis status (personverninnstillinger) &rarr;</a>
+					</p>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+}
+

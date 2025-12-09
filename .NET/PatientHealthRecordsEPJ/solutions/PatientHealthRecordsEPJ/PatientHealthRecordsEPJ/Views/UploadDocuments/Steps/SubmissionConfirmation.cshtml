@@ -1,0 +1,130 @@
+﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+@model FinalizeSubmissionViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+}
+
+<partial name="_WizardHeaderPartial" model="7" />
+
+<div class="container-fluid max">
+
+	<div class="row">
+		<div class="col-md-12">
+
+			<h3>Dokument(ene) har blitt lastet opp. @* Document submission set has been registered successfully.  *@</h3>
+			<br />
+
+			<div class="text-center fs-3">
+				Pasient:
+				@if (string.IsNullOrEmpty(sessionData.PatientName))
+				{
+					<span>
+						@sessionData.PatientId
+					</span>
+				}
+				else
+				{
+					<span>@sessionData.PatientName (@sessionData.PatientId)</span>
+				}
+
+			</div>
+
+			<div class="text-center fs-3">
+				<br />
+				<p>
+					<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName</a><br />
+					<br />
+
+					<a href="/UploadDocuments" class="btn btn-primary">Last opp flere dokumenter til nasjonalt lager i @sessionData.EnvironmentName</a>
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12">
+
+			<details>
+				<summary><strong>Lenker for dokument status og problemløsning (klikk for å se): </strong></summary>
+
+				<table class="table">
+					<thead>
+					</thead>
+					<tbody>
+						@foreach (var document in Model.Upload.DocumentCollection.Documents)
+						{
+							<tr>
+								<td>
+									Tittel: @document.Title<br />
+									Document Id: @document.Metadata.UniqueId
+								</td>
+								<td>
+
+									<table>
+										<tr>
+											<td>
+												Status:
+											</td>
+											<td>
+												@{
+													var statusUrl = $"{Model.RegistryRepositoryBaseUrl}/registry-repository/document-status?home={Model.Upload.Submission.HomeCommunityId}&document={document.Metadata.UniqueId}";
+												}
+
+												<a href="@statusUrl" target="_blank">Check document status. Whether it now exists in registry (metadata) and/or repository (content saved to disk).</a>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												Get Document:
+											</td>
+											<td>
+												@{
+													var getDocumentUrl = $"{Model.RegistryRepositoryBaseUrl}/registry-repository/document?home={Model.Upload.Submission.HomeCommunityId}&document={document.Metadata.UniqueId}";
+												}
+
+												<a href="@getDocumentUrl" target="_blank">Get document content</a>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												Document Entry:
+											</td>
+											<td>
+												@{
+													var getDocumentEntryUrl = $"{Model.RegistryRepositoryBaseUrl}/registry-repository/document-entry?home={Model.Upload.Submission.HomeCommunityId}&id={document.Metadata.UniqueId}";
+												}
+
+												<a href="@getDocumentEntryUrl" target="_blank">Get document entry for patient</a>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												Document List for patient:
+											</td>
+											<td>
+												@{
+													var getDocumentListUrl = $"{Model.RegistryRepositoryBaseUrl}/registry-repository/document-list?home={Model.Upload.Submission.HomeCommunityId}&patientId={Model.Upload.Patient.NIN}";
+												}
+
+												<a href="@getDocumentListUrl" target="_blank">Get document list for patient</a>
+											</td>
+										</tr>
+									</table>
+
+								</td>
+							</tr>
+
+						}
+
+					</tbody>
+
+				</table>
+			</details>
+		</div>
+	</div>
+
+
+	<partial name="_PrevNextPartial" />
+
+</div>

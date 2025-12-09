@@ -1,0 +1,255 @@
+﻿@using Hl7.Fhir.Model
+
+@model GetDocumentViewModel
+
+@{	
+	var sessionData = Context.Session.SessionData();
+}
+
+<style>
+	.head {
+		font-size: 11px;
+		font-style: italic;
+	}
+
+	tr.document-item {
+		cursor: pointer;
+	}
+
+	tr.document-detail {
+		display: none;
+	}
+
+	iframe
+	{
+		width:100%;
+		height:800px; 
+
+		/* border:none;  */
+		border: 1px solid #aaa; 
+	}
+
+</style>
+
+<script>
+	function onDocumentRowClick(e) {
+		console.log(e);
+
+		const rowId = e.currentTarget.getAttribute("data-id");
+
+		console.log(rowId);
+
+		const documentDetail = document.querySelector(`tr.document-detail[data-id='${rowId}']`);
+
+		if (documentDetail.style.display == "table-row") {
+			documentDetail.style.display = "none";
+		}
+		else {
+			documentDetail.style.display = "table-row";
+		}
+
+	}
+</script>
+
+<script type="text/javascript">
+	function setIframeContent(iframeId, rawHtml) {
+
+		var iframe = document.getElementById(iframeId);
+		iframe.contentWindow.document.open();
+		iframe.contentWindow.document.write(rawHtml);
+		iframe.contentWindow.document.close();
+	}
+</script>
+
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">Journaldokumenter</h4>
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<p>
+					Error: @Model.ErrorMessage
+					</p>
+					<p>
+						API response status code: @Model.ApiResult.StatusCode
+					</p>
+					<p>
+						API response body:
+						<pre>
+								@Model.ApiResult.Body
+							</pre>
+					</p>
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		@if (Model.IsShowClinicalDocumentXml)
+		{
+			<div class="container-fluid container-highlighted">
+				<div class="row">
+					<div class="col-md-12">
+
+						<div class="textarea-container">
+							<pre class="highlighted clinicaldocument" aria-hidden="true"></pre>
+							<textarea class="textarea w-100 clinicaldocument" rows="10">@Model.ClinicalDocumentXml</textarea>
+						</div>
+
+
+					</div>
+				</div>
+			</div>			
+		}
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					@{
+						var documentUrl = "/document/download?file=" + Model.DocumentUrl; 
+						var clinicalDocumentUrl = "/document/download?file=" + Model.ClinicalDocumentUrl;
+					}
+
+					@{
+						if (Model.IsShowClinicalDocumentXml)
+						{
+							<div>
+								<a href="@clinicalDocumentUrl" class="btn btn-primary"><i class="bi bi-download"></i>&nbsp; Last ned ClinicalDocument XML (som inneholder dokumentet)</a> <a href="@documentUrl" class="btn btn-primary"><i class="bi bi-download"></i> &nbsp; Last ned kun dokumentet</a>
+							</div>
+						}
+						else
+						{
+						
+							<div>
+								<a href="@documentUrl" class="btn btn-primary"><i class="bi bi-download"></i> &nbsp; Last ned dokumentet</a>
+							</div>						
+						}
+					}
+					
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+
+					@* @if (Model.ContentType == "application/pdf")
+					{
+						<iframe src="data:application/pdf;base64,@Model.PdfBase64String">
+						</iframe>
+					} *@
+
+					@if (Model.IsConverted)
+					{
+						<div>
+							<em>@Model.ConvertedFromType has automatically been converted to @Model.ConvertedToType for display in the browser</em>
+						</div>
+					}
+
+					@if (Model.ContentType == "application/pdf")
+					{
+						<iframe src="@Model.DocumentUrl">
+						</iframe>
+					}
+
+					@if (Model.ContentType == "application/xml" || Model.ContentType == "text/plain" || Model.ContentType == "application/rtf")
+					{
+						<iframe id="contentIframe">
+						</iframe>
+
+						<script type="text/javascript">
+							setIframeContent('contentIframe', `@Html.Raw(Model.Html)`);
+						</script>
+					}
+
+					@if (Model.ContentType?.StartsWith("image") == true)
+					{						
+						<img src="data:@Model.ContentType;base64,@Model.ImageBase64String">						
+					}
+
+					@* @Html.PagedListPager(Model.Bundle.Entry, page => Url.Action("Index", "Document", new { page, sort = Model.SortExpression, pageSize = Model.PageSize }), PagedListRenderOptions.ClassicPlusFirstAndLast) *@
+
+
+					@* 	<div class="pagination-container">
+				<ul class="pagination">
+				<li class="PagedList-skipToFirst disabled"><a>&lt;&lt;</a></li>
+				<li class="PagedList-skipToPrevious disabled">
+				<a rel="prev">&lt;</a></li>
+				<li class="active"><span>1</span></li>
+				<li>
+				<a href="/Contacts?page=2&amp;sort=recent&amp;pageSize=25">2</a></li>
+				<li><a href="/Contacts?page=3&amp;sort=recent&amp;pageSize=25">3</a></li>
+				<li><a href="/Contacts?page=4&amp;sort=recent&amp;pageSize=25">4</a></li>
+				<li><a href="/Contacts?page=10&amp;sort=recent&amp;pageSize=25">10</a></li>
+				<li class="PagedList-skipToNext"><a href="/Contacts?page=2&amp;sort=recent&amp;pageSize=25" rel="next">&gt;</a></li>
+				<li class="PagedList-skipToLast"><a href="/Contacts?page=219&amp;sort=recent&amp;pageSize=25">&gt;&gt;</a></li>
+				</ul></div>  *@
+
+				</div>
+			</div>
+		</div>
+	}
+</div>
+
+
+<script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+	const containerHighlighted = document.querySelector('.container-highlighted');
+
+	if (textarea !== undefined)
+	{
+		textarea.addEventListener('input', updateHighlighting);
+		textarea.addEventListener('scroll', syncScroll);
+
+		function updateHighlighting() {
+		const xml = textarea.value;
+		highlighted.innerHTML = applySyntaxHighlighting(xml);
+		}
+
+		function applySyntaxHighlighting(xml) {
+		return xml.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+		return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+		});
+		}
+
+		function highlightAttributes(attributes) {
+		return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+		return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+		});
+		}
+
+		function syncScroll() {
+		highlighted.scrollTop = textarea.scrollTop;
+		highlighted.scrollLeft = textarea.scrollLeft;
+		}
+
+		// Initialize highlighting
+		updateHighlighting();
+	}
+</script>

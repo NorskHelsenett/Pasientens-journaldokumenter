@@ -1,0 +1,121 @@
+﻿@{
+	var sessionData = Context.Session.SessionData();
+}
+
+<style>
+	.selected {
+		background-color: lightskyblue;
+	}
+</style>
+
+<partial name="_WizardHeaderPartial" model="2" />
+
+@{
+	var patient = sessionData.BundleRequest?.Patient;
+}
+
+<div class="container-fluid max">
+
+	<form method="post">
+		<h4>
+			<i class="bi bi-server fs-1 text-primary"></i> Velg kilde du skal laste opp til:
+		</h4>
+
+		@{
+			var homeCommunityId = sessionData.BundleRequest.Submission.HomeCommunityId;
+		}
+
+		@if (!string.IsNullOrEmpty(homeCommunityId))
+		{
+			KildeInfo? kilde = default!;
+
+			kilde = sessionData.EnvironmentId switch
+			{
+				"test" => KildeInfo.KildeListTest.First(x => x.HomeCommunityId == homeCommunityId),
+				"qa" => KildeInfo.KildeListQA.First(x => x.HomeCommunityId == homeCommunityId),
+				_ => null
+			}; 
+
+			<h5>
+				Currently selected source: @kilde.Name (@kilde.HomeCommunityId), @kilde.AppName
+			</h5>
+		}
+
+		<table class="table w-auto">
+			<thead>
+				<tr>
+					<th>
+						HomeCommunityId
+					</th>
+					<th>
+						Navn
+					</th>
+					<th>
+						Applikasjon
+					</th>
+					<th>Type</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				@{
+					List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+					{
+						"test" => KildeInfo.KildeListTest,
+						"qa" => KildeInfo.KildeListQA,
+						_ => null
+					};
+
+					#if DEBUG
+						var isDebug = true;
+					#else
+						var isDebug = false;
+					#endif
+				}				
+										
+				@foreach (var kilde in kildeList.Where(x => x.IsShowInUploadWizard || isDebug))
+				{
+					var selectedClass = "";
+					if (kilde.HomeCommunityId == homeCommunityId)
+					{
+						selectedClass = "selected";
+					}
+
+					<tr class="@selectedClass">
+						<td>@kilde.HomeCommunityId</td>
+						<td>@kilde.Name</td>
+						<td>@kilde.AppName</td>
+						<td>
+							@{
+								if (kilde.KildeType == KildeInfo.KildeTypeEnum.SiemensXds)
+								{
+									<div>
+										Siemens XDS
+									</div>
+								}
+
+								if (kilde.KildeType == KildeInfo.KildeTypeEnum.NasjonaltLager)
+								{
+									<div>
+										Nasjonalt lager instans
+									</div>
+								}
+							}
+						</td>
+						<td>
+							@if (kilde.HomeCommunityId != homeCommunityId)
+							{
+								<button type="submit" name="selectedHomeCommunityId" value="@kilde.HomeCommunityId" class="btn btn-primary">Velg kilde</button>
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+
+		<partial name="_PrevNextPartial" />
+
+	</form>
+
+</div>
+

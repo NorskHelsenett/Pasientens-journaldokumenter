@@ -1,0 +1,146 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="TestData\CDA_ConsultationNote01.xml" />
+    <None Remove="TestData\CDA_ConsultationNote02.xml" />
+    <None Remove="TestData\CDA_Level1_Document01.xml" />
+    <None Remove="TestData\CDA_Level1_Document02.xml" />
+    <None Remove="TestData\Documents\dokument1.pdf" />
+    <None Remove="TestData\FhirDocumentReference.json" />
+    <None Remove="TestData\IntegrationTests\IT_iti18-request.xml" />
+    <None Remove="TestData\IntegrationTests\IT_iti38-request.xml" />
+    <None Remove="TestData\IntegrationTests\IT_iti38-request_async.xml" />
+    <None Remove="TestData\IntegrationTests\IT_iti39-request-multipart.txt" />
+    <None Remove="TestData\IntegrationTests\IT_iti39-request.xml" />
+    <None Remove="TestData\IntegrationTests\IT_iti39-request_async.xml" />
+    <None Remove="TestData\IntegrationTests\IT_iti43-request.xml" />
+    <None Remove="TestData\IntegrationTests\IT_SamlToken_HN01.xml" />
+    <None Remove="TestData\IntegrationTests\IT_SamlToken_KJ01.xml" />
+    <None Remove="TestData\IntegrationTests\Policies\90bd12ea-1a26-417f-a035-f3708f4e0198" />
+    <None Remove="TestData\iti18-iti40-request.xml" />
+    <None Remove="TestData\iti18-response.xml" />
+    <None Remove="TestData\iti38-iti40-request.xml" />
+    <None Remove="TestData\iti39-iti40-request.xml" />
+    <None Remove="TestData\iti39-iti40-request_async.xml" />
+    <None Remove="TestData\iti43-iti40-request.xml" />
+    <None Remove="TestData\PnR_request.xml" />
+    <None Remove="TestData\Policies\90bd12ea-1a26-417f-a035-f3708f4e0198" />
+    <None Remove="TestData\Policies\deny-certain-roles" />
+    <None Remove="TestData\Policies\deny2" />
+    <None Remove="TestData\Policies\readdocuments-lege" />
+    <None Remove="TestData\SamlToken01.xml" />
+    <None Remove="TestData\SamlToken02.xml" />
+    <None Remove="TestData\TestDataRegistryObjects.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestData\CDA_ConsultationNote01.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\CDA_ConsultationNote02.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\CDA_Level1_Document01.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\CDA_Level1_Document02.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\Documents\dokument1.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\FhirDocumentReference.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti18-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti38-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti38-request_async.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti39-request-multipart.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti39-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti39-request_async.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_iti43-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_SamlToken_HN01.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\IT_SamlToken_KJ01.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\IntegrationTests\Policies\90bd12ea-1a26-417f-a035-f3708f4e0198">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\iti18-iti40-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\iti18-response.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\iti38-iti40-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\iti39-iti40-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\iti39-iti40-request_async.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\iti43-iti40-request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\PnR_request.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\Policies\90bd12ea-1a26-417f-a035-f3708f4e0198">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\Policies\deny-certain-roles">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\Policies\deny2">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\Policies\readdocuments-lege">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\SamlToken01.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\SamlToken02.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\TestDataRegistryObjects.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Hl7.Fhir.R4B" Version="5.12.1" />
+		<PackageReference Include="Hl7.Fhir.Serialization" Version="4.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens.Saml" Version="8.9.0" />
+		<PackageReference Include="System.ServiceModel.Http" Version="8.1.2" />
+		<PackageReference Include="System.ServiceModel.Primitives" Version="8.1.2" />
+	</ItemGroup>
+
+
+</Project>
