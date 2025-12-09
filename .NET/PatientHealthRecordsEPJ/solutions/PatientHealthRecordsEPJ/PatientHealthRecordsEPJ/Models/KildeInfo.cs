@@ -12,6 +12,7 @@ public class KildeInfo
 	public string HomeCommunityId { get; set; } = default!;	// SourceId i submission set points to this
 	public string AppName { get; set; } = default!;
 	public string Url { get; set; } = default!; // Default path is "/Repository/services/RepositoryService"
+	public bool IsShowInUploadWizard { get; set; } = true;
 
 	public KildeTypeEnum KildeType { get; set; } = default!; // 
 
@@ -25,6 +26,8 @@ public class KildeInfo
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.15", Name = "Bjarne sykehus", AppName = "bjarne-sykehus", Url = "https://bjarne-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.17", Name = "Kurt sykehus", AppName = "kurt-sykehus", Url = "https://kurt-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.18", Name = "Rex sykehus", AppName = "rex-sykehus", Url = "https://rex-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.18", Name = "Tim sykehus", AppName = "tim-sykehus", Url = "https://tim-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.19", Name = "Origo sykehus", AppName = "origo-sykehus", Url = "https://origo-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager, IsShowInUploadWizard = false},
 	};
 
 	public static List<KildeInfo> KildeListQA { get; set; } = new List<KildeInfo>()

@@ -65,9 +65,15 @@
 						"qa" => KildeInfo.KildeListQA,
 						_ => null
 					};
+
+					#if DEBUG
+						var isDebug = true;
+					#else
+						var isDebug = false;
+					#endif
 				}				
 										
-				@foreach (var kilde in kildeList)
+				@foreach (var kilde in kildeList.Where(x => x.IsShowInUploadWizard || isDebug))
 				{
 					var selectedClass = "";
 					if (kilde.HomeCommunityId == homeCommunityId)

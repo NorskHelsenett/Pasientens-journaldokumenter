@@ -1189,7 +1189,9 @@ public class UploadDocumentsController : BaseController
 
 		// Create document-object		
 		var bundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
-		
+		var filePath = @"C:\NHN\DEBUG\Origo\fhir-document-reference-test6.json";
+		//var bundleDocument = System.IO.File.ReadAllText(filePath);
+
 		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument);
 		
 		if (apiResult.IsSuccess)

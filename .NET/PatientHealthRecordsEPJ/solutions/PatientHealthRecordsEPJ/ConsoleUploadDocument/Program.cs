@@ -59,13 +59,13 @@ var services = scope.ServiceProvider;
 /*
 	Configure constants
 */
-var patientId = "21825297143";
+var patientId = "17855599120";
 
-var firstName = "PUSLETE";
+var firstName = "USNOBBET";
 var middleName = "";
-var lastName = "PIKE";
+var lastName = "KLOKKE";
 var gender = "M";
-var dateOfBirth = new DateTime(1952, 2, 21);
+var dateOfBirth = new DateTime(1955, 5, 17);
 
 var authorNin = "05898597468";
 var authorFirstName = "GRØNN";
@@ -84,10 +84,11 @@ var PatientPointOfCareOrg = organizationIdentifier;
 //var hl7Organization = _organizationService.GetHl7OrganizationDetailFromOrganization(sessionData.OrgRegOrganization);
 
 var homeCommunityId = "2.16.578.1.12.4.5.100.3.15";  // Bjarne sykehus, test environment
+var sourceId = "1.1"; // TODO: what should sourceId be? 
 
 
 /*
-	Log in with HelseID. We need a user token (logged in user) to call the bundle endpoint. 
+	Log in with HelseID. This example uses user login (logged in user) to call the bundle endpoint, but we could also use client credentials flow.
 */
 //private const int LocalhostPort = 8080;
 const int LocalhostPort = 8089;
@@ -212,8 +213,8 @@ catch (Exception ex)
 var currentDirectory = Directory.GetCurrentDirectory();
 
 //var fileName = "Epikrise.xml";
-var fileName = "ClinicalDocument_PUSLETE_PIKE.xml";
-var filePath = Path.Combine(currentDirectory, @"Examples\", fileName); 
+var fileName = "ClinicalDocument_USNOBBET_KLOKKE.xml";
+var filePath = Path.Combine(currentDirectory, @"Examples\", fileName);
 
 var content = File.ReadAllBytes(filePath);
 
@@ -230,7 +231,8 @@ request.Submission
 	.WithTitle($"SubmissionSet-{patientId}-{DateTime.Now}")
 	.WithAvailabilityStatus(DocumentSubmissionMetadata.AvailabilityStatusApproved)
 	.WithSubmissionTime(DateTime.Now)
-	.WithSourceId(homeCommunityId)
+	.WithSourceId(sourceId)
+	.WithHomeCommunityId(homeCommunityId)
 	.WithPatientId(patientId)
 	.WithAuthor(new Author()
 	{
@@ -331,7 +333,36 @@ var apiResult = await _phrApiService.ProvideDocumentBundleAsync(accessToken, hel
 
 if (apiResult.IsSuccess)
 {
-	Console.WriteLine("Document bundle was successfully uploaded."); 
+	Console.WriteLine("Document bundle was successfully uploaded.");
+
+	// 1. Read JSON string
+	string json = apiResult.Body;
+
+	// 2. Parse into FHIR Bundle using the HL7 serializer
+	var parser = new Hl7.Fhir.Serialization.FhirJsonParser();
+	Hl7.Fhir.Model.Bundle responseBundle = parser.Parse<Hl7.Fhir.Model.Bundle>(json);
+
+	// 3. Iterate over entries and read the response elements
+	//Console.WriteLine($"Resource Type: {responseBundle.ResourceType}");
+	Console.WriteLine($"Bundle ID: {responseBundle.Id}");
+	Console.WriteLine($"Bundle Type: {responseBundle.Type}");
+	Console.WriteLine("------ Entries ------");
+
+	foreach (var entry in responseBundle.Entry)
+	{
+		// Each entry has a 'response' object when returning transaction results
+		if (entry.Response != null)
+		{
+			string status = entry.Response.Status ?? "(no status)";
+			string location = entry.Response.Location ?? "(no location)";
+			string lastModified = entry.Response.LastModified?.ToString("o") ?? "(no last modified)";
+
+			Console.WriteLine($"Status       : {status}");
+			Console.WriteLine($"Location     : {location}");
+			Console.WriteLine($"Last Modified: {lastModified}");
+			Console.WriteLine("----------------------------------------");
+		}
+	}
 }
 else
 {
