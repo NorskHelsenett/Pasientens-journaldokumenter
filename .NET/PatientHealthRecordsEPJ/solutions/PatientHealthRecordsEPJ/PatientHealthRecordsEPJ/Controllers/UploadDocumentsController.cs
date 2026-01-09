@@ -1,3 +1,4 @@
+using Hl7.Fhir.Model;
 using Hl7.Fhir.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -407,9 +408,17 @@ public class UploadDocumentsController : BaseController
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> UploadDocument(DocumentMetadataViewModel model, string? selectedFileUniqueId, NavigationAction navButton)
+	public async Task<IActionResult> UploadDocument(DocumentMetadataViewModel model, string? selectedFileUniqueId, int relatesTo, NavigationAction navButton)
 	{
 		var sessionData = session.SessionData();
+
+		model.SelectedDocument.DocumentRelationshipType = (CustomDocumentRelationshipType)relatesTo;
+
+		if (!string.IsNullOrWhiteSpace(model.SelectedDocument.ExistingDocumentId) 
+			&& !model.SelectedDocument.ExistingDocumentId.StartsWith("DocumentReference/"))
+		{
+			model.SelectedDocument.ExistingDocumentId = $"DocumentReference/{model.SelectedDocument.ExistingDocumentId}"; 
+		}
 	
 		SaveDocumentToSession(model.SelectedDocument, model.SelectedDocument!.Metadata.FormatCode!);
 

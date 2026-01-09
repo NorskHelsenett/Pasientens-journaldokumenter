@@ -135,6 +135,52 @@
 								</tr>
 							</table>
 
+							<strong>Relationship:</strong>
+							<div style="color:darkgoldenrod"><em>replace/update, transform, add to existing, sign <!-- snapshot  --></em></div>							
+							<table class="table table-sm">								
+								<tr>
+									<td>Relationship:</td>
+									<td>
+										@if (document.DocumentRelationshipType == CustomDocumentRelationshipType.NoRelation)
+										{
+											<span>No relation (original document).</span>
+										}
+
+										@if (document.DocumentRelationshipType == CustomDocumentRelationshipType.Replaces)
+										{
+											<span>Replace existing document</span>
+										}
+
+										@if (document.DocumentRelationshipType == CustomDocumentRelationshipType.Transforms)
+										{
+											<span>Transform of existing document</span>
+										}
+
+										@if (document.DocumentRelationshipType == CustomDocumentRelationshipType.Appends)
+										{
+											<span>Appends to existing document</span>
+										}
+
+										@if (document.DocumentRelationshipType == CustomDocumentRelationshipType.ReplaceAndTransform)
+										{
+											<span>Replace and transform existing document</span>
+										}
+
+										@if (document.DocumentRelationshipType == CustomDocumentRelationshipType.Signs)
+										{
+											<span>Signs - Register digital signature to existing document</span>
+										}									
+									</td>
+								</tr>
+								@if (document.DocumentRelationshipType != CustomDocumentRelationshipType.NoRelation)
+								{
+									<tr>
+										<td>Existing document Id:</td>
+										<td class="display">@document.ExistingDocumentId</td>
+									</tr>
+								}								
+							</table>
+
 							<strong>Content Metadata:</strong><br />
 
 							@foreach (var author in document.Metadata!.Authors!)
@@ -422,7 +468,7 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 					}
 				</div>
 				<div id="Association">
-					<h5>Association:</h5><br />
+					@* <h5>Association:</h5><br /> Moved to Relationship section for each document  *@
 					@if (Model.Upload.Association != null)
 					{
 						<table class="table table-sm">
@@ -457,7 +503,7 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 					else
 					{
 						@* <div>Document(s) will be uploaded as <strong> new documents</strong>. Future functionality may provide: <span style="color:darkgoldenrod"><em>replace, tranform, add to existing, sign, snapshot </em></span></div> *@
-						<div>Document(s) will not be related to any others. Future functionality may provide: <span style="color:darkgoldenrod"><em>replace, tranform, add to existing, sign, snapshot </em></span></div>
+						@* <div>Document(s) will not be related to any others. Future functionality may provide: <span style="color:darkgoldenrod"><em>replace, transform, add to existing, sign, snapshot </em></span></div> *@
 					}
 
 

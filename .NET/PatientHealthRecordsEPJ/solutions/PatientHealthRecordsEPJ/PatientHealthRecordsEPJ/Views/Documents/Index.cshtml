@@ -282,6 +282,7 @@
 
 					@{
 						var haveAnyNasjonaltLager = false;
+						var haveAnyRelatesTo = false; 
 					}
 
 					<table class="table table-striped table-hover table-sm">
@@ -351,6 +352,9 @@
 									Kilde 
 								</th>
 								<th>
+									Info
+								</th>
+								<th>
 									<a href="@nameSortUrl">
 										Dokumentnavn @Html.Raw(SortIcon("name", ascending))
 									</a>
@@ -409,6 +413,13 @@
 								var homeCommunityId = GetHomeCommunityId(document);
 								var repositoryUniqueId = GetRepositoryUniqueId(document);
 
+								var relatesTo = document.RelatesTo; 
+
+								if (relatesTo?.Count > 0)
+								{
+									haveAnyRelatesTo = true; 
+								}
+
 								var kildeType = "";
 								var kilde = "";
 
@@ -446,6 +457,40 @@
 											}
 										}
 										
+									</td>
+									<td>
+										@{
+											if (relatesTo?.Count > 0)
+											{
+												var relatesToString = ""; 
+												foreach (var relation in relatesTo)
+												{
+													switch (relation.Code)
+													{
+														case DocumentRelationshipType.Replaces: 
+															relatesToString += "Erstatter ";
+															break; 
+
+														case DocumentRelationshipType.Appends:
+															relatesToString += "Tillegg ";
+															break;
+
+														case DocumentRelationshipType.Transforms:
+															relatesToString += "Transformerer ";
+															break;
+														
+															case DocumentRelationshipType.Signs:
+															relatesToString += "Signerer ";
+															break;
+
+														default:
+															break; 
+													}													
+												}
+
+												<div><span style="color:darkolivegreen">@relatesToString</span></div>
+											}
+										}
 									</td>
 									<td>
 										@attachment.Title
@@ -530,6 +575,36 @@
 								</tr>
 								<tr class="document-detail" data-id="@rowId">
 									<td colspan="10">
+
+										@if (relatesTo?.Count > 0)
+										{											
+											foreach (var relation in relatesTo)
+											{
+												var relatesToString = "";
+												var target = relation.Target.Reference; 
+
+												switch (relation.Code)
+												{
+													case DocumentRelationshipType.Replaces:
+														relatesToString += $"Erstatter: {target}";
+														break;
+
+													case DocumentRelationshipType.Appends:
+														relatesToString += $"Tillegg til: {target}";
+														break;
+
+													case DocumentRelationshipType.Transforms:
+														relatesToString += $"Transformerer: {target}";
+														break;
+
+													case DocumentRelationshipType.Signs:
+														relatesToString += $"Signerer: {target}";
+														break;													
+												}
+
+												<div><span style="color:darkolivegreen">@relatesToString</span></div>
+											}
+										}																			
 
 										<div style="display:flex;justify-content:space-between" class="p-2">
 
@@ -649,6 +724,17 @@
 						{
 							<div>
 								<strong>Kilde: NL = Nasjonalt lager</strong>
+								<br />
+								<br />
+							</div>
+						}
+
+						if (haveAnyRelatesTo)
+						{
+							<div>
+								<strong>Info kolonne: Informasjon om oppdatering/erstatning av eksisterende dokument, tillegg til eksisterende, transformering, signering </strong>
+								<br />
+								<br />
 							</div>
 						}
 					}

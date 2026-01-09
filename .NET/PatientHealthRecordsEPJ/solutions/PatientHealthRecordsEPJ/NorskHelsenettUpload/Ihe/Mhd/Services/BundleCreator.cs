@@ -54,6 +54,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 
 			// ---------- 3) Per-document: Binary + DocumentReference ----------
 			var docRefFullUrls = new List<string>();
+			var docRefIdToFullUrl = new Dictionary<string, string>();
 
 			foreach (var (doc, index) in model.DocumentCollection.Documents.Select((doc, index) => (doc, index)))
 			{
@@ -86,7 +87,16 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 				// DocumentReference
 				var docRefId = (doc.Metadata?.UniqueId != Guid.Empty ? doc.Metadata!.UniqueId : Guid.NewGuid()).ToString();
 				var docRefFullUrl = $"urn:uuid:{docRefId}";
+				docRefIdToFullUrl[docRefId] = docRefFullUrl;
 				var docRefEntry = BuildDocumentReferenceEntry(model, doc, docRefId, patientFullUrl, binaryFullUrl, patientEntry.Resource);
+
+				var relatesTo = BuildRelatesTo(doc, docRefIdToFullUrl);
+				if (relatesTo is not null &&
+					docRefEntry.Resource is DocumentReference dr)
+				{
+					dr.RelatesTo = relatesTo.ToList();
+				}
+
 				bundle.Entry.Add(docRefEntry);
 				docRefFullUrls.Add(docRefFullUrl);
 			}
@@ -371,44 +381,8 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			{
 				docRef.Contained.Add(authenticator);
 				docRef.Authenticator = new ResourceReference { Reference = "#" + authenticator.Id };
-			}
-
-			// Associations/relatesTo (single example; extend to a collection if needed)
-			if (model.Association?.Type is string assocType &&
-				assocType != "urn:oasis:names:tc:ebxml-regrep:AssociationType:HasMember")
-			{
-				var relCode = assocType switch
-				{
-					/*"urn:ihe:iti:2007:AssociationType:APND" => DocumentReference.DocumentRelationshipType.Appends,
-					"urn:ihe:iti:2007:AssociationType:XFRM" => DocumentReference.DocumentRelationshipType.Transforms,
-					"urn:ihe:iti:2007:AssociationType:signs" => DocumentReference.DocumentRelationshipType.Signs,
-					"urn:ihe:iti:2007:AssociationType:RPLC" => DocumentReference.DocumentRelationshipType.Replaces,
-					_ => (DocumentReference.DocumentRelationshipType?)null*/
-
-					"urn:ihe:iti:2007:AssociationType:APND" => DocumentRelationshipType.Appends,
-					"urn:ihe:iti:2007:AssociationType:XFRM" => DocumentRelationshipType.Transforms,
-					"urn:ihe:iti:2007:AssociationType:signs" => DocumentRelationshipType.Signs,
-					"urn:ihe:iti:2007:AssociationType:RPLC" => DocumentRelationshipType.Replaces,
-					_ => (DocumentRelationshipType?)null
-				};
-
-				if (relCode is not null)
-				{
-					docRef.RelatesTo =
-					[
-						new DocumentReference.RelatesToComponent
-						{
-							Code = relCode.Value,
-							Target = new ResourceReference
-							{
-                                // TODO: Resolve to another DocumentReference FullUrl in the same bundle
-                                Reference = "reference_to_another_document[not_implemented]"
-							}
-						}
-					];
-				}
-			}
-
+			}			
+			
 			return new Bundle.EntryComponent
 			{
 				FullUrl = $"urn:uuid:{docRefId}",
@@ -768,5 +742,109 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
 				=> writer.WriteStringValue(value.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'", CultureInfo.InvariantCulture));
 		}
+
+		private static IEnumerable<DocumentReference.RelatesToComponent>? BuildRelatesTo(Document doc, IReadOnlyDictionary<string, string> docIdToFullUrl)
+		{
+			if (doc.DocumentRelationshipType is null ||
+				doc.DocumentRelationshipType == CustomDocumentRelationshipType.NoRelation)
+			{
+				return null;
+			}					
+
+			if (string.IsNullOrWhiteSpace(doc.ExistingDocumentId))
+			{
+				throw new InvalidOperationException(
+					$"DocumentRelationshipType '{doc.DocumentRelationshipType}' requires ExistingDocumentId");
+			}
+
+			if (doc.Metadata?.UniqueId != Guid.Empty &&
+				doc.ExistingDocumentId == doc.Metadata.UniqueId.ToString())
+			{
+				throw new InvalidOperationException("A document cannot relate to itself");
+			}
+
+			string targetReference;
+
+			if (docIdToFullUrl.TryGetValue(doc.ExistingDocumentId, out var bundleRef))
+			{
+				// Old document is part of the same bundle
+				targetReference = bundleRef;
+			}
+			else
+			{
+				// Old document already exists in repository
+				// Use logical reference (preferred for MHD/XDS)
+
+				// TODO: If we later want to be stricter, we can normalize:
+				// urn: uuid:
+				// urn: oid:
+				// DocumentReference/{id}
+
+				targetReference = !doc.ExistingDocumentId.Contains("DocumentReference") ?  $"DocumentReference/{doc.ExistingDocumentId}" : doc.ExistingDocumentId;
+			}
+
+			// Snapshot is intentionally excluded
+			if (doc.DocumentRelationshipType == CustomDocumentRelationshipType.SnapshotOf)
+			{
+				return null;
+			}
+
+			return doc.DocumentRelationshipType switch
+			{
+				CustomDocumentRelationshipType.Replaces =>
+				[
+					new DocumentReference.RelatesToComponent
+			{
+				Code = DocumentRelationshipType.Replaces,
+				Target = new ResourceReference { Reference = targetReference }
+			}
+				],
+
+				CustomDocumentRelationshipType.Transforms =>
+				[
+					new DocumentReference.RelatesToComponent
+			{
+				Code = DocumentRelationshipType.Transforms,
+				Target = new ResourceReference { Reference = targetReference }
+			}
+				],
+
+				CustomDocumentRelationshipType.Appends =>
+				[
+					new DocumentReference.RelatesToComponent
+			{
+				Code = DocumentRelationshipType.Appends,
+				Target = new ResourceReference { Reference = targetReference }
+			}
+				],
+
+				CustomDocumentRelationshipType.Signs =>
+				[
+					new DocumentReference.RelatesToComponent
+			{
+				Code = DocumentRelationshipType.Signs,
+				Target = new ResourceReference { Reference = targetReference }
+			}
+				],
+
+				// Deterministic expansion (FHIR has no combined enum)
+				CustomDocumentRelationshipType.ReplaceAndTransform =>
+				[
+					new DocumentReference.RelatesToComponent
+			{
+				Code = DocumentRelationshipType.Replaces,
+				Target = new ResourceReference { Reference = targetReference }
+			},
+			new DocumentReference.RelatesToComponent
+			{
+				Code = DocumentRelationshipType.Transforms,
+				Target = new ResourceReference { Reference = targetReference }
+			}
+				],
+
+				_ => null
+			};
+		}
+
 	}
 }

@@ -1,4 +1,6 @@
-﻿@using PatientHealthRecordsEPJ.UploadDocuments.Models
+﻿@using Hl7.Fhir.Model
+@using NorskHelsenettUpload.Ihe.Mhd.Models
+@using PatientHealthRecordsEPJ.UploadDocuments.Models
 @model DocumentMetadataViewModel
 
 @{
@@ -304,6 +306,101 @@
 							</select>
 						</div>
 					</div>
+
+					<h4><i class="bi bi-link fs-1 text-primary"></i> Relates to:</h4>
+
+					<div>
+						<span style="color:darkgoldenrod">Here you can perform <em>replace/update only metadata of existing document, replace/update existing metadata and binary document, transform, add to existing, sign, snapshot </em></span>
+					</div>
+
+					<!-- Existing document Id -->
+					<div class="row mb-3">
+						<label for="inputExistingDocumentId" class="col-sm-2 col-form-label">Existing document Id:</label>
+						<div class="col-sm-10">
+							@* <input type="password" class="form-control" id="inputPassword3"> *@
+							<input asp-for="SelectedDocument.ExistingDocumentId" type="text" class="form-control" id="inputExistingDocumentId" placeholder="DocumentReference/&lt;id&gt;">
+						</div>
+					</div>
+
+					<!-- Language -->
+
+					@{
+						var _checked = (Model.SelectedDocument.DocumentRelationshipType == null || Model.SelectedDocument.DocumentRelationshipType == CustomDocumentRelationshipType.NoRelation) ? "checked" : "";
+					}
+					<div class="row mb-3">
+						<div class="col-sm-6">
+							<label><input type="radio" name="relatesTo" value="@((int)CustomDocumentRelationshipType.NoRelation)" @_checked /> No relation (upload original document).</label>
+						</div>
+						<div class="col-sm-6">
+						</div>
+					</div>
+
+					@{
+						_checked = Model.SelectedDocument.DocumentRelationshipType == CustomDocumentRelationshipType.Replaces ? "checked" : "";
+					}
+					<div class="row mb-3">						
+						<div class="col-sm-6">
+							<label><input type="radio" name="relatesTo" value="@((int)CustomDocumentRelationshipType.Replaces)" @_checked /> Replace - Replace existing document</label>
+						</div>
+						<div class="col-sm-6">
+							
+						</div>
+					</div>
+
+					@{
+						_checked = Model.SelectedDocument.DocumentRelationshipType == CustomDocumentRelationshipType.Transforms ? "checked" : "";
+					}
+					<div class="row mb-3">
+						<div class="col-sm-6">
+							<label><input type="radio" name="relatesTo" value="@((int)CustomDocumentRelationshipType.Transforms)" @_checked /> Transform - Transform of existing document</label>
+						</div>
+						<div class="col-sm-6">
+						</div>
+					</div>
+
+					@{
+						_checked = Model.SelectedDocument.DocumentRelationshipType == CustomDocumentRelationshipType.Appends ? "checked" : "";
+					}
+					<div class="row mb-3">
+						<div class="col-sm-6">
+							<label><input type="radio" name="relatesTo" value="@((int)CustomDocumentRelationshipType.Appends)" @_checked /> Appends - Appends to existing document</label>
+						</div>
+						<div class="col-sm-6">
+						</div>
+					</div>
+
+					@{
+						_checked = Model.SelectedDocument.DocumentRelationshipType == CustomDocumentRelationshipType.ReplaceAndTransform ? "checked" : "";
+					}
+					<div class="row mb-3">
+						<div class="col-sm-6">
+							<label><input type="radio" name="relatesTo" value="@((int)CustomDocumentRelationshipType.ReplaceAndTransform)" @_checked /> Replace &amp; Transform - Replace and transform existing document</label>
+						</div>
+						<div class="col-sm-6">
+						</div>
+					</div>
+
+					@{
+						_checked = Model.SelectedDocument.DocumentRelationshipType == CustomDocumentRelationshipType.Signs ? "checked" : "";
+					}
+					<div class="row mb-3">
+						<div class="col-sm-6">
+							<label><input type="radio" name="relatesTo" value="@((int)CustomDocumentRelationshipType.Signs)" @_checked /> Signs - Register digital signature to existing document</label>
+						</div>
+						<div class="col-sm-6">
+						</div>
+					</div>
+
+				@* 	<div class="row mb-3">
+						<div class="col-sm-4">
+							<label><input type="radio" /> SnapshotOf - Snapshot of On-Demand Document Entry</label>
+						</div>
+						<div class="col-sm-8">
+						</div>
+					</div> *@
+
+
+
 				</div>
 			</div>
 
