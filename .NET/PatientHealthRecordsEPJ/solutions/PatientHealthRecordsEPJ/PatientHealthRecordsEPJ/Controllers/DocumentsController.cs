@@ -138,7 +138,11 @@ public class DocumentsController : BaseController
 			new("status", "current"),
 			new("_count", pageSize.ToString()),
 			new("_page", pageIndex.ToString()),
-			new("_sort", sort)
+			new("_sort", sort),
+			// If _include contains DocumentReference:relatesTo, get associations. Note: Will make an extra call to XDS for associations and slow down UI rendering.
+			// OK for Test EPJ so that we can show associations in the UI in the "Info" column. 
+			// In production, consider calling a separate API (GetDocumentAssociations) to get associations only when user requests it for a specific document.			
+			new("_include", "DocumentReference:relatesTo") 
 		]);
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Post,
