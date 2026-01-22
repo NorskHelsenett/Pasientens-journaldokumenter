@@ -553,20 +553,21 @@
 									<td>
 										@* Enhet/Avdeling *@
 										@{
+											var institutionName = GetInstitutionName(document);
 											var departmentName = GetDepartmentName(document);
-										}
 
+											if (departmentName == "-")
+											{
+												departmentName = institutionName;
+											}
+										}
 
 
 										@departmentName
 
 									</td>
 									<td>
-										@* Institusjon *@
-
-										@{
-											var institutionName = GetInstitutionName(document);
-										}
+										@* Institusjon *@										
 
 										@institutionName
 

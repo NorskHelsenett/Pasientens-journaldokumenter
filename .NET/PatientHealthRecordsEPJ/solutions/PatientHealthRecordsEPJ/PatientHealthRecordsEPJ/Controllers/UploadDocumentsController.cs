@@ -452,6 +452,9 @@ public class UploadDocumentsController : BaseController
 		return Navigate(navButton, current: nameof(UploadDocument));
 	}
 
+	[RequestSizeLimit(1L * 1024 * 1024 * 1024)]
+	[RequestFormLimits(MultipartBodyLengthLimit = 1L * 1024 * 1024 * 1024)]
+	//[DisableRequestSizeLimit]
 	[HttpPost]
 	public async Task<IActionResult> UploadFiles(List<IFormFile> files, string fileCreationDates, string dateType)
 	{	
@@ -723,7 +726,8 @@ public class UploadDocumentsController : BaseController
 			default:
 				var fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 				
-				document.WithTitle(ToPascalCase(fileNameNoExtension));
+				//document.WithTitle(ToPascalCase(fileNameNoExtension));
+				document.WithTitle(ToTitleCase(fileNameNoExtension));
 
 				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == "N");
 
@@ -767,6 +771,18 @@ public class UploadDocumentsController : BaseController
 
 		return string.Concat(words);
 	}
+
+	private static string ToTitleCase(string s)
+	{
+		if (string.IsNullOrEmpty(s))
+			return s;
+
+		if (char.IsUpper(s[0]))
+			return s;
+
+		return char.ToUpperInvariant(s[0]) + s.Substring(1);
+	}
+
 
 	private static string NormalizeMime(string contentType, string extension)
 	{

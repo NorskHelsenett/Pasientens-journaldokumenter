@@ -66,7 +66,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 					binaryFullUrl = $"urn:uuid:{binaryId}";
 					var binaryEntry = BuildBinaryEntry(doc, binaryId);
 
-					if (removeBinaryDataForDisplay && index > 0)
+					if (removeBinaryDataForDisplay && (index > 0 || doc.Content.Length > (2 * 1024 * 1024))) // Only remove data for all documents with index > 0 or if size > 2MB
 					{
 						// If we're going to display the serialized submission bundle as a JSON string to the end user (as in Patient Health Records Test EPJ)
 						// then we can remove the binary data to keep the string short

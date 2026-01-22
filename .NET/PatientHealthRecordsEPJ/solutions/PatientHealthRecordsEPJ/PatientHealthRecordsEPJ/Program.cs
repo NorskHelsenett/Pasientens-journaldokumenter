@@ -7,10 +7,28 @@ using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ;
 using PatientHealthRecordsEPJ.Services;
 using StackExchange.Redis;
+using Microsoft.AspNetCore.Http.Features;
+
+const long OneGb = 1L * 1024 * 1024 * 1024;
 
 AppContext.SetSwitch("Switch.System.Xml.AllowDefaultResolver", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+	options.Limits.MaxRequestBodySize = OneGb;
+});
+
+// Multipart/form-data (IFormFile uploads)
+builder.Services.Configure<FormOptions>(options =>
+{
+	options.MultipartBodyLengthLimit = OneGb;
+
+	// Optional: if you expect very long file names / lots of form keys, etc.
+	// options.ValueLengthLimit = int.MaxValue;
+	// options.MultipartHeadersLengthLimit = int.MaxValue;
+});
 
 var apiOptions = builder.Configuration.GetSection("ApiOptions").Get<PhrApiOptions>()!;
 
