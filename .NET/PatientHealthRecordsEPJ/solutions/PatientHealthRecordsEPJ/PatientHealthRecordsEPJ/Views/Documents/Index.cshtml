@@ -633,10 +633,20 @@
 
 												@if (!string.IsNullOrEmpty(attachment.Creation))
 												{
+													var dto = DateTimeOffset.Parse(
+														attachment.Creation,
+														System.Globalization.CultureInfo.InvariantCulture,
+														System.Globalization.DateTimeStyles.RoundtripKind
+														);
+
+													var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Oslo");
+													var norwayTime = TimeZoneInfo.ConvertTime(dto, tz);
+
 													<div>
-														kl. @DateTime.Parse(attachment.Creation).ToShortTimeString()
+														kl. @norwayTime.ToString("HH:mm")
 													</div>
 												}
+
 											</div>
 
 											@* Kilde-ID *@

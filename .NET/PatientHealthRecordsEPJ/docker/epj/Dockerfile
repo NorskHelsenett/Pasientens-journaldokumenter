@@ -7,6 +7,13 @@ EXPOSE 8443
 
 ENV ASPNETCORE_URLS=http://*:8080
 
+# Install time zone database (required for TimeZoneInfo on Alpine)
+RUN apk add --no-cache tzdata
+
+# (Optional) Set container default timezone for any code that still uses "local time"
+# Your Razor fix should NOT rely on this, but it can prevent surprises elsewhere.
+ENV TZ=Europe/Oslo
+
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
 
