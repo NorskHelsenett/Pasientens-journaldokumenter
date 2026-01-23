@@ -28,4 +28,23 @@ public class ProvideDocumentBundleRequest
 			document.Metadata.SourcePatientInfo = Patient;
 		}
 	}	
+
+	public void Cleanup()
+	{
+		foreach (var document in DocumentCollection.Documents)
+		{
+			if (document.ContentLocation == Document.ContentLocationType.FilePath && File.Exists(document.ContentFilePath))
+			{
+				try
+				{
+					File.Delete(document.ContentFilePath);
+				}
+				catch (Exception ex)
+				{
+					// Log the exception or handle it as needed
+					Console.WriteLine($"Error deleting file {document.ContentFilePath}: {ex.Message}");
+				}
+			}			
+		}
+	}
 }

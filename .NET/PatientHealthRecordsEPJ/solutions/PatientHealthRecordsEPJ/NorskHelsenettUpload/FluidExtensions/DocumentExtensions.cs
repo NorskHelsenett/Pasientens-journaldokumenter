@@ -69,7 +69,7 @@ public static class DocumentExtensions
 
 	public static Document WithContent(this Document document, byte[]? content, bool computeSha)
 	{
-		document.Content = content; 
+		document.ContentInline = content; 
 
 		if (computeSha && content != null)
 		{
@@ -79,7 +79,34 @@ public static class DocumentExtensions
 		}
 		return document;
 	}
+
+	/// <summary>
+	/// Used to save content temporarily to disk for large files and set the ContentFilePath property.
+	/// In order to avoid keeping large files in memory/session and saved to Redis/Valkey.
+	/// </summary>	
+	/// <returns></returns>
+	public static Document WithContentSaveToDisk(this Document document, byte[]? content, bool computeSha)
+	{
+		var tempFolder = "_NorskHelsenettUpload";
+		if (!Directory.Exists(Path.Combine(Path.GetTempPath(), tempFolder)))
+		{
+			Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), tempFolder));
+		}
+
+		var filePath = Path.Combine(Path.GetTempPath(), tempFolder, Guid.NewGuid().ToString());
+		File.WriteAllBytes(filePath, content ?? Array.Empty<byte>());
 		
+		document.ContentFilePath = filePath;
+
+		if (computeSha && content != null)
+		{
+			var sha1 = SHA1.Create();
+
+			document.Hash = sha1.ComputeHash(content);
+		}
+		return document;
+	}
+
 	public static Document WithUniqueId(this Document document, Guid uniqueId)
 	{
 		document.Metadata.UniqueId = uniqueId;

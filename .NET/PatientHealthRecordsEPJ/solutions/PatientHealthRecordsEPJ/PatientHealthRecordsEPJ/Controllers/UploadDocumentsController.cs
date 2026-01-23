@@ -537,7 +537,8 @@ public class UploadDocumentsController : BaseController
 			//Document document = upload.DocumentCollection.SelectedDocument		
 			.WithUniqueId(Guid.NewGuid())
 			.WithFilename(fileName)
-			.WithContent(content, computeSha: true)
+			//.WithContent(content, computeSha: true)
+			.WithContentSaveToDisk(content, computeSha: true) // save to disk to avoid large memory consumption (and large saves to session/Redis/Valkey) with large files
 			.WithMimeType(mimeType)			
 			.WithCreationTime(lastModified)			
 			.WithSize((int)content.Length);        // TODO: make .Size property of type long? 
@@ -1181,8 +1182,9 @@ public class UploadDocumentsController : BaseController
 
 		var apiUri = new Uri(apiUrl); 
 
-		model.RegistryRepositoryBaseUrl = $"{apiUri.Scheme}://{apiUri.Authority}";	// Used to create links to /registry-repository/document-status urls etc
+		model.RegistryRepositoryBaseUrl = $"{apiUri.Scheme}://{apiUri.Authority}";  // Used to create links to /registry-repository/document-status urls etc
 
+		sessionData.BundleRequest?.Cleanup(); // Remove files saved to disk etc
 		sessionData.BundleRequest = null;
 		sessionData.UploadWizardOpenSteps.Clear();
 		sessionData.SaveToSession(session); 

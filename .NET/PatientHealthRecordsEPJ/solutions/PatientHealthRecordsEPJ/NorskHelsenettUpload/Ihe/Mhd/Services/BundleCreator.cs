@@ -60,13 +60,14 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			{
 				// Binary (only if we have in-memory content; if URL is provided, we can skip Binary)
 				string? binaryFullUrl = null;
-				if (doc.Content is { Length: > 0 })
+				var content = doc.Content;  // Get content once from inline or temporary file path
+				if (content is { Length: > 0 })
 				{
 					var binaryId = Guid.NewGuid().ToString();
 					binaryFullUrl = $"urn:uuid:{binaryId}";
-					var binaryEntry = BuildBinaryEntry(doc, binaryId);
+					var binaryEntry = BuildBinaryEntry(doc, content, binaryId);
 
-					if (removeBinaryDataForDisplay && (index > 0 || doc.Content.Length > (2 * 1024 * 1024))) // Only remove data for all documents with index > 0 or if size > 2MB
+					if (removeBinaryDataForDisplay && (index > 0 || content.Length > (2 * 1024 * 1024))) // Only remove data for all documents with index > 0 or if size > 2MB
 					{
 						// If we're going to display the serialized submission bundle as a JSON string to the end user (as in Patient Health Records Test EPJ)
 						// then we can remove the binary data to keep the string short
@@ -211,7 +212,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			};
 		}
 
-		private static Bundle.EntryComponent BuildBinaryEntry(Document doc, string binaryId)
+		private static Bundle.EntryComponent BuildBinaryEntry(Document doc, byte[]? content, string binaryId)
 		{
 			return new Bundle.EntryComponent
 			{
@@ -220,7 +221,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 				{
 					Id = binaryId,
 					Meta = new() { Profile = ["http://hl7.org/fhir/StructureDefinition/Binary"] },
-					Data = doc.Content,
+					Data = content,
 					ContentType = doc.MimeType
 				},
 				Request = new Bundle.RequestComponent

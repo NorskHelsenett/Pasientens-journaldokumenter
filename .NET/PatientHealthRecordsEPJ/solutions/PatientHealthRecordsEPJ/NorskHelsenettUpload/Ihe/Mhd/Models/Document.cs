@@ -1,5 +1,5 @@
-﻿using Hl7.Fhir.Utility;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace NorskHelsenettUpload.Ihe.Mhd.Models;
 
@@ -16,7 +16,13 @@ public enum CustomDocumentRelationshipType // The same as Hl7.Fhir.Model.Documen
 
 public class Document
 {
-    public string? Title { get; set; }
+    public enum ContentLocationType
+    {
+        Inline,        
+        FilePath
+	}
+
+	public string? Title { get; set; }
 	public string? Filename { get; set; }
 	[Required]
     public int? Size { get; set; }
@@ -31,8 +37,51 @@ public class Document
     public string? LanguageCode { get; set; }
     // Content might be specified either by file.Content or file.Url
     public string? Url { get; set; }
-    public byte[]? Content { get; set; }
-    [Required]
+
+	//[BindNever]
+	//[ValidateNever]
+	public ContentLocationType ContentLocation 
+    { 
+        get
+        {
+            if (this.ContentInline != null)
+                return ContentLocationType.Inline;
+            else if (!string.IsNullOrEmpty(this.ContentFilePath))
+                return ContentLocationType.FilePath;
+            else
+				//throw new InvalidOperationException("Either Content or ContentFilePath must be specified.");
+				return ContentLocationType.Inline;
+		}
+	}
+	public byte[]? ContentInline { get; set; }
+	public string? ContentFilePath { get; set; }    // Path to file on disk, used internally when uploading large files
+
+    [JsonIgnore]
+	public byte[]? Content 
+    { 
+        get 
+        {
+            try
+            {
+                var content = this.ContentLocation switch
+
+                {
+                    ContentLocationType.Inline => this.ContentInline,
+                    ContentLocationType.FilePath => System.IO.File.ReadAllBytes(this.ContentFilePath!),
+					//_ => throw new InvalidOperationException("Invalid ContentLocationType."),
+					_ => null
+				};
+
+                return content;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error retrieving content: " + ex.Message, ex);
+			}
+		}
+    }
+	
+	[Required]
     public DocumentEntryMetadata Metadata { get; set; } = new DocumentEntryMetadata();
 
 	public string? ExistingDocumentId { get; set; } // When using relatesTo for replace, transform, add to existing, sign, snapshot, this points to the existing document Id and will be saved in relatesTo.TargetObject
