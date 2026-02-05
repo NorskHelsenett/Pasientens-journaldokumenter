@@ -87,11 +87,11 @@ public class DocumentsController : BaseController
 		return Ok(result.AccessToken);
 	}
 
-	public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date")
+	public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date", bool? useCaching = null)
 	{
-		var loginResult = session.SessionData();
+		var sessionData = session.SessionData();
 
-		if (loginResult.AccessToken == null)
+		if (sessionData.AccessToken == null)
 		{
 			return Redirect("/");
 		}
@@ -103,7 +103,15 @@ public class DocumentsController : BaseController
 		if (!sessionLoginResult.IsAuthenticated)
 			return Redirect("/");
 
+		if (useCaching != null)
+		{
+			sessionLoginResult.UseCaching = useCaching.Value;
+			sessionLoginResult.SaveToSession(session);
+		}
+
 		var model = await GetDocumentReferences(page, pageSize, sort: sort, query: query);
+
+		model.UseCaching = sessionLoginResult.UseCaching;
 
 		return View(model);
 	}
@@ -128,6 +136,7 @@ public class DocumentsController : BaseController
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ"));
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
+		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-bypass-cache", sessionLoginResult.UseCaching ? "false" : "true"));
 
 		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
 
@@ -167,6 +176,7 @@ public class DocumentsController : BaseController
 
 				model.Bundle = bundle;
 				model.NorsCount = apiResult.NorsCount;
+				model.IsRetrievedFromCache = apiResult.IsRetrievedFromCache;
 
 				var operationOutcome = bundle.GetResources().OfType<OperationOutcome>().FirstOrDefault();
 

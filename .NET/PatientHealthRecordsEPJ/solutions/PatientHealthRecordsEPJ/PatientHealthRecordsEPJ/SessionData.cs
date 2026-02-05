@@ -45,7 +45,9 @@ public class SessionData
 	// Used to keep state before and after login
 	public string? AuthorizeState { get; set; } = default!;
 
-	public bool IsUploadAvailable { get; set; } = default!;	// Set to true if correct upload password (Constants.UploadPassword) has been entered
+	public bool IsUploadAvailable { get; set; } = default!; // Set to true if correct upload password (Constants.UploadPassword) has been entered
+
+	public bool UseCaching { get; set; } = true; // true is the default in REST API so that paging can be fast
 
 	//
 	//	Bundle request

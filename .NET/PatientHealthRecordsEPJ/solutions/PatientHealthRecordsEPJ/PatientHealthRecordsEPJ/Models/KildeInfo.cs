@@ -1,3 +1,5 @@
+using System;
+
 namespace PatientHealthRecordsEPJ.Models;
 
 public class KildeInfo
@@ -22,7 +24,8 @@ public class KildeInfo
 	// 1 for Prod, 2 for QA, 3 for Test og 4 for DevTest
 
 	public static List<KildeInfo> KildeListTest { get; set; } = new List<KildeInfo>()
-	{
+	{		
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.1.1", Name = "Local development", AppName = "local-development-sykehus", Url = "", KildeType = KildeTypeEnum.NasjonaltLager, IsShowInUploadWizard = false },
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.15", Name = "Bjarne sykehus", AppName = "bjarne-sykehus", Url = "https://bjarne-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.17", Name = "Kurt sykehus", AppName = "kurt-sykehus", Url = "https://kurt-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.3.18", Name = "Rex sykehus", AppName = "rex-sykehus", Url = "https://rex-sykehus.t-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
@@ -32,6 +35,7 @@ public class KildeInfo
 
 	public static List<KildeInfo> KildeListQA { get; set; } = new List<KildeInfo>()
 	{
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.1.1", Name = "Local development", AppName = "local-development-sykehus", Url = "", KildeType = KildeTypeEnum.NasjonaltLager, IsShowInUploadWizard = false },
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.15", Name = "Bjarne sykehus", AppName = "bjarne-sykehus", Url = "https://bjarne-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.16", Name = "Tim sykehus", AppName = "tim-sykehus", Url = "https://tim-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.2.17", Name = "Kurt sykehus", AppName = "kurt-sykehus", Url = "https://kurt-sykehus.q-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},

@@ -13,6 +13,7 @@ public class ApiResult
 	public string? ContentType { get; set; }
 
 	public int NorsCount { get; set; } // Antall sperrede dokumenter, returnert som X-SecurityLabel-Nors-Count header parameter
+	public bool IsRetrievedFromCache { get; set; } // If true, the response was retrieved from cache. This is determined by the presence of the "NHN-Retrieved-From-Cache" header with value "true" in the response.	
 }
 
 public class ApiCaller
@@ -25,7 +26,7 @@ public class ApiCaller
 		List<KeyValuePair<string, string>> headerKeyValues = null!,
 		List<string> acceptHeaderValues = null!,
 		HttpContent content = null!, 
-		bool isStatus = false
+		bool isReadBodyAsString = false
 		)
 	{
 		var request = new HttpRequestMessage(method, url); 
@@ -93,7 +94,7 @@ public class ApiCaller
 
 		if (response.IsSuccessStatusCode)
 		{
-			if (isStatus)
+			if (isReadBodyAsString)
 			{
 				var responseBody = await response.Content.ReadAsStringAsync();
 
@@ -114,6 +115,13 @@ public class ApiCaller
 					norsCount = Int32.Parse(norsValues.FirstOrDefault()!);
 				}
 
+				bool isRetrievedFromCache = false; 
+
+				if (response.Headers.TryGetValues("NHN-Retrieved-From-Cache", out var retrievedFromCacheValues))
+				{
+					isRetrievedFromCache = Boolean.Parse(retrievedFromCacheValues.FirstOrDefault()!);
+				}
+
 				var responseBody = await response.Content.ReadAsStringAsync();
 
 				return new ApiResult()
@@ -123,6 +131,7 @@ public class ApiCaller
 					Body = responseBody,
 					ContentType = response.Content.Headers.ContentType!.ToString(),
 					NorsCount = norsCount,
+					IsRetrievedFromCache = isRetrievedFromCache
 				};
 			}
 			else

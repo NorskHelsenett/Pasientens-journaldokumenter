@@ -184,6 +184,16 @@
 
 		location.href = url;
 	}
+
+	function onChangeCaching() {
+		const checkbox = document.getElementById("useCaching");
+
+		const useCaching = checkbox.checked;
+
+		const url = "documents?sort=@Model.SortExpression&pageSize=@Model.Pagination?.PageSize&page=" + page + "&useCaching=" + useCaching;
+
+		location.href = url;
+	}
 </script>
 
 <div style="max-width:1900px;margin:0 auto">
@@ -215,6 +225,15 @@
 
 			<div>
 				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Caching:</h5>
+
+			<div>
+				<label for="useCaching"><input type="checkbox" id="useCaching" onchange="onChangeCaching()" @(Model.UseCaching ? "checked" : "")> Bruk caching (3 minutter)</label>
 			</div>
 		</div>
 	</div>
@@ -748,6 +767,23 @@
 								<br />
 							</div>
 						}
+
+						if (Model.IsRetrievedFromCache)
+						{
+							<div>
+								<strong>Hentet fra REST API cache?: <span style="color:green">JA (ikke noen spørring til kildene)</span> </strong>
+								<br />
+								<br />
+							</div>
+						}
+						else
+						{
+							<div>
+								<strong>Hentet fra REST API cache?: <span style="color:goldenrod">NEI (det er gjort spørring til kildene)</span> </strong>
+								<br />
+								<br />
+							</div>
+						}
 					}
 
 					@* @Html.PagedListPager(Model.Bundle.Entry, page => Url.Action("Index", "Document", new { page, sort = Model.SortExpression, pageSize = Model.PageSize }), PagedListRenderOptions.ClassicPlusFirstAndLast) *@
@@ -755,7 +791,10 @@
 					@{
 						var prevPageUrl = $"documents?page={Model.Pagination.PrevPageIndex}&pageSize={Model.Pagination.PageSize}&sort={Model.SortExpression}";
 						var nextPageUrl = $"documents?page={Model.Pagination.NextPageIndex}&pageSize={Model.Pagination.PageSize}&sort={Model.SortExpression}";
-					}
+						{
+							
+						}
+					}			
 
 					<div class="row">
 						<div class="col-md-3">

@@ -72,35 +72,66 @@
 						aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
 				</button>
+
+				<style>
+					.navbar-nav .nav-link:hover {
+						text-decoration: underline;
+					}
+				</style>
+
 				<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 					<ul class="navbar-nav flex-grow-1">
+
+						@{
+							var selectedClass = "fw-bold text-decoration-underline";
+							var selected = "";
+							var path = Context.Request.Path.ToString().ToLower();
+
+							selected = path == "/" ? selectedClass : string.Empty;
+						}
+						
 						<li class="nav-item">
-							<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Hjem</a>
+							<a class="nav-link text-dark @selected" asp-area="" asp-controller="Home" asp-action="Index">Hjem</a>
 						</li>
 						@* <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li> *@
 
 						@if (sessionData.IsAuthenticated)
-						{
+						{							
+
+							selected = path.StartsWith("/documents") ? selectedClass : string.Empty; 
+
 							<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="Documents" asp-action="Index">Journaldokumenter</a>
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Documents" asp-action="Index">Journaldokumenter</a>
 							</li>
 							
+							selected = path.StartsWith("/uploaddocuments") ? selectedClass : string.Empty;
+
 							<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="UploadDocuments" asp-action="Index">Lagre dokument(er)</a>
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="UploadDocuments" asp-action="Index">Lagre dokument(er)</a>
+							</li>
+
+							selected = path.StartsWith("/status") ? selectedClass : string.Empty;
+
+							<li class="nav-item">
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Status" asp-action="Index">Status</a>
+							</li>
+
+							selected = path.StartsWith("/saml") ? selectedClass : string.Empty;
+
+							<li class="nav-item">
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Saml" asp-action="ShowSamlAssertion">SAML billett</a>
+							</li>
+							
+							selected = path.StartsWith("/atna") ? selectedClass : string.Empty; 
+
+							<li class="nav-item">
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="AtnaLog" asp-action="Index">ATNA logg</a>
 							</li>
 
 							<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="Status" asp-action="Index">Status</a>
-							</li>
-
-							<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="Saml" asp-action="ShowSamlAssertion">SAML billett</a>
-							</li>
-
-							<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
 							</li>
 						}
 						@* else                        

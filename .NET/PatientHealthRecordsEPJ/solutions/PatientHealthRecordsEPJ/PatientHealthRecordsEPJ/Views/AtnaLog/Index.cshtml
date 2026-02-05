@@ -1,0 +1,936 @@
+﻿@using Hl7.Fhir.Model
+
+@model AtnaLogViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+
+	string ShowJsonData(string json)
+	{
+		if (string.IsNullOrEmpty(json))
+		{
+			return "- ingen data -";
+		}
+		else
+		{
+			return json;
+		}
+	}
+
+	string Active(bool? active)
+	{
+		return active == true ? "<span class='active'>AKTIV</span>" : "<span class='inactive'>IKKE AKTIV</span>";
+	}
+
+	string Blocked(bool? blocked)
+	{
+		return blocked == true ? "<span class='active'>JA, ER BLOKKERT</span>" : "<span class='inactive'>NEI, IKKE BLOKKERT</span>";
+	}
+
+	string NoUrn(string? v)
+	{
+		if (string.IsNullOrWhiteSpace(v))
+			return string.Empty;
+		return v.StartsWith("urn:", StringComparison.OrdinalIgnoreCase) ? v.Split(':').Last() : v;
+	}
+
+	static string? TryGetContainedId(string? reference)
+	{
+		if (string.IsNullOrWhiteSpace(reference))
+			return null;
+		if (!reference.StartsWith("#", StringComparison.Ordinal))
+			return null;
+		return reference.Length > 1 ? reference.Substring(1) : null;
+	}
+
+	static Resource? FindContainedResourceById(IEnumerable<Resource>? contained, string? id)
+	{
+		if (contained == null || string.IsNullOrWhiteSpace(id))
+			return null;
+		return contained.FirstOrDefault(r => string.Equals(r.Id, id, StringComparison.Ordinal));
+	}
+
+	static string? FormatHumanName(HumanName? name)
+	{
+		if (name == null)
+			return null;
+		var given = name.Given != null ? string.Join(" ", name.Given.Where(g => !string.IsNullOrWhiteSpace(g))) : string.Empty;
+		var family = name.Family ?? string.Empty;
+		var full = (given + " " + family).Trim();
+		return string.IsNullOrWhiteSpace(full) ? null : full;
+	}
+
+	static string? FindDeviceIdentifierValue(AuditEvent auditEvent, string identifierTypeText)
+	{
+		var device = auditEvent.Contained?.OfType<Device>().FirstOrDefault();
+		if (device?.Identifier == null)
+			return null;
+		return device.Identifier.FirstOrDefault(i => string.Equals(i.Type?.Text, identifierTypeText, StringComparison.OrdinalIgnoreCase))?.Value;
+	}
+
+	static (string? name, string? id)? GetPatientText(AuditEvent auditEvent)
+	{
+		var entity = auditEvent.Entity;
+		if (entity == null || entity.Count == 0)
+			return (null, null);
+
+		var patientEntity = entity.FirstOrDefault(e =>
+			e.Role?.Code == "1" ||
+			e.Role?.Display?.Contains("Patient", StringComparison.OrdinalIgnoreCase) == true ||
+			e.What?.Reference?.Contains("Patient/", StringComparison.OrdinalIgnoreCase) == true ||
+			e.What?.Reference?.StartsWith("#patient", StringComparison.OrdinalIgnoreCase) == true);
+
+		if (patientEntity?.What == null)
+			return (null, null);
+
+		var containedId = TryGetContainedId(patientEntity.What.Reference);
+		var containedPatient = FindContainedResourceById(auditEvent.Contained, containedId) as Patient;
+		if (containedPatient != null)
+		{
+			var name = FormatHumanName(containedPatient.Name?.FirstOrDefault());
+			var id = containedPatient.Identifier?.FirstOrDefault()?.Value;
+			//if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(id))
+				//return $"{name} ({id})";
+			return (name, id);
+		}
+
+		return (patientEntity.What.Display
+			?? patientEntity.What.Identifier?.Value
+			?? patientEntity.What.Reference, patientEntity.What.Identifier?.Value);
+	}
+
+	static (string Title, List<(string Type, string? Value)> Details) GetDocumentInfo(AuditEvent auditEvent)
+	{
+		var entity = auditEvent.Entity;
+		if (entity == null || entity.Count == 0)
+			return ("-", new());
+
+		var docEntity = entity.FirstOrDefault(e =>
+			e.What?.Reference?.StartsWith("DocumentReference/", StringComparison.OrdinalIgnoreCase) == true ||
+			e.Role?.Display?.Contains("Report", StringComparison.OrdinalIgnoreCase) == true ||
+			e.Role?.Code == "3" ||
+			e.Type?.Code == "2");
+
+		if (docEntity == null)
+			return ("-", new());
+
+		string? titleFromDetail = docEntity.Detail?.FirstOrDefault(d => string.Equals(d.Type, "title", StringComparison.OrdinalIgnoreCase))?.Value?.ToString();
+		var title = titleFromDetail
+			?? docEntity.Name
+			?? docEntity.What?.Display
+			?? docEntity.What?.Reference
+			?? "-";
+
+		var details = new List<(string Type, string? Value)>();
+		if (docEntity.Detail != null)
+		{
+			foreach (var d in docEntity.Detail)
+			{
+				var value = d.Value?.ToString();
+				details.Add((d.Type ?? "-", value));
+			}
+		}
+
+		if (docEntity.What?.Reference != null)
+			details.Insert(0, ("reference", docEntity.What.Reference));
+
+		return (title, details);
+	}
+
+	static (string? OrgNrParent, string? ClientName, string? ClientId) GetClientInfo(AuditEvent auditEvent)
+	{
+		var entity = auditEvent.Entity;
+		if (entity == null || entity.Count == 0)
+			return (null, null, null);
+
+		var clientEntity = entity.FirstOrDefault(e =>
+			e.Role?.Code == "13" ||
+			e.Role?.Display?.Contains("Security", StringComparison.OrdinalIgnoreCase) == true ||
+			string.Equals(e.What?.Display, "client", StringComparison.OrdinalIgnoreCase));
+
+		if (clientEntity?.Detail == null || clientEntity.Detail.Count == 0)
+			return (null, null, null);
+
+		string? GetDetail(string type) => clientEntity.Detail
+			.FirstOrDefault(d => string.Equals(d.Type, type, StringComparison.OrdinalIgnoreCase))
+			?.Value?.ToString();
+
+		return (
+			GetDetail("orgnr_parent"),
+			GetDetail("client_name"),
+			GetDetail("client_id")
+		);
+	}
+}
+
+<style>
+	.head {
+		font-size: 14px;
+		font-style: italic;
+	}
+
+	tr.document-item {
+		cursor: pointer;
+	}
+
+	tr.audit-event-detail {
+		display: none;
+	}
+
+	iframe {
+		width: 100%;
+		height: 800px;
+		/* border:none;  */
+		border: 1px solid #aaa;
+	}
+
+	textarea {
+		position: relative;
+		color: black;
+		height: auto;
+	}
+
+	.active {
+		color: green;
+	}
+
+	.inactive {
+		color: red;
+	}
+
+	tr.document-item[aria-expanded='true'] {
+		background-color: #f2f6ff;
+	}
+
+	.audit-event-detail td {
+		background-color: #fbfbfb;
+	}
+
+</style>
+
+<script>
+	function onChangePageSize() {
+
+		const selectPageSize = document.getElementById("pageSize");
+
+		const pageSize = parseInt(selectPageSize.value);
+
+		const url = "AtnaLog?page=@Model.Pagination?.PrevPageIndex&sort=@Model.SortExpression&pageSize=" + pageSize;
+
+		location.href = url;
+	}
+
+	function onChangePage() {
+
+		const selectPage = document.getElementById("page");
+
+		const page = parseInt(selectPage.value);
+
+		const selectSource = document.getElementById("selectSource");
+
+		const homeCommunityId = selectSource.value;
+
+		const url = "AtnaLog?sort=@Model.SortExpression&pageSize=@Model.Pagination?.PageSize&page=" + page + "&homeCommunityId=" + homeCommunityId;;
+
+		location.href = url;
+	}
+
+	function onChangeSource() {
+
+		const selectSource = document.getElementById("selectSource");
+
+		const homeCommunityId = selectSource.value;
+
+		//const url = "AtnaLog?sort=@Model.SortExpression&pageSize=@Model.Pagination?.PageSize&page=" + page + "&homeCommunityId=" + homeCommunityId;
+		const url = "AtnaLog?sort=@Model.SortExpression&pageSize=@Model.Pagination?.PageSize" + "&homeCommunityId=" + homeCommunityId;
+
+		location.href = url;
+	}
+</script>
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">Audit Logg (ATNA) - hentet fra AuditEvent-endepunkt i REST API</h4>
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	<br />
+
+	<div style="background-color:goldenrod; padding:10px; border-radius:4px">
+
+		<span>Denne loggen viser kun hendelser fra NHN nasjonalt lager.</span>	
+
+	</div>
+
+	<br />
+
+
+	@* <h4>Logg hentet fra AuditEvent-endepunkt i REST API: </h4> *@
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					Error: @Model.ErrorMessage
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6">
+				@* 	<table class="table">
+						<tr>
+							<td>hasReservationKjernejournal</td>
+							<td><strong>@Model.Status.PrivacySetting.HasReservationKjernejournal.ToString()</strong></td>
+						</tr>
+						<tr>
+							<td>isRestricted</td>
+							<td><strong>@Model.Status.PrivacySetting.IsRestricted.ToString()</strong></td>
+						</tr>
+						<tr>
+							<td>isBlocked</td>
+							<td><strong>@Model.Status.PrivacySetting.IsBlocked.ToString()</strong></td>							
+							<td>Dette er sjekket: @sessionData.Name (HPR: @sessionData.HprNumber) eller alt helsepersonell</td>	
+						</tr>
+					</table> *@
+				</div>
+			</div>
+		</div>		
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+
+					@{
+						var haveAnyNasjonaltLager = false;
+						var haveAnyRelatesTo = false;
+					}
+
+					@{
+						List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+						{
+							"test" => KildeInfo.KildeListTest,
+							"qa" => KildeInfo.KildeListQA,
+							_ => null
+						};
+					}
+
+					<div>
+						<strong>Velg instans av nasjonalt lager: </strong>
+						<select id="selectSource" onchange="onChangeSource()">
+							<option value="0">-- Alle --</option>
+							@foreach (var kilde in kildeList)
+							{
+								var _checked = kilde.HomeCommunityId == Model.SelectedHomeCommunityId ? "selected" : string.Empty;	
+
+								if (kilde.HomeCommunityId == Model.SelectedHomeCommunityId)
+								{
+									<option value="@kilde.HomeCommunityId" selected>@kilde.HomeCommunityId - @kilde.Name</option>
+								}
+								else
+								{
+									<option value="@kilde.HomeCommunityId">@kilde.HomeCommunityId - @kilde.Name</option>
+								}								
+							}
+
+						</select>
+						<br />
+						<br />
+					</div>
+
+					<table class="table table-striped table-hover table-sm">
+						<thead>
+							<tr>
+								@{
+									var trimmedSort = Model.SortExpression.TrimStart('-');
+									var ascending = !Model.SortExpression.StartsWith("-");
+									var sortUrl = string.Empty;
+								}
+
+								<th>
+									@{
+
+										string CreateSortUrl(string sort, bool ascending)
+										{
+											var trimmedSort = Model.SortExpression.TrimStart('-');
+
+											if (trimmedSort == sort)
+											{
+												if (ascending)
+												{
+													sort = "-" + sort;
+												}
+												else
+												{
+													sort = sort;
+												}
+											}
+
+											sortUrl = $"documents?page={Model.Pagination.PrevPageIndex}&pageSize={Model.Pagination.PageSize}&sort={sort}";
+
+											// sortUrl = ascending ?
+											// 	$"documents?page={Model.Pagination.PrevPageIndex}&pageSize={Model.Pagination.PageSize}&sort={sort}":
+											// 	$"documents?page={Model.Pagination.PrevPageIndex}&pageSize={Model.Pagination.PageSize}&sort={sort}";
+
+											return sortUrl;
+										}
+
+										string SortIcon(string sort, bool ascending)
+										{
+											var trimmedSort = Model.SortExpression.TrimStart('-');
+
+											if (trimmedSort != sort)
+												return string.Empty;
+
+											return ascending ? "<i class='bi-chevron-up'> </i>" : "<i class='bi-chevron-down'> </i>";
+										}
+									}
+
+									@{
+										var dateSortUrl = CreateSortUrl("date", ascending);
+										var nameSortUrl = CreateSortUrl("name", ascending);
+										var typeSortUrl = CreateSortUrl("type", ascending);
+										var securityLabelSortUrl = CreateSortUrl("securityLabel", ascending);
+										var cateogorySortUrl = CreateSortUrl("category", ascending);
+										var departmentSortUrl = CreateSortUrl("department", ascending);
+										var organizationSortUrl = CreateSortUrl("organization", ascending);
+									}
+
+									<a href="@dateSortUrl">
+										Dato @Html.Raw(SortIcon("date", ascending))
+									</a>
+
+								</th>
+								<th>
+									Hendelse
+								</th>
+								<th>
+									Resultat
+								</th>
+								<th>
+									Handling
+								</th>
+								<th>Klient</th>
+								<th>
+									Bruker
+								</th>
+								<th>
+									Kilde
+								</th>
+								<th>
+									Destinasjon
+								</th>
+								<th>
+									Pasient
+								</th>
+								<th>
+									Dokument
+								</th>
+								<th>
+									Kilde-ID
+								</th>
+							</tr>
+
+						</thead>
+						<tbody>
+							@foreach (var entry in Model.Entries)
+							{
+								var auditEvent = entry.Resource as AuditEvent;
+
+								if (auditEvent == null)
+									continue;
+
+								var typeSystem = auditEvent.Type?.System;
+								var typeCode = auditEvent.Type?.Code;
+								var typeDisplay = auditEvent.Type?.Display;
+
+								var action = auditEvent.Action;
+								var recorded = auditEvent.Recorded;
+								var outcome = auditEvent.Outcome;
+
+								var purposeOfEvent = auditEvent.PurposeOfEvent;
+								var agent = auditEvent.Agent;
+								var source = auditEvent.Source;
+								var entity = auditEvent.Entity;
+
+								var rowId = Guid.NewGuid().ToString();
+
+								var recordedText = recorded != null ? recorded.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
+								var eventText = !string.IsNullOrWhiteSpace(typeDisplay)
+									? typeDisplay
+									: (!string.IsNullOrWhiteSpace(typeCode) ? typeCode : "AuditEvent");
+
+
+								var outcomeEnumText = outcome != null ? outcome.ToString() : "-";
+								var outcomeText = string.Empty; 
+								var outComeTextColor = "green";
+								var actionEnumText = action?.ToString() ?? "-";
+								var actionText = string.Empty;
+
+								switch(outcome)
+								{
+									case AuditEvent.AuditEventOutcome.N0: // Success
+										{
+											outcomeText = "Success";
+											outComeTextColor = "green";
+											break;
+										}
+										
+									case AuditEvent.AuditEventOutcome.N4: // Minor failure
+										{
+											outcomeText = "Minor failure";
+											outComeTextColor = "orange";
+											break;												
+										}
+
+									case AuditEvent.AuditEventOutcome.N8: // Serious failure
+										{
+											outcomeText = "Serious failure";
+											outComeTextColor = "red";
+											break;
+										}
+
+									case AuditEvent.AuditEventOutcome.N12: // Major failure
+										{
+											outcomeText = "Major failure";
+											outComeTextColor = "darkred";
+											break;
+										}
+								
+								};	
+
+								switch (action)
+								{
+									case AuditEvent.AuditEventAction.C: // Create
+										{
+											actionText = "Create";
+											break;
+										}
+									case AuditEvent.AuditEventAction.R: // Read
+										{
+											actionText = "Read";
+											break;
+										}
+									case AuditEvent.AuditEventAction.U: // Update
+										{
+											actionText = "Update";
+											break;
+										}
+									case AuditEvent.AuditEventAction.D: // Delete
+										{
+											actionText = "Delete";
+											break;
+										}
+									case AuditEvent.AuditEventAction.E: // Execute
+										{
+											actionText = "Execute";
+											break;
+										}
+								}
+
+								var outcomeStyle = $"color:{outComeTextColor};font-weight:bold";
+
+								var agentComponent = agent?.FirstOrDefault();
+								var agentWhoRef = agentComponent?.Who?.Reference;
+								var agentContainedId = TryGetContainedId(agentWhoRef);
+								var agentContainedResource = FindContainedResourceById(auditEvent.Contained, agentContainedId);
+
+								string? agentNameFromContained = null;
+								string? agentRoleFromContained = null;
+
+								if (agentContainedResource is PractitionerRole pr)
+								{
+									var practitionerId = TryGetContainedId(pr.Practitioner?.Reference);
+									var practitioner = FindContainedResourceById(auditEvent.Contained, practitionerId) as Practitioner;
+									agentNameFromContained = FormatHumanName(practitioner?.Name?.FirstOrDefault());
+
+									var orgId = TryGetContainedId(pr.Organization?.Reference);
+									var org = FindContainedResourceById(auditEvent.Contained, orgId) as Organization;
+									var locationId = TryGetContainedId(pr.Location?.FirstOrDefault()?.Reference);
+									var locationOrg = FindContainedResourceById(auditEvent.Contained, locationId) as Organization;
+
+									var roleParts = new List<string>();
+									if (!string.IsNullOrWhiteSpace(locationOrg?.Name))
+										roleParts.Add(locationOrg!.Name);
+									if (!string.IsNullOrWhiteSpace(org?.Name) && org?.Name != locationOrg?.Name)
+										roleParts.Add(org!.Name);
+									agentRoleFromContained = roleParts.Count > 0 ? string.Join(" / ", roleParts) : null;
+								}
+								else if (agentContainedResource is Practitioner p)
+								{
+									agentNameFromContained = FormatHumanName(p.Name?.FirstOrDefault());
+								}
+
+								var agentName = agentNameFromContained
+									?? agentComponent?.Who?.Display
+									?? agentComponent?.Name
+									?? "-";
+
+								var agentRole = agentRoleFromContained
+									?? agentComponent?.Role?.FirstOrDefault()?.Text
+									?? agentComponent?.Role?.FirstOrDefault()?.Coding?.FirstOrDefault()?.Display
+									?? string.Empty;
+
+								var sourceSite = source?.Site ?? "-";
+								var sourceObserver = source?.Observer?.Display ?? source?.Observer?.Reference ?? string.Empty;
+								var sourceText = string.IsNullOrWhiteSpace(sourceObserver) ? sourceSite : $"{sourceSite} ({sourceObserver})";
+
+								var destinationText = auditEvent.Agent?.FirstOrDefault(a => a.Requestor == false)?.Network?.Address
+									?? auditEvent.Agent?.FirstOrDefault(a => a.Requestor == false)?.Who?.Display
+									?? "-";
+
+								var patientNameAndId = GetPatientText(auditEvent) ?? ("-", "-");
+								var patientName = patientNameAndId.name;
+								var patientId = patientNameAndId.id;
+
+								var documentInfo = GetDocumentInfo(auditEvent);
+								var documentText = documentInfo.Title;
+
+								var clientInfo = GetClientInfo(auditEvent);
+								@* var clientText = !string.IsNullOrWhiteSpace(clientInfo.ClientName) && !string.IsNullOrWhiteSpace(clientInfo.OrgNrParent)
+									? $"{clientInfo.OrgNrParent} / {clientInfo.ClientName}"
+									: (clientInfo.ClientName ?? clientInfo.OrgNrParent ?? "-"); *@
+
+								var clientText = !string.IsNullOrWhiteSpace(clientInfo.ClientName) && !string.IsNullOrWhiteSpace(clientInfo.OrgNrParent)
+								? $"{clientInfo.ClientName}"
+								: (clientInfo.ClientName ?? clientInfo.OrgNrParent ?? "-");
+
+								var repositoryUniqueId = FindDeviceIdentifierValue(auditEvent, "repositoryUniqueId")
+									?? FindDeviceIdentifierValue(auditEvent, "repository")
+									?? string.Empty;
+								var homeCommunityId = FindDeviceIdentifierValue(auditEvent, "homeCommunityId")
+									?? FindDeviceIdentifierValue(auditEvent, "home")
+									?? string.Empty;
+
+								var details = auditEvent.Entity?.SelectMany(e => e.Detail ?? Enumerable.Empty<AuditEvent.DetailComponent>()).ToList();
+								if (details?.Count > 0)
+								{
+									haveAnyRelatesTo = true;
+								}
+
+								//var destination = auditEvent.Entity?.FirstOrDefault(e => e.Role == AuditEvent.AuditEventEntityRole.Destination);									
+
+								var kildeType = "";
+								var kilde = "";								
+
+								var kildeInfo = kildeList?.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId));
+
+								<tr class="document-item" data-id="@rowId" onclick="onDocumentRowClick(event)" aria-expanded="false">
+									<td>
+										@recordedText
+									</td>
+									<td>
+										@eventText
+										@if (!string.IsNullOrWhiteSpace(typeCode))
+										{
+											<div class="head">@typeCode</div>
+										}
+									</td>
+									<td>
+										<div style="@outcomeStyle">
+											@outcomeText (@outcomeEnumText)
+										</div>
+									</td>
+									<td>
+										@actionText (@actionEnumText)
+									</td>
+									<td>@clientText</td>
+									<td>
+										@agentName
+										@if (!string.IsNullOrWhiteSpace(agentRole))
+										{
+											<div class="head">@agentRole</div>
+										}
+									</td>
+									<td>
+										@{
+											if (kildeInfo != null)
+											{
+												//kildeType = "Nasjonalt lager";
+												kildeType = "NL";
+												kilde = kildeInfo.Name;
+
+												haveAnyNasjonaltLager = true;
+
+												// <div>@kildeType <span style="color:darkolivegreen">(@kilde)</span></div>
+												<div><span style="color:darkolivegreen">@kilde</span></div>
+											}
+											else
+											{
+												<div>-</div>
+											}
+										}
+									</td>
+									<td>
+										@destinationText
+									</td>
+									<td>
+										@patientName
+									</td>
+									<td>
+										@documentText
+									</td>
+									<td>
+										@repositoryUniqueId.Replace("urn:oid:", "")
+									</td>
+								</tr>
+								<tr class="audit-event-detail" data-id="@rowId">
+									<td colspan="100">
+										<div class="p-2">
+											<div class="head">Detaljer</div>
+											<table class="table table-sm mb-0">
+												<tbody>
+													<tr>
+														<td style="width:220px"><strong>Type</strong></td>
+														<td>@typeSystem / @typeCode (@typeDisplay)</td>
+													</tr>
+													<tr>
+														<td><strong>Tidspunkt</strong></td>
+														<td>@recordedText</td>
+													</tr>
+													<tr>
+														<td><strong>Resultat / handling</strong></td>
+														<td>@outcomeText / @actionText</td>
+													</tr>
+													<tr>
+														<td><strong>Bruker</strong></td>
+														<td>@agentName @(!string.IsNullOrWhiteSpace(agentRole) ? $"({agentRole})" : "")</td>
+													</tr>
+												<tr>
+													<td><strong>Klient</strong></td>
+													<td>														
+														<div>@clientText</div>
+														<div>Parent Organization Number: @clientInfo.OrgNrParent</div>
+														@if (!string.IsNullOrWhiteSpace(clientInfo.ClientId))
+														{
+															<div class="head">client_id: @clientInfo.ClientId</div>
+														}
+													</td>
+												</tr>
+													<tr>
+														<td><strong>Kilde</strong></td>
+														<td>@* @sourceText *@
+
+															@{
+																if (kildeInfo != null)
+																{
+																	//kildeType = "Nasjonalt lager";
+																	kildeType = "NL";
+																	kilde = kildeInfo.Name;																	
+
+																	// <div>@kildeType <span style="color:darkolivegreen">(@kilde)</span></div>
+																	<div><span style="color:darkolivegreen">@kilde</span></div>
+																}
+																else
+																{
+																	<div>-</div>
+																}
+															}
+
+														</td>
+													</tr>
+													<tr>
+														<td><strong>Destinasjon</strong></td>
+														<td>@destinationText</td>
+													</tr>
+													<tr>
+														<td><strong>Pasient</strong></td>
+														<td>@patientName (@sessionData.PatientId)
+															<div>
+																<strong>Pasient Id i kilde (@kildeInfo.Name): @patientId</strong>
+															</div>																													
+														</td>
+													</tr>
+													<tr>
+														<td><strong>Dokument</strong></td>
+														<td>@documentText</td>
+													</tr>
+													<tr>
+														<td><strong>Dokumentdetaljer</strong></td>
+														<td>
+															@if (documentInfo.Details.Count > 0)
+															{
+																foreach (var dd in documentInfo.Details)
+																{
+																	<div><strong>@dd.Type</strong>: @dd.Value</div>
+																}
+															}
+															else
+															{
+																<span>-</span>
+															}
+
+															@* <div><strong>repositoryUniqueId</strong>: @repositoryUniqueId</div> *@
+														</td>
+													</tr>
+													<tr>
+														<td><strong>Kilde-ID</strong></td>
+														<td>@repositoryUniqueId.Replace("urn:oid:", "") (repositoryUniqueId)</td>
+													</tr>
+													<tr>
+														<td><strong>Purpose of event</strong></td>
+														<td>
+															@if (purposeOfEvent?.Count > 0)
+															{
+																foreach (var po in purposeOfEvent)
+																{
+																	var c = po.Coding?.FirstOrDefault();
+																	<div>@(po.Text ?? c?.Display ?? c?.Code ?? "-")</div>
+																}
+															}
+															else
+															{
+																<span>-</span>
+															}
+													</td>
+												</tr>
+												<tr>
+													<td><strong>Entities</strong></td>
+													<td>
+														@if (entity?.Count > 0)
+														{
+															foreach (var e in entity)
+															{
+																var eType = e.Type?.Display ?? e.Type?.Code;
+																var eWhat = e.What?.Display ?? e.What?.Reference;
+																<div>
+																	<strong>@(eType ?? "Entity")</strong>: @(e.Name ?? eWhat ?? "-")
+																</div>
+															}
+														}
+														else
+														{
+															<span>-</span>
+														}
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+									</td>
+								</tr>
+
+							}
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
+
+					@{
+						var prevPageUrl = $"AtnaLog?page={Model.Pagination.PrevPageIndex}&pageSize={Model.Pagination.PageSize}&sort={Model.SortExpression}&homeCommunityId={Model.SelectedHomeCommunityId}";
+						var nextPageUrl = $"AtnaLog?page={Model.Pagination.NextPageIndex}&pageSize={Model.Pagination.PageSize}&sort={Model.SortExpression}&homeCommunityId={Model.SelectedHomeCommunityId}";
+					}
+
+					<div class="row">
+						<div class="col-md-3">
+							<a class="btn btn-primary w-100" href="@prevPageUrl">Forrige</a>
+						</div>
+						<div class="col-md-3">
+							Side <input id="page" type="text" value="@Model.Pagination.CurrentPageIndex" onchange="onChangePage()" /> av @Model.Pagination.PageCount
+						</div>
+						<div class="col-md-3">
+							<select id="pageSize" name="pageSize" onchange="onChangePageSize()" asp-for="Pagination.PageSize">
+
+								<option value="10">10 rader per side</option>
+								<option value="20">20 rader per side</option>
+								<option value="25">25 rader per side</option>
+								<option value="50">50 rader per side</option>
+							</select>
+						</div>
+						<div class="col-md-3">
+							<a class="btn btn-primary w-100" href="@nextPageUrl">Neste</a>
+						</div>
+
+					</div>
+
+					
+				</div>
+			</div>
+
+			
+
+		</div>
+	}
+</div>
+
+<script>
+	function onDocumentRowClick(event) {
+		var target = event.target;
+		if (target && (target.closest('a, button, input, textarea, select, label'))) {
+			return;
+		}
+
+		var row = event.currentTarget;
+		var id = row.getAttribute('data-id');
+		if (!id) return;
+
+		var detailRow = document.querySelector("tr.audit-event-detail[data-id='" + id + "']");
+		if (!detailRow) return;
+
+		var isExpanded = row.getAttribute('aria-expanded') === 'true';
+		row.setAttribute('aria-expanded', (!isExpanded).toString());
+		detailRow.style.display = isExpanded ? 'none' : 'table-row';
+	}
+</script>
+
+
+@* <script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+	const containerHighlighted = document.querySelector('.container-highlighted');
+
+	if (textarea !== undefined)
+	{
+		textarea.addEventListener('input', updateHighlighting);
+		textarea.addEventListener('scroll', syncScroll);
+
+		function updateHighlighting() {
+		const xml = textarea.value;
+		highlighted.innerHTML = applySyntaxHighlighting(xml);
+		}
+
+		function applySyntaxHighlighting(xml) {
+		return xml.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+		return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+		});
+		}
+
+		function highlightAttributes(attributes) {
+		return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+		return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+		});
+		}
+
+		function syncScroll() {
+		highlighted.scrollTop = textarea.scrollTop;
+		highlighted.scrollLeft = textarea.scrollLeft;
+		}
+
+		
+		updateHighlighting();
+	}
+</script>
+ *@

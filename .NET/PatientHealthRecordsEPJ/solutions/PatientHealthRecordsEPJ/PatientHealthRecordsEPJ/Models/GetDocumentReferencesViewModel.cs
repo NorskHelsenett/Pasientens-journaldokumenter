@@ -13,6 +13,8 @@ public class GetDocumentReferencesViewModel
 	public int PageSize { get; set; }
 	public string SortExpression { get; set; }
 
+	public bool UseCaching { get; set; }
+
 	public int BlockedCount { get; set; }
 
 	public Pagination Pagination { get; set; }
@@ -20,6 +22,7 @@ public class GetDocumentReferencesViewModel
 	public ApiResult ApiResult { get; set; }
 
     public int? NorsCount { get; set; } // Antall sperrede dokumenter
+	public bool IsRetrievedFromCache { get; set; } // If true, the response was retrieved from cache. This is determined by the presence of the "NHN-Retrieved-From-Cache" header with value "true" in the response.
 
 	public List<UnavailableLocation> UnavailableLocations { get; set; } = new List<UnavailableLocation>(); 
 }
