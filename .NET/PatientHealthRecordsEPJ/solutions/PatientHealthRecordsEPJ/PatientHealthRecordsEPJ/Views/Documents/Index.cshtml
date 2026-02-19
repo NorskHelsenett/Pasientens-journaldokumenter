@@ -142,6 +142,11 @@
 		display: none;
 	}
 
+	.securityLabel
+	{
+		color: #015945;
+	}
+
 </style>
 
 <script>
@@ -428,6 +433,7 @@
 
 								var securityLabels = document.SecurityLabel;
 
+								var documentReferenceId = document.Id;
 								var documentUniqueId = document.MasterIdentifier.Value; 
 								var homeCommunityId = GetHomeCommunityId(document);
 								var repositoryUniqueId = GetRepositoryUniqueId(document);
@@ -522,7 +528,7 @@
 										{
 											@foreach (var _coding in securityLabel.Coding)
 											{
-												<span style="color:red">
+												<span class="securityLabel">
 													@_coding.Code &nbsp;
 												</span>
 											}
@@ -725,7 +731,8 @@
 
 												//var openUrl = $"document{uri.Query}"; // Kaller DocumentController->Index metoden for å vise dokument
 												var openUrl = $"document?url={System.Web.HttpUtility.UrlEncode(uri.ToString())}"; // Kaller DocumentController->Index metoden for å vise dokument
-												var deleteUrl = $"documents/DeleteDocument?documentUniqueId={documentUniqueId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->Delete metoden for å slette dokument
+												//var deleteUrl = $"documents/DeleteDocument?documentUniqueId={documentUniqueId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->Delete metoden for å slette dokument
+												var deleteUrl = $"documents/DeleteDocument?id={documentReferenceId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->Delete metoden for å slette dokument
 											}
 											<div>
 												<a class="btn btn-primary" href="@openUrl" target="_blank">Åpne</a>

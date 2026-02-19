@@ -1,11 +1,12 @@
 using Hl7.Fhir.Model;
+using System.Security.Principal;
 using System.Text.Json.Serialization;
 
 namespace PatientHealthRecordsEPJ.Models; 
 
 public class GetDocumentReferencesViewModel
-    {
-        public bool IsSuccess  { get; set; }
+{
+	public bool IsSuccess  { get; set; }
 	public string ErrorMessage { get; set; }
 
 	public Bundle Bundle { get; set; }
@@ -23,6 +24,9 @@ public class GetDocumentReferencesViewModel
 
     public int? NorsCount { get; set; } // Antall sperrede dokumenter
 	public bool IsRetrievedFromCache { get; set; } // If true, the response was retrieved from cache. This is determined by the presence of the "NHN-Retrieved-From-Cache" header with value "true" in the response.
+
+
+	public string? DeletedDocumentReferenceId { get; set; }
 
 	public List<UnavailableLocation> UnavailableLocations { get; set; } = new List<UnavailableLocation>(); 
 }

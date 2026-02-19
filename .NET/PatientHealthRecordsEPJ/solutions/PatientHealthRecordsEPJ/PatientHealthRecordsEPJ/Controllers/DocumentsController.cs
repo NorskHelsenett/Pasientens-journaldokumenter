@@ -236,12 +236,12 @@ public class DocumentsController : BaseController
 			return model;
 		}
 	}
-
-	public async Task<IActionResult> DeleteDocument(string documentUniqueId, string homeCommunityId)	
+	
+	public async Task<IActionResult> DeleteDocument(string id, string homeCommunityId)
 	{
 		var sessionData = session.SessionData();
-
-		documentUniqueId = documentUniqueId.NoUrn();
+		
+		id = id.NoUrn();
 		homeCommunityId = homeCommunityId.NoUrn(); 
 
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
@@ -250,16 +250,16 @@ public class DocumentsController : BaseController
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
 		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
-
-		var apiUrl = $"{_apiEnvironment.DeleteDocumentUrl}/{documentUniqueId}?homeCommunityId={homeCommunityId}";
 		
+		var apiUrl = $"{_apiEnvironment.DeleteDocumentUrl}/{id}?homeCommunityId={homeCommunityId}";
+
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Delete,
 			apiUrl,
 			sessionData.AccessToken!,
 			document: false,
 			headerKeyValues: headerKeyValues
 			);
-
+		
 		if (apiResult.IsSuccess)
 		{
 			try
@@ -283,19 +283,18 @@ public class DocumentsController : BaseController
 								var system = firstCoding.System;
 								var code = firstCoding.Code;
 								var display = firstCoding.Display;
-							}
-
-							if (issue.Diagnostics != null)
-							{
-								var unavailableLocation = JsonSerializer.Deserialize<UnavailableLocation>(issue.Diagnostics);
-
-								//model.UnavailableLocations.Add(unavailableLocation!);
-							}
+							}							
 						}
 					}
-				}				
-				
-				//return model;
+				}
+
+				GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel();
+				model.IsSuccess = true;
+				model.DeletedDocumentReferenceId = id; 
+				//model.ErrorMessage = $"Could not delete document {id}";
+				model.ApiResult = apiResult;
+				model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
+				return View("DeleteConfirmation", model);
 			}
 			catch (Hl7.Fhir.Serialization.DeserializationFailedException e)
 			{
@@ -304,20 +303,24 @@ public class DocumentsController : BaseController
 					Debug.WriteLine(ex.Message);
 				}
 
-				//model.IsSuccess = false;
-
-				//return model;
+				GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel();
+				model.IsSuccess = false;
+				model.ErrorMessage = $"Could not delete document {id}";
+				model.ApiResult = apiResult;
+				model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
+				return View("Index", model);
 			}
 		}
 		else
 		{
-			/*model.IsSuccess = false;
-			model.ErrorMessage = "Could not retrieve documents";
+			GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel(); 
+			model.IsSuccess = false;
+			model.ErrorMessage = $"Could not delete document {id}";
 			model.ApiResult = apiResult;
 			model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
-			return model; */
+			return View("Index", model); 
 		}
 
-		return Redirect("/documents"); 
+		//return Redirect("/documents"); 
 	}
 }
