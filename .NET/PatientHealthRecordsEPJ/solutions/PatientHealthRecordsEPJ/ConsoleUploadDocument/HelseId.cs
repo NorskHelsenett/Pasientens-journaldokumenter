@@ -150,7 +150,7 @@ public class DPoPProofCreator(IOptions<HelseIdOptions> options, ILogger<DPoPProo
             // ath: hash of the access token. The value MUST be the result of a base64url encoding
             // the SHA-256 [SHS] hash of the ASCII encoding of the associated access token's value.
             var hash = SHA256.HashData(Encoding.ASCII.GetBytes(accessToken));
-            var ath = Base64Url.Encode(hash);
+            var ath = Base64UrlEncoder.Encode(hash);
 
             payload[JwtClaimTypes.DPoPAccessTokenHash] = ath;
         }

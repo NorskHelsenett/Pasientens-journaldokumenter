@@ -1,6 +1,5 @@
 using Duende.IdentityModel.Client;
 using Duende.IdentityModel.OidcClient.DPoP;
-using Microsoft.VisualBasic;
 using System.Net.Http.Headers;
 
 namespace PatientHealthRecords.ApiService;
@@ -74,7 +73,7 @@ public class PhrApiCaller(IPhrApiEnvironmentProvider phrApiEnvironmentProvider) 
 
 		// Set the DPoP proof, we use the same key for this as for the client assertion:
 		//var proof = new DPoPProofTokenFactory(Constants.JwkPrivateKey).CreateProofToken(proofRequest);
-		var proof = new DPoPProofTokenFactory(jwtProofPrivatekey).CreateProofToken(proofRequest);
+		var proof = new DefaultDPoPProofTokenFactory(jwtProofPrivatekey).CreateProofToken(proofRequest);
 
 		request.SetDPoPToken(accessToken, proof.ProofToken);
 

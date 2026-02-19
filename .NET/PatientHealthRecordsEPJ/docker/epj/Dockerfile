@@ -1,6 +1,6 @@
 #See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8443
@@ -14,7 +14,7 @@ RUN apk add --no-cache tzdata
 # Your Razor fix should NOT rely on this, but it can prevent surprises elsewhere.
 ENV TZ=Europe/Oslo
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
 COPY ./.NET/PatientHealthRecordsEPJ/solutions/PatientHealthRecordsEPJ/ ./

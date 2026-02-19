@@ -1,7 +1,7 @@
 test:
   interruptible: true
   stage: test
-  image: ncr.sky.nhn.no/mcr/dotnet/sdk:9.0
+  image: ncr.sky.nhn.no/mcr/dotnet/sdk:10.0
   script:
 
     # Download certificate for tax office from secure files: https://docs.gitlab.com/ee/ci/secure_files/#use-secure-files-in-cicd-jobs

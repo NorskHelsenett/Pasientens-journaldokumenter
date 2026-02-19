@@ -47,7 +47,7 @@ public class ApiCaller
 		};
 
 		// Set the DPoP proof, we use the same key for this as for the client assertion:
-		var proof = new DPoPProofTokenFactory(Constants.JwkPrivateKey).CreateProofToken(proofRequest);
+		var proof = new DefaultDPoPProofTokenFactory(Constants.JwkPrivateKey).CreateProofToken(proofRequest);
 
 		request.SetDPoPToken(accessToken, proof.ProofToken);
 
