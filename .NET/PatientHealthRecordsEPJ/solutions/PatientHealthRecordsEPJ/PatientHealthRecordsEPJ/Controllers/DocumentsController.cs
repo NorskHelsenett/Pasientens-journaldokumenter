@@ -264,11 +264,11 @@ public class DocumentsController : BaseController
 		{
 			try
 			{
-				var json = apiResult.Body;				
+				var json = apiResult.Body;
 
-				var parser = new FhirJsonParser();
+				var fhirDeserializer = new FhirJsonDeserializer();
 
-				var operationOutcome = parser.Parse<OperationOutcome>(json);
+				var operationOutcome = fhirDeserializer.Deserialize<OperationOutcome>(json);
 
 				if (operationOutcome != null)
 				{
