@@ -254,7 +254,8 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			{
 				ContentType = doc.MimeType,
 				Language = doc.LanguageCode,
-				Size = doc.Size,
+				//Size = doc.Size,
+				SizeUnsignedInt = doc.Size,
 				Hash = doc.Hash,
 				Title = doc.Title,
 				Creation = doc.CreationTime.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'")
