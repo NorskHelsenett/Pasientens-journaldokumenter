@@ -109,7 +109,7 @@
 							selected = path.StartsWith("/uploaddocuments") ? selectedClass : string.Empty;
 
 							<li class="nav-item">
-								<a class="nav-link text-dark @selected" asp-area="" asp-controller="UploadDocuments" asp-action="Index">Lagre dokument(er)</a>
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="UploadDocuments" asp-action="Index">Dokumentlager</a>
 							</li>
 
 							selected = path.StartsWith("/status") ? selectedClass : string.Empty;
@@ -130,8 +130,14 @@
 								<a class="nav-link text-dark @selected" asp-area="" asp-controller="AtnaLog" asp-action="Index">ATNA logg</a>
 							</li>
 
+							selected = path.StartsWith("/helseid") ? selectedClass : string.Empty;
+
 							<li class="nav-item">
-								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="HelseId" asp-action="Index">HelseID@*  token *@</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
 							</li>
 						}
 						@* else                        

@@ -5,8 +5,28 @@
 }
 
 
-@if (!sessionData.IsAuthenticated)
+<style>
+	.sessionData
+	{
+		background-color: rgb(218, 218, 218); 
+		border-radius:5px; 
+		padding:4px; 
+		/* font-weight:bold;  */
+	}
 
+	.fnr
+	{
+		color:darkgoldenrod; 
+	}
+
+	.actions a
+	{
+		display:inline-block;
+		margin-bottom:1rem; 
+	}
+</style>
+
+@if (!sessionData.IsAuthenticated)
 {
 	@if (string.IsNullOrEmpty(Model.AttestJson))
 
@@ -28,11 +48,11 @@
 							{
 								var info = env.Id switch
 								{
-									"test" => "api.pjd.test.nhn.no => pjd.ehs.test.nhn.no",
-									"qa" => "api.pjd.qa.nhn.no => pjd.ehs.qa.nhn.no",
+																	"test" => "api.pjd.test.nhn.no => pjd.ehs.test.nhn.no",
+																	"qa" => "api.pjd.qa.nhn.no => pjd.ehs.qa.nhn.no",
 									_ => ""
-								}; 
-								
+								};
+
 								<div class="form-check">
 									<input class="form-check-input"
 										   type="radio"
@@ -140,7 +160,7 @@
 										</span>
 									}
 								</td>
-							</tr>						
+							</tr>
 							<tr>
 								<td>Kjønn: </td>
 								<td>@sessionData.SourcePatientInfo?.Gender</td>
@@ -205,71 +225,83 @@ else
 		<div class="row">
 			<div class="col-md-12">
 
-				<div class="text-center fs-3">
-					Bruker: @sessionData.Name (@sessionData.PersonId)&nbsp;&nbsp;&nbsp; Autorisasjon: @sessionData.AuthorizationName
+				<div class="sessionData">
+
+					<table class="table table-borderless table-sm w-auto m-0">
+
+						<tr>
+							<td>
+								Bruker:
+							</td>
+							<td>
+								@sessionData.Name (<span class="fnr">@sessionData.PersonId</span>)
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Autorisasjon:
+							</td>
+							<td>
+								@sessionData.AuthorizationName (@sessionData.AuthorizationId)
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Pasient:
+							</td>
+							<td>
+								@if (string.IsNullOrEmpty(sessionData.PatientName))
+								{
+									<span class="fnr">
+										@sessionData.PatientId
+									</span>
+								}
+								else
+								{
+									<div>@sessionData.PatientName (<span class="fnr">@sessionData.PatientId</span>)</div>
+								}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Lovverk/scope for å hente dokumentliste:
+							</td>
+							<td>
+								@sessionData.DocumentListScopeName
+							</td>
+						</tr>
+						@if (sessionData.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
+						{
+							<tr>
+								<td>
+									Grunnlag:
+								</td>
+								<td>
+									@sessionData.GrunnlagName
+								</td>
+							</tr>
+						}
+
+					</table>
 				</div>
-
-				<div class="text-center fs-3">
-					Pasient:
-					@if (string.IsNullOrEmpty(sessionData.PatientName))
-					{
-						<span>
-							@sessionData.PatientId
-						</span>
-					}
-					else
-					{
-						<span>@sessionData.PatientName (@sessionData.PatientId)</span>
-					}
-
-				</div>
-
-				<div class="text-center fs-3">
-					Lovverk/scope for å hente dokumentliste: @sessionData.DocumentListScopeName
-				</div>
-
-				@if (sessionData.DocumentListScopeId == (int)DocumentListScopeEnum.Kjernejournalforskriften)
-				{
-					<div class="text-center fs-3">
-						Grunnlag: @sessionData.GrunnlagName
-					</div>
-				}
-				else
-				{
-
-				}
-
+			
 				<div class="text-center fs-3">
 					<p>
-						<a asp-asp-controller="patient" asp-controller="patient" asp-action="pasientvalg" class="btn btn-primary"> &larr; Bytt pasient </a>
-						<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName</a>
-						<a href="/UploadDocuments" class="btn btn-primary">Last opp dokumenter til nasjonalt lager i @sessionData.EnvironmentName</a>
+						<a asp-asp-controller="patient" asp-controller="patient" asp-action="pasientvalg" class="btn btn-primary w-100"> &larr; Bytt pasient </a>						
+					</p>
+				</div>
+
+				<div class="text-center fs-3">
+					<p class="actions">
+						@* <a asp-asp-controller="patient" asp-controller="patient" asp-action="pasientvalg" class="btn btn-primary"> &larr; Bytt pasient </a> *@
+						<a href="/documents" class="btn btn-primary p-3">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName &rarr;</a><br />
+						<a href="/UploadDocuments" class="btn btn-primary p-3">Last opp dokumenter til NHN Dokumentlager i @sessionData.EnvironmentName &rarr;</a><br />
+						<a asp-controller="Saml" asp-action="ShowSamlAssertion" class="btn btn-primary p-3"> Vis SAML billett &rarr;</a><br />
+						<a asp-controller="Status" asp-action="Index" class="btn btn-primary p-3"> Vis status (personverninnstillinger) &rarr;</a><br />
 					</p>
 				</div>
 			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="text-center fs-3">
-					<p>
-						<a asp-controller="Saml" asp-action="ShowSamlAssertion" class="btn btn-primary"> Vis SAML billett &rarr;</a>
-					</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="text-center fs-3">
-					<p>
-						<a asp-controller="Status" asp-action="Index" class="btn btn-primary"> Vis status (personverninnstillinger) &rarr;</a>
-					</p>
-				</div>
-			</div>
-		</div>
-
+		</div>	
 	</div>
-
 }
 

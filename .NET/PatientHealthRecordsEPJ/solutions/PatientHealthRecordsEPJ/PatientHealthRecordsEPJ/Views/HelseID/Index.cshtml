@@ -1,0 +1,123 @@
+﻿@model HelseIdViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();	
+}
+
+<style>
+	.head {
+		font-size: 11px;
+		font-style: italic;
+	}
+		
+	textarea {
+		position: relative;
+		color: black;
+		height: auto;
+	}	
+
+</style>
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">Helse ID</h4>
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	<br />
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					Error: @Model.ErrorMessage
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{	
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+
+					<h5>HelseID access token</h5>					
+
+					<textarea class="w-100" rows="5">@Model.AccessToken</textarea>
+
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<hr />
+
+					<h5>Decoded token</h5>					
+
+					<textarea class="w-100" rows="50">@Model.JwtToken</textarea>
+
+				</div>
+			</div>		
+		</div>
+	}
+</div>
+
+
+@* <script>
+	const textarea = document.querySelector('.textarea');
+	const highlighted = document.querySelector('.highlighted');
+	const containerHighlighted = document.querySelector('.container-highlighted');
+
+	if (textarea !== undefined)
+	{
+		textarea.addEventListener('input', updateHighlighting);
+		textarea.addEventListener('scroll', syncScroll);
+
+		function updateHighlighting() {
+		const xml = textarea.value;
+		highlighted.innerHTML = applySyntaxHighlighting(xml);
+		}
+
+		function applySyntaxHighlighting(xml) {
+		return xml.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, p1, p2, p3, p4) => {
+		return `${p1}<span class="tag">${p2}</span>${highlightAttributes(p3)}${p4}`;
+		});
+		}
+
+		function highlightAttributes(attributes) {
+		return attributes.replace(/(\w+)=(".*?")/g, (match, p1, p2) => {
+		return `<span class="attribute">${p1}</span>=<span class="value">${p2}</span>`;
+		});
+		}
+
+		function syncScroll() {
+		highlighted.scrollTop = textarea.scrollTop;
+		highlighted.scrollLeft = textarea.scrollLeft;
+		}
+
+		
+		updateHighlighting();
+	}
+</script>
+ *@
