@@ -5,7 +5,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Models;
-using PdfSharpCore;
 using System.Diagnostics;
 using System.Text.Json;
 using XcaXds.Commons.Extensions;

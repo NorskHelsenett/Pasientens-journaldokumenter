@@ -16,6 +16,33 @@
 		height: auto;
 	}	
 
+	#encodedtoken
+	{
+		font-family: monospace;
+		/* font-size: 14px;
+		line-height: 1.5; */
+		white-space: pre-wrap; 
+		word-break:break-all; 
+		min-height:100px; 
+		border: 1px solid #aaa; 
+		padding:10px; 
+		font-size:14px; 
+	}
+
+	.jwtHeader
+	{
+		color: #B00; 
+	}
+
+	.jwtClaims
+	{
+		color: #00B; 
+	}
+
+	.jwtSignature {
+		color: #090; 
+	}
+
 </style>
 
 <div style="max-width:1900px;margin:0 auto">
@@ -60,8 +87,15 @@
 				<div class="col-md-12">
 
 					<h5>HelseID access token</h5>					
+					@{
+						var tokenParts = Model.AccessToken?.Split('.');
 
-					<textarea class="w-100" rows="5">@Model.AccessToken</textarea>
+						var jwtHeader = tokenParts != null && tokenParts.Length > 0 ? tokenParts[0] : string.Empty;
+						var jwtClaims = tokenParts != null && tokenParts.Length > 1 ? tokenParts[1] : string.Empty;
+						var jwtSignature = tokenParts != null && tokenParts.Length > 2 ? tokenParts[2] : string.Empty;
+					}
+					
+					<div id="encodedtoken"><span class="jwtHeader">@jwtHeader</span>.<span class="jwtClaims">@jwtClaims</span>.<span class="jwtSignature">@jwtSignature</span></div>
 
 				</div>
 			</div>
@@ -71,7 +105,7 @@
 
 					<hr />
 
-					<h5>Decoded token</h5>					
+					<h5>Decoded token (claims only)</h5>					
 
 					<textarea class="w-100" rows="50">@Model.JwtToken</textarea>
 
