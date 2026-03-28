@@ -1,6 +1,15 @@
 ﻿@{
 
 	var sessionData = Context.Session.SessionData();
+
+	var isDebug = false;
+	var isShowDokumentlagerTests = false; 
+
+#if DEBUG
+	isDebug = true;
+	isShowDokumentlagerTests = true; 
+#endif
+
 }
 
 <!DOCTYPE html>
@@ -18,49 +27,49 @@
 
 	<style>
 		.btn-primary {
-			background-color: #015945;
-			border: none;
+		background-color: #015945;
+		border: none;
 		}
 
-			.btn-primary:hover {
-				background-color: #01755B;
-			}
+		.btn-primary:hover {
+		background-color: #01755B;
+		}
 
 		.logo {
-			background-color: #015945;
-			display: inline-block;
-			padding: 3px 10px;
-			border-radius: 4px;
-			color: #fff;
+		background-color: #015945;
+		display: inline-block;
+		padding: 3px 10px;
+		border-radius: 4px;
+		color: #fff;
 		}
 
 		.navbar-brand {
-			font-weight: bold;
+		font-weight: bold;
 		}
 
 		.environment {
-			padding: 3px 40px;
-			border-radius: 6px;
-			font-weight: bold;
+		padding: 3px 40px;
+		border-radius: 6px;
+		font-weight: bold;
 		}
 
-			.environment.empty {
-				background-color: #aaa;
-				color: #fff;
-			}
+		.environment.empty {
+		background-color: #aaa;
+		color: #fff;
+		}
 
-			.environment.test {
-				background-color: red;
-				color: #fff;
-			}
+		.environment.test {
+		background-color: red;
+		color: #fff;
+		}
 
-			.environment.qa {
-				background-color: darkmagenta;
-				color: #fff;
-			}
+		.environment.qa {
+		background-color: darkmagenta;
+		color: #fff;
+		}
 
-			.environment.prod {
-			}
+		.environment.prod {
+		}
 	</style>
 </head>
 <body>
@@ -75,7 +84,7 @@
 
 				<style>
 					.navbar-nav .nav-link:hover {
-						text-decoration: underline;
+					text-decoration: underline;
 					}
 				</style>
 
@@ -98,9 +107,9 @@
                         </li> *@
 
 						@if (sessionData.IsAuthenticated)
-						{							
+						{
 
-							selected = path.StartsWith("/documents") ? selectedClass : string.Empty; 
+							selected = path.StartsWith("/documents") ? selectedClass : string.Empty;
 
 							<li class="nav-item">
 								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Documents" asp-action="Index">Journaldokumenter</a>
@@ -124,7 +133,7 @@
 								<a class="nav-link text-dark @selected" asp-area="" asp-controller="Saml" asp-action="ShowSamlAssertion">SAML billett</a>
 							</li>
 							
-							selected = path.StartsWith("/atna") ? selectedClass : string.Empty; 
+							selected = path.StartsWith("/atna") ? selectedClass : string.Empty;
 
 							<li class="nav-item">
 								<a class="nav-link text-dark @selected" asp-area="" asp-controller="AtnaLog" asp-action="Index">ATNA logg</a>
@@ -138,15 +147,18 @@
 
 							selected = path.StartsWith("/dokumentlagertest") ? selectedClass : string.Empty;
 
-							<li class="nav-item">
-								<a class="nav-link text-dark @selected" asp-area="" asp-controller="DokumentlagerTest" asp-action="Index">Dokumentlager Test</a>
-							</li>
+							@if (isShowDokumentlagerTests)
+							{
+								<li class="nav-item">
+									<a class="nav-link text-dark @selected" asp-area="" asp-controller="DokumentlagerTest" asp-action="Index">Dokumentlager Test</a>
+								</li>
+							}
 
 							<li class="nav-item">
 								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
 							</li>
 						}
-						@* else                        
+						@* else
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Logg inn</a>
@@ -208,7 +220,7 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-md-4">
-					Pasientens journaldokumenter REST API - EPJ @* - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@            
+					Pasientens journaldokumenter REST API - EPJ @* - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@
 				</div>
 
 				<div class="col-md-4" style="font-weight:bold">
@@ -227,7 +239,7 @@
 					@if (ViewBag.SessionExpiresAt != null && sessionData.IsAuthenticated)
 					{
 						var expiresAt = (DateTime)ViewBag.SessionExpiresAt;
-						<span>Sesjon utløper kl @expiresAt.ToString("HH:mm:ss")</span>						
+						<span>Sesjon utløper kl @expiresAt.ToString("HH:mm:ss")</span>
 					}
 				</div>
 
