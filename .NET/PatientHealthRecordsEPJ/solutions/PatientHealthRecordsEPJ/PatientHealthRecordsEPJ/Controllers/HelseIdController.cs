@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Models;
+using PatientHealthRecordsEPJ.Services;
 using System.Text;
 using System.Text.Json;
 
@@ -26,8 +27,9 @@ public class HelseIdController : BaseController
 		IMemoryCache memoryCache, 
 		IWebHostEnvironment webHostEnvironment,		
 		IOidcClientService oidcClientService,
-		IPhrApiEnvironmentProvider phrApiEnvironmentProvider
-		) : base(sessionOptions)
+		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
@@ -35,44 +37,12 @@ public class HelseIdController : BaseController
 		_oidcClientService = oidcClientService;
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
-
-	private string GetRedirectUrl()
-	{
-#if DEBUG
-		var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
-#else
-		var redirectUrl = HomeController.TestRedirectUrl; 
-#endif
-		return redirectUrl;
-	}
-
-	public async Task<IActionResult> RefreshToken()
-	{
-		var redirectUrl = GetRedirectUrl();
-
-		await _oidcClientService.InitializeAsync(redirectUrl);
-
-		var loginResult = session.SessionData();
-
-		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-
-		if (result.IsError)
-		{
-			throw new Exception($"{result.Error}: {result.ErrorDescription}");
-		}
-
-		loginResult.AccessToken = result.AccessToken;
-		loginResult.RefreshToken = result.RefreshToken;
-		loginResult.SaveToSession(session);
-
-		return Ok(result.AccessToken);
-	}
-
+	
 	public async Task<IActionResult> Index()
 	{
-		var sessionData = session.SessionData();
+		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
-		if (sessionData.AccessToken == null)
+		if (sessionData.PjdAccessToken == null)
 		{
 			return Redirect("/");
 		}
@@ -80,9 +50,7 @@ public class HelseIdController : BaseController
 		if (sessionData.SourcePatientInfo == null) 
 		{
 			return RedirectToAction(nameof(PatientController.Pasientvalg), "Patient");
-		}
-
-		await RefreshToken();
+		}		
 
 		this.sessionData = session.SessionData();
 
@@ -92,11 +60,11 @@ public class HelseIdController : BaseController
 		var model = new HelseIdViewModel()
 		{
 			IsSuccess = true,
-			AccessToken = sessionData.AccessToken,
+			AccessToken = sessionData.PjdAccessToken,
 		};
 
-		model.JwtToken = !string.IsNullOrWhiteSpace(sessionData.AccessToken)
-			? DecodeJwtPayloadPretty(sessionData.AccessToken)
+		model.JwtToken = !string.IsNullOrWhiteSpace(sessionData.PjdAccessToken)
+			? DecodeJwtPayloadPretty(sessionData.PjdAccessToken)
 			: null;
 
 		return View(model);

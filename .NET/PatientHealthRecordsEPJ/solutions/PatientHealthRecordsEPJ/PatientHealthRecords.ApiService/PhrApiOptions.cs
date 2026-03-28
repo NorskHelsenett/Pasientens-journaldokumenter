@@ -8,7 +8,8 @@ public class PhrApiOptions
 
 public class PhrApiEnvironment
 {
-	public string Environment { get; set; } = default!;	
+	public string Environment { get; set; } = default!;
+	public string RootUrl { get; set; } = default!; 
 	public string GetDocumentReferencesApiUrl { get; set; } = default!;
 	public string GetDocumentApiUrl { get; set; } = default!;
 	public string GetSamlAssertionUrl { get; set; } = default!;

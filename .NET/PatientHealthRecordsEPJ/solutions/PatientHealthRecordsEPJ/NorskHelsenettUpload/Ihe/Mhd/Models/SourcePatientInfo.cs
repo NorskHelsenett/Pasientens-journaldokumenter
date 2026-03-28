@@ -6,7 +6,13 @@
 		public const string NinTypeDnumber = "DNumber";
 	}
 
-    public class SourcePatientInfo
+	public class NinSystem
+	{
+		public const string NinSystemNationalIdentityNumber = "urn:oid:2.16.578.1.12.4.1.4.1";
+		public const string NinSystemDnumber = "urn:oid:2.16.578.1.12.4.1.4.2";
+	}
+
+	public class SourcePatientInfo
     {        
 		public PersonName Name { get; set; } = new(); // PID-5 => "PID-5|Family_name^First_name^Middle_name^^^"
         public DateTime DateOfBirth { get; set; } //PID-7 => "PID-7|19650715"

@@ -1,6 +1,7 @@
 // This demo project has some very simple session storage to store the authenticated user and associated information to keep things as simple as possible
 using NorskHelsenettUpload.Ihe.Mhd.Models;
 using NorskHelsenettUpload.Models;
+using PatientHealthRecordsEPJ.Models;
 using PatientHealthRecordsEPJ.UploadDocuments;
 using System.Linq;
 
@@ -9,16 +10,20 @@ public class SessionData
 	public bool IsAuthenticated { get; set; } = false; 
 
 	// Helsepersonell: 
-	public string IdentityToken { get; set; } = default!;
-	public string AccessToken { get; set; } = default!;
-	public string RefreshToken { get; set; } = default!;
+	public string? IdentityToken { get; set; } = default!;
+	public string? PjdAccessToken { get; set; } = default!;  // Access token for PHR API (audience only contains "nhn:phr")
+	public string? PjdServiceAccessToken { get; set; } = default!;  // Access token for Pasientens journaldokumenters støttetjenester API (audience only contains "nhn:phr-service")
+	public string? PjdRepositoryAccessToken { get; set; } = default!;  // Access token for Norsk helsenett dokumentlager API (audience only contains "nhn:phr-document-repository")
+	public string? KjernejournalAccessToken { get; set; } = default!;    // Access token for Kjernejournal (audience only contains "nhn:kjernejournal")
 
-	public string PersonId { get; set; } = default!; // Helsepersonell fødselsnummer
+	public string? RefreshToken { get; set; } = default!;
+	
+	public string? PersonId { get; set; } = default!; // Helsepersonell fødselsnummer
 	public string? HprNumber { get; set; } = default!;
-	public string Name { get; set; } = default!;
-	public string GivenName { get; set; } = default!;
-	public string MiddleName { get; set; } = default!;
-	public string FamilyName { get; set; } = default!;
+	public string? Name { get; set; } = default!;
+	public string? GivenName { get; set; } = default!;
+	public string? MiddleName { get; set; } = default!;
+	public string? FamilyName { get; set; } = default!;
 
 	public OrgRegOrganization? OrgRegOrganization { get; set; }	// Organization details received from Persontjenesten
 
@@ -44,6 +49,9 @@ public class SessionData
 
 	// Used to keep state before and after login
 	public string? AuthorizeState { get; set; } = default!;
+
+	// Kjernejournal innlogging (PKCE)
+	public string? KjernejournalEhrCodeVerifier { get; set; } = default!;
 
 	public bool IsUploadAvailable { get; set; } = default!; // Set to true if correct upload password (Constants.UploadPassword) has been entered
 
@@ -73,5 +81,11 @@ public class SessionData
 			UploadWizardOpenSteps.Add(step);
 		}
 	}
+
+	//
+	// Dokumentlager tests
+	//
+	public DokumentlagerTestStatus DokumentlagerTestStatus { get; set; } = new DokumentlagerTestStatus();
+	public DokumentlagerTests DokumentlagerTests { get; set; } = new DokumentlagerTests();
 }
 

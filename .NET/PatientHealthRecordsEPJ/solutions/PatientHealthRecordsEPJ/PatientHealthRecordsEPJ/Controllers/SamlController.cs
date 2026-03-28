@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using System.Diagnostics;
-using System.Xml.Linq;
-using System.Xml;
+using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
+using PatientHealthRecordsEPJ.Services;
+using System.Diagnostics;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace PatientHealthRecordsEPJ.Controllers;
 
@@ -18,7 +20,7 @@ public class SamlAssertionViewModel
 	public string SamlAssertion { get; set; } = default!;
 }
 
-public class SamlController : Controller
+public class SamlController : BaseController
 {
 	private readonly ILogger<HomeController> _logger;
 	private readonly IHttpContextAccessor _httpContextAccessor;
@@ -28,7 +30,15 @@ public class SamlController : Controller
 
 	SessionData sessionLoginResult;
 
-	public SamlController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache, IPhrApiEnvironmentProvider phrApiEnvironmentProvider)
+	public SamlController(
+		IOptions<SessionOptions> sessionOptions,
+		ILogger<HomeController> logger, 
+		IHttpContextAccessor httpContextAccessor, 
+		IMemoryCache memoryCache, 
+		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
+		IUserTokenService userTokenService
+		)
+		: base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
@@ -38,7 +48,7 @@ public class SamlController : Controller
 
 	public async Task<IActionResult> ShowSamlAssertion()
 	{
-		sessionLoginResult = session.SessionData();
+		sessionLoginResult = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
 		if (!sessionLoginResult.IsAuthenticated)
 			return View(new SamlAssertionViewModel() { IsAuthenticated = false });
@@ -56,7 +66,7 @@ public class SamlController : Controller
 
 		var apiUrl = _apiEnvironment.GetSamlAssertionUrl + $"?patient.identifier={sessionLoginResult.PatientId}";
 
-		var apiResult = await ApiCaller.CallApi(HttpMethod.Post, apiUrl, sessionLoginResult.AccessToken!, document: false);
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Post, apiUrl, sessionLoginResult.PjdAccessToken!, document: false);
 
 		if (apiResult.IsSuccess)
 		{

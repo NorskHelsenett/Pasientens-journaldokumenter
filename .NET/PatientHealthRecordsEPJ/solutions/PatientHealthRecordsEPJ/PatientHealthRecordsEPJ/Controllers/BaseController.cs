@@ -1,17 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Session;
-using Microsoft.Extensions.Options; // Needed for SessionOptions
+using Microsoft.Extensions.Options;
+using PatientHealthRecordsEPJ.Services; // Needed for SessionOptions
 
 namespace PatientHealthRecordsEPJ.Controllers;
 
 public class BaseController : Controller
 {
 	private readonly TimeSpan _sessionTimeout;
+	protected readonly IUserTokenService _userTokenService;
 
-	public BaseController(IOptions<SessionOptions> sessionOptions)
+	public BaseController(IOptions<SessionOptions> sessionOptions, IUserTokenService userTokenService)
 	{
 		_sessionTimeout = sessionOptions.Value.IdleTimeout;
+		_userTokenService = userTokenService;
 	}
 
 	public override void OnActionExecuting(ActionExecutingContext context)

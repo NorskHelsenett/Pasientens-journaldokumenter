@@ -14,5 +14,10 @@ namespace PatientHealthRecordsEPJ.UploadDocuments.Models
 		public string? ResponseBody { get; set; }
 
         public string? RegistryRepositoryBaseUrl { get; set; }
-    }
+
+		public bool IsValidate { get; set; }
+		public bool ValidationSuccess { get; set; }
+		public string? ValidationMessage { get; set; }
+
+	}
 }

@@ -66,6 +66,18 @@ public static class HttpClientExtensions
 
 			return new HelseIdDelegatingHandler(dPoPProofCreator, tokenService);
         });
+
+#if DEBUG
+        httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
+		{
+			return new HttpClientHandler
+			{
+				ServerCertificateCustomValidationCallback =
+					HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+			};
+		});
+#endif
+
         return httpClientBuilder;
     }
 }

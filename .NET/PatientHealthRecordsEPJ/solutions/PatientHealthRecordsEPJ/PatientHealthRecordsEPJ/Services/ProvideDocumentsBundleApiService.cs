@@ -21,7 +21,7 @@ public class ProvideBundle
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
 
-	public async Task<ApiResult> ProvideDocumentBundleAsync(string content)
+	public async Task<ApiResult> ProvideDocumentBundleAsync(string content, bool validate)
     {
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
 
@@ -33,6 +33,11 @@ public class ProvideBundle
 		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
 
 		var apiUrl = _apiEnvironment.ProvideDocumentBundleUrl;
+
+		if (validate)
+		{
+			apiUrl += "/$validate";
+		}
 
 		//var host = _httpClient.BaseAddress;
 		//var getByNinUrl = $"{host}{GetByNinPath}?{informationPartsQueryString}";				

@@ -60,6 +60,10 @@
 	
 	@if (showButtonNext && (stepIndex < (steps.Count -1 )))
 	{
+		if (next == "submissionconfirmation")
+		{
+			<button type="submit" name="navButton" value="Validate" class="btn btn-primary @buttonNextClass ">Validate only (don't upload) &rarr;</button><span>&nbsp;</span>
+		}
 		<button type="submit" name="navButton" value="Next" class="btn btn-primary @buttonNextClass ">@buttonNextText &rarr;</button>
 	}
 </div>

@@ -10,7 +10,7 @@ public interface IOidcClientService
 {
 	OidcClient Client { get; }
 	Task InitializeAsync(string redirectUrl); // Needed if you use async setup (like discovery document fetch)
-	Task<RefreshTokenResult> RefreshTokenAsync(string refreshToken); 
+	Task<RefreshTokenResult> RefreshTokenAsync(string refreshToken, Parameters? parameters = null); 
 }
 
 public class OidcClientService : IOidcClientService
@@ -59,10 +59,10 @@ public class OidcClientService : IOidcClientService
 		_initialized = true;
 	}
 
-	public async Task<RefreshTokenResult> RefreshTokenAsync(string refreshToken)
+	public async Task<RefreshTokenResult> RefreshTokenAsync(string refreshToken, Parameters? parameters = null)
 	{
 		_oidcClient.Options.ClientAssertion = HomeController.GetClientAssertionPayload(_disco);
-		return await _oidcClient.RefreshTokenAsync(refreshToken);
+		return await _oidcClient.RefreshTokenAsync(refreshToken, parameters);
 	}
 }
 

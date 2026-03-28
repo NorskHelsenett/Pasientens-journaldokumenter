@@ -82,8 +82,9 @@ public class UploadDocumentsController : BaseController
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		OrganizationService organizationService,
 		ProvideDocumentBundleApiService provideDocumentsBundleApiService,
-		PhrEpjOptions phrEpjOptions
-		) : base(sessionOptions)
+		PhrEpjOptions phrEpjOptions,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
@@ -165,48 +166,14 @@ public class UploadDocumentsController : BaseController
 		sessionData.SaveToSession(session);
 	}
 
-	private string GetRedirectUrl()
-	{
-#if DEBUG
-		var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
-#else
-		var redirectUrl = HomeController.TestRedirectUrl; 
-#endif
-		return redirectUrl;
-	}
-
-	public async Task<IActionResult> RefreshToken()
-	{
-		var redirectUrl = GetRedirectUrl();
-
-		await _oidcClientService.InitializeAsync(redirectUrl);
-
-		var loginResult = session.SessionData();
-
-		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-
-		if (result.IsError)
-		{
-			throw new Exception($"{result.Error}: {result.ErrorDescription}");
-		}
-
-		loginResult.AccessToken = result.AccessToken;
-		loginResult.RefreshToken = result.RefreshToken;
-		loginResult.SaveToSession(session);
-
-		return Ok(result.AccessToken);
-	}
-
 	public async Task<IActionResult> Index()
 	{
-		var sessionData = session.SessionData();
+		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
 		if (!sessionData.IsUploadAvailable)
 		{
 			return RedirectToAction(nameof(Password));
-		}
-
-		await RefreshToken();
+		}		
 
 		return RedirectToAction(nameof(Patient));
 	}
@@ -240,9 +207,7 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> Patient()
 	{
-		await RefreshToken();
-
-		var sessionData = session.SessionData();
+		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);		
 
 		if (string.IsNullOrEmpty(sessionData.PatientId))
 		{
@@ -377,11 +342,10 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> UploadDocument()
 	{
-		await RefreshToken();
+		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
 		var model = new DocumentMetadataViewModel();
-
-		var sessionData = session.SessionData();
+		
 		var request = sessionData.BundleRequest;
 
 		model.SelectedDocument = request.DocumentCollection?.SelectedDocument; 
@@ -1095,14 +1059,13 @@ public class UploadDocumentsController : BaseController
 
 	public async Task<IActionResult> FinalizeSubmission(string error)
 	{
-		await RefreshToken();
+		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
 		var model = new FinalizeSubmissionViewModel();
 
 		model.ErrorMessage = error;
 		model.IsError = !string.IsNullOrEmpty(error); 
-
-		var sessionData = session.SessionData();
+		
 		var request = sessionData.BundleRequest;
 
 		model.Upload = request;
@@ -1144,20 +1107,52 @@ public class UploadDocumentsController : BaseController
 
 		// Create document-object		
 		var bundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive");
-		
-		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument);
+
+		var validate = navButton == NavigationAction.Validate;
+
+		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument, validate);
 		
 		if (apiResult.IsSuccess)
 		{
-			var responseBody = apiResult.Body; 
+			var responseBody = PrettyJson(apiResult.Body);
 
-			return RedirectToAction(nameof(SubmissionConfirmation));
+			if (validate)
+			{			
+				// Validation succeded
+				model.IsValidate = true;
+				model.ValidationSuccess = true;
+				model.ValidationMessage = "Validation successful. The document bundle is valid and can be submitted.";
+				model.ResponseBody = responseBody;
+				
+				model.Upload = request;
+
+				model.JsonBundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: true);
+				model.JsonBundleDocument = model.JsonBundleDocument.Replace(BundleCreator.REMOVED_FOR_DISPLAY_TEXT_BASE64, "...removed for display...");
+
+				return View("Steps/FinalizeSubmission", model);
+			}
+			else
+			{
+				return RedirectToAction(nameof(SubmissionConfirmation));
+			}			
 		}
 		else
 		{
-			model.ErrorMessage = "An error occurred trying to register document bundle";			
-			model.IsError = true; 
-			model.ResponseBody = apiResult.Body;
+			model.ResponseBody = PrettyJson(apiResult.Body);
+
+			if (validate)
+			{
+				// Validation failed
+				model.IsValidate = true;
+				model.ValidationSuccess = false;
+				model.ValidationMessage = "Validation failed. The document bundle is not valid and cannot be submitted.";
+			}
+			else
+			{
+				model.ErrorMessage = "An error occurred trying to register document bundle";
+				model.IsError = true;
+			}
+
 			model.Upload = request;
 
 			model.JsonBundleDocument = _bundleCreator.CreateFhirBundle(request, "Comprehensive", removeBinaryDataForDisplay: true);			
@@ -1206,5 +1201,17 @@ public class UploadDocumentsController : BaseController
 		}
 
 		return View();
+	}
+
+	private string PrettyJson(string json)
+	{
+		var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
+
+		var prettyJson = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions
+		{
+			WriteIndented = true
+		});
+
+		return prettyJson;
 	}
 }

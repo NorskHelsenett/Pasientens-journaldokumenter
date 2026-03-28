@@ -23,8 +23,9 @@ public class PatientController : BaseController
 		IOptions<SessionOptions> sessionOptions,
 		ILogger<HomeController> logger,
 		IHttpContextAccessor httpContextAccessor,		
-		PersonApiService personApiService
-		) : base(sessionOptions)
+		PersonApiService personApiService,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;

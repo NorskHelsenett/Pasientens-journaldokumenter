@@ -2,7 +2,8 @@ public enum NavigationAction // Used in the wizard when uploading documents
 {
 	None, // If page is just submitted to update data
 	Previous,
-	Next
+	Next,
+	Validate // Only for the last page, to validate the data with '/Bundle/$validate' endpoint
 }
 
 

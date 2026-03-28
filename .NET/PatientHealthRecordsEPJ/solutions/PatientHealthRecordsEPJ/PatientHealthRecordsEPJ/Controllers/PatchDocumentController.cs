@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Models;
+using PatientHealthRecordsEPJ.Services;
 using System.Diagnostics;
 using XcaXds.Commons.Extensions;
 
@@ -28,7 +29,9 @@ public class PatchDocumentController : BaseController
 		IMemoryCache memoryCache, 
 		IWebHostEnvironment webHostEnvironment,		
 		IOidcClientService oidcClientService,
-		IPhrApiEnvironmentProvider phrApiEnvironmentProvider) : base(sessionOptions)
+		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
@@ -37,48 +40,14 @@ public class PatchDocumentController : BaseController
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
 
-	private string GetRedirectUrl()
-	{
-#if DEBUG
-		var redirectUrl = Request.Scheme + "://" + Request.Host.Value + "/callback";
-#else
-		var redirectUrl = HomeController.TestRedirectUrl; 
-#endif
-		return redirectUrl;
-	}
-
-	public async Task<IActionResult> RefreshToken()
-	{
-		var redirectUrl = GetRedirectUrl();
-
-		await _oidcClientService.InitializeAsync(redirectUrl);
-
-		var loginResult = session.SessionData();
-
-		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-
-		if (result.IsError)
-		{
-			throw new Exception($"{result.Error}: {result.ErrorDescription}");
-		}
-
-		loginResult.AccessToken = result.AccessToken;
-		loginResult.RefreshToken = result.RefreshToken;
-		loginResult.SaveToSession(session);
-
-		return Ok(result.AccessToken);
-	}
-
 	public async Task<IActionResult> Index()
 	{
-		var loginResult = session.SessionData();
+		var loginResult = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
-		if (loginResult.AccessToken == null)
+		if (loginResult.PjdRepositoryAccessToken == null)
 		{
 			return Redirect("/");
-		}
-
-		await RefreshToken();
+		}		
 
 		sessionLoginResult = session.SessionData();
 
@@ -142,7 +111,7 @@ public class PatchDocumentController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Patch,
 			apiUrl,
-			sessionData.AccessToken!,
+			sessionData.PjdRepositoryAccessToken!,
 			document: false,
 			headerKeyValues: headerKeyValues,
 			content: content

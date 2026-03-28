@@ -1,0 +1,122 @@
+﻿@using Hl7.Fhir.Model
+
+@model KjernejournalLoginViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+
+	string ShowJsonData(string json)
+	{
+		if (string.IsNullOrEmpty(json))
+		{
+			return "- ingen data -";
+		}
+		else
+		{
+			return json;
+		}
+	}
+
+	string Active(bool? active)
+	{
+		return active == true ? "<span class='active'>AKTIV</span>" : "<span class='inactive'>IKKE AKTIV</span>";
+	}
+
+	string Blocked(bool? blocked)
+	{
+		return blocked == true ? "<span class='active'>JA, ER BLOKKERT</span>" : "<span class='inactive'>NEI, IKKE BLOKKERT</span>";
+	}
+}
+
+<style>
+	.head {
+		font-size: 11px;
+		font-style: italic;
+	}
+
+	tr.document-item {
+		cursor: pointer;
+	}
+
+	tr.document-detail {
+		display: none;
+	}
+
+	iframe {
+		width: 100%;
+		height: 800px;
+		/* border:none;  */
+		border: 1px solid #aaa;
+	}
+
+	textarea {
+		position: relative;
+		color: black;
+		height: auto;
+	}
+
+	.active {
+		color: green;
+	}
+
+	.inactive {
+		color: red;
+	}
+
+</style>
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">Status endepunkt</h4>
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	<br />
+
+	<h4>Respons fra status-endepunkt i REST API: </h4>
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					Error: @Model.ErrorMessage
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">					
+
+					@{
+						var kjLoginUrl = $"https://st1.kjernejournal-test.no/hpp-webapp/hentpasient.html?code={Model.KjernejournalSession?.code}&ehr_code_verifier={sessionData.KjernejournalEhrCodeVerifier}";
+					}
+
+					<a href="@kjLoginUrl" target="_blank">Login to Kjernejournal ST1</a>
+				</div>
+			</div>
+		</div>
+
+	}
+</div>
+

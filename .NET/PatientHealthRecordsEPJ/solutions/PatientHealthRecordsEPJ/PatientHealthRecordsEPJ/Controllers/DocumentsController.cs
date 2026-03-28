@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Models;
+using PatientHealthRecordsEPJ.Services;
 using System.Diagnostics;
 using System.Text.Json;
 using XcaXds.Commons.Extensions;
@@ -45,13 +46,15 @@ public class DocumentsController : BaseController
 		IHttpContextAccessor httpContextAccessor,
 		IMemoryCache memoryCache,
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
-		IOidcClientService oidcClientService) : base(sessionOptions)
+		IOidcClientService oidcClientService,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
 		_memoryCache = memoryCache;
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
-		_oidcClientService = oidcClientService;
+		_oidcClientService = oidcClientService;		
 	}
 
 	private string GetRedirectUrl()
@@ -63,45 +66,21 @@ public class DocumentsController : BaseController
 #endif
 		return redirectUrl;
 	}
-
-	public async Task<IActionResult> RefreshToken()
-	{
-		var redirectUrl = GetRedirectUrl();
-
-		await _oidcClientService.InitializeAsync(redirectUrl);
-
-		var loginResult = session.SessionData();
-
-		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-
-		if (result.IsError)
-		{
-			throw new Exception($"{result.Error}: {result.ErrorDescription}");
-		}
-
-		loginResult.AccessToken = result.AccessToken;
-		loginResult.RefreshToken = result.RefreshToken;
-		loginResult.SaveToSession(session);
-
-		return Ok(result.AccessToken);
-	}
-
+	
 	public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date", bool? useCaching = null)
 	{
-		var sessionData = session.SessionData();
+		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
-		if (sessionData.AccessToken == null)
+		if (!sessionData.IsAuthenticated)
+			return Redirect("/");
+		
+		if (sessionData.PjdAccessToken == null)
 		{
 			return Redirect("/");
 		}
 
-		await RefreshToken();
-
 		sessionLoginResult = session.SessionData();
-
-		if (!sessionLoginResult.IsAuthenticated)
-			return Redirect("/");
-
+	
 		if (useCaching != null)
 		{
 			sessionLoginResult.UseCaching = useCaching.Value;
@@ -155,7 +134,7 @@ public class DocumentsController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Post,
 			apiUrl,
-			sessionLoginResult.AccessToken!,
+			sessionLoginResult.PjdAccessToken!,
 			document: false,
 			headerKeyValues: headerKeyValues,
 			acceptHeaderValues: ["application/fhir+json; fhirVersion=4.0"], // Only empty accept header, or 'application/fhir+json' is allowed				
@@ -254,7 +233,7 @@ public class DocumentsController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Delete,
 			apiUrl,
-			sessionData.AccessToken!,
+			sessionData.PjdAccessToken!,
 			document: false,
 			headerKeyValues: headerKeyValues
 			);

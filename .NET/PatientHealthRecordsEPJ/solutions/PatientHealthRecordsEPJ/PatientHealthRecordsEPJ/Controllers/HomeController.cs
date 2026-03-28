@@ -36,11 +36,22 @@ public class HomeController : BaseController
 
 	// The client is configured in the HelseID test environment, so we will point to that
 	public const string StsUrl = "https://helseid-sts.test.nhn.no";
-			
+
+	// Define audience of all APIs we want to call. We'll use resource indicators to get tokens scoped only to each API. 
+	public const string PhrResource = "nhn:phr";
+	public const string PhrServiceResource = "nhn:phr-service";
+	public const string PhrRepositoryResource = "nhn:phr-document-repository";
+	public const string KjernejournalResource = "nhn:kjernejournal";
+
 	// This is the scope of the API you want to call (get an access token for)		
-	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference";
-	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference";
-	
+
+	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference";
+	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference nhn:phr-service/atna/read/document-repository nhn:phr-service/atna/read/document-repository-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	//private const string ApiScopes = "nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	//private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference nhn:phr-service/atna/read/document-repository nhn:phr-service/atna/read/document-repository-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+
 	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:hgd-persontjenesten-api/full-access";
 	//private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:hgd-persontjenesten-api/full-access";
 
@@ -67,8 +78,9 @@ public class HomeController : BaseController
 		IOidcClientService oidcClientService,
 		PhrApiOptions phrApiOptions,
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
-		OrganizationService organizationService
-		) : base(sessionOptions)
+		OrganizationService organizationService,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
@@ -386,7 +398,15 @@ public class HomeController : BaseController
 			//var authorizeState = _memoryCache.Get("authorizeState") as AuthorizeState;
 			var helseIdResponse = Request.QueryString.ToString();
 
-			var loginResult = await oidcClient.ProcessResponseAsync(helseIdResponse, authorizeState);
+			// User login has finished, now we want to request tokens from the /token endpoint
+			// We add a Resource parameter that indicates that we want scopes for PHR API. Later, we'll also get token with scopes for Kjernejournal. 
+
+			var parameters = new Parameters
+			{
+				{"resource", PhrResource}
+			};
+
+			var loginResult = await oidcClient.ProcessResponseAsync(helseIdResponse, authorizeState, parameters);
 
 			if (loginResult.IsError == false)
 			{
@@ -419,8 +439,17 @@ public class HomeController : BaseController
 			// and the child organization
 			// Copy the access token and paste it at https://jwt.ms to decode it
 
+			Console.WriteLine("First request, resource: " + PhrResource);
 			Console.WriteLine($"Identity token from login: {loginResult.IdentityToken}");
 			Console.WriteLine($"DPoP token from login: {loginResult.AccessToken}");
+
+			sessionData.RefreshToken = loginResult.RefreshToken;
+
+			sessionData.SaveToSession(session); 
+
+			sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
+
+			//sessionData.AccessToken = loginResult.AccessToken;
 
 			var pid = jsonIdentityToken.Claims.FirstOrDefault(c => c.Type == "helseid://claims/identity/pid")?.Value;
 
@@ -432,8 +461,8 @@ public class HomeController : BaseController
 
 			sessionData.IsAuthenticated = true;
 			sessionData.IdentityToken = loginResult.IdentityToken;
-			sessionData.AccessToken = loginResult.AccessToken;
-			sessionData.RefreshToken = loginResult.RefreshToken;
+			//sessionData.AccessToken = loginResult.AccessToken;
+			//sessionData.RefreshToken = loginResult.RefreshToken;
 			sessionData.Name = loginResult.User.Identity!.Name!;
 			sessionData.PersonId = pid;
 			sessionData.HprNumber = jsonAccessToken.Claims.FirstOrDefault(c => c.Type == "helseid://claims/hpr/hpr_number")?.Value;
@@ -455,9 +484,15 @@ public class HomeController : BaseController
 
 			// We can now call the /token endpoint again with the refresh token in order to get a new access token:
 			// Client assertions cannot be used twice, so we need a new payload:
-			oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
+			/*oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
 
-			var refreshTokenResult = await oidcClient.RefreshTokenAsync(loginResult.RefreshToken);
+			// We add a Resource parameter that indicates that we want scopes for Kjernejournal API
+			parameters = new Parameters
+			{
+				{"resource", KjernejournalResource}
+			};
+
+			var refreshTokenResult = await oidcClient.RefreshTokenAsync(loginResult.RefreshToken, parameters);
 
 			if (refreshTokenResult.IsError)
 			{
@@ -465,9 +500,13 @@ public class HomeController : BaseController
 			}				
 
 			Console.WriteLine();
+			Console.WriteLine("Second request, resource: " + KjernejournalResource);
 			Console.WriteLine("New Access Token after using Refresh Token:");
 			Console.WriteLine(refreshTokenResult.AccessToken);
-								
+			Console.WriteLine(refreshTokenResult.RefreshToken);
+
+			sessionData.KjernejournalAccessToken = refreshTokenResult.AccessToken; */
+
 			// Retrieve submission's AUTHOR-ORG details
 			//var org = new Hl7.Fhir.Model.Organization();
 
@@ -526,13 +565,35 @@ public class HomeController : BaseController
 		string scopes, 
 		string redirectUrl
 		)
-
 	{
+		// Sets the pushed authorization request parameters:
+		/*var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(authorizeState.CodeVerifier));
+		var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
+		var requestObject = BuildRequestObject(disco, attestJson);		*/
+
+		/*var dictionary = new Dictionary<string, string>
+		{			
+			{ "redirect_uri", redirectUrl}			
+		};
+		var parameters = new Parameters(dictionary);*/
+
 		// Setup a client assertion - this will authenticate the client (this application)
 		var clientAssertionPayload = GetClientAssertionPayload(disco);
 		var pushedAuthorizationRequest = new PushedAuthorizationRequest
 		{
+			//Resource = new List<string> { PhrResource, KjernejournalResource },
 			Address = disco.PushedAuthorizationRequestEndpoint,
+			/*ClientId = ClientId,
+			ClientAssertion = clientAssertionPayload,
+			Request = requestObject,
+			Scope = scopes,
+			RedirectUri = redirectUrl,			
+			ResponseType = OidcConstants.ResponseTypes.Code,
+			ClientCredentialStyle = ClientCredentialStyle.PostBody,
+			CodeChallenge = codeChallenge,
+			CodeChallengeMethod = OidcConstants.CodeChallengeMethods.Sha256,
+			State = authorizeState.State,
+			Parameters = parameters*/
 			Parameters = GetParametersForPushedAuthorizationRequest(
 				//attest,
 				attestJson,
@@ -563,21 +624,41 @@ public class HomeController : BaseController
 		var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(authorizeState.CodeVerifier));
 		var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 		var requestObject = BuildRequestObject(disco, attestJson);
+
+		var parameters = new Parameters(); 
+		parameters.Add("resource", PhrResource);
+		parameters.Add("resource", PhrServiceResource, parameterReplace: ParameterReplaceBehavior.None);
+		parameters.Add("resource", PhrRepositoryResource, parameterReplace: ParameterReplaceBehavior.None);
+		parameters.Add("resource", KjernejournalResource, parameterReplace: ParameterReplaceBehavior.None);
+		parameters.Add("client_id", ClientId);
+		parameters.Add("client_assertion", clientAssertionPayload.Value);
+		parameters.Add("client_assertion_type", clientAssertionPayload.Type);
+		parameters.Add("request", requestObject);
+		parameters.Add("scope", scopes + " " + IdentityScopes);
+		parameters.Add("redirect_uri", redirectUrl);
+		parameters.Add("response_type", OidcConstants.ResponseTypes.Code);
+		parameters.Add("code_challenge", codeChallenge);
+		parameters.Add("code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256);
+		parameters.Add("state", authorizeState.State);
+
+		return parameters; 
 		
-		var dictionary = new Dictionary<string, string>
-	{
-		{ "client_id", ClientId },
-		{ "client_assertion", clientAssertionPayload.Value },
-		{ "client_assertion_type", clientAssertionPayload.Type },
-		{ "request", requestObject },
-		{ "scope", scopes + " " + IdentityScopes },
-		{ "redirect_uri", redirectUrl},
-		{ "response_type", OidcConstants.ResponseTypes.Code },
-		{ "code_challenge", codeChallenge },
-		{ "code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256 },
-		{ "state", authorizeState.State },
-	};
-		return new Parameters(dictionary);
+		/*var dictionary = new Dictionary<string, string>
+		{
+			{ "resource", PhrResource },
+			{ "resource", KjernejournalResource },
+			{ "client_id", ClientId },
+			{ "client_assertion", clientAssertionPayload.Value },
+			{ "client_assertion_type", clientAssertionPayload.Type },
+			{ "request", requestObject },
+			{ "scope", scopes + " " + IdentityScopes },
+			{ "redirect_uri", redirectUrl},
+			{ "response_type", OidcConstants.ResponseTypes.Code },
+			{ "code_challenge", codeChallenge },
+			{ "code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256 },
+			{ "state", authorizeState.State },
+		};
+		return new Parameters(dictionary);*/
 	}
 
 	private static string BuildAttestJson(AttestModel attest, bool writeIndented = true)

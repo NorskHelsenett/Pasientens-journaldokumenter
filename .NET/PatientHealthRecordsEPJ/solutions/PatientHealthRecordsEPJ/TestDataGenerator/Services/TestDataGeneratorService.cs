@@ -8,7 +8,12 @@ namespace XcaXds.Commons.Services;
 
 public static class TestDataGeneratorService
 {
-    public static List<RegistryObjectDto> GenerateRegistryObjectsFromTestData(Test_DocumentReference documentEntryValues, int amount, DateTime? creationTime = null, int maxSecondsIntoPast = 100_000_000)
+    public static List<RegistryObjectDto> GenerateRegistryObjectsFromTestData(
+        Test_DocumentReference documentEntryValues, 
+        int amount, 
+        DateTime? creationTime = null, 
+        int maxSecondsIntoPast = 100_000_000, 
+        Action<DocumentEntryDto, SubmissionSetDto, AssociationDto>? configureDocument = null)
     {
         var registryObjects = new List<RegistryObjectDto>();
 
@@ -70,7 +75,7 @@ public static class TestDataGeneratorService
                 Title = PickRandom(documentEntryValues.PossibleDocumentEntryValues.Titles)
             };
 
-            var associaiton = new AssociationDto()
+            var association = new AssociationDto()
             {
                 AssociationType = Constants.Xds.AssociationType.HasMember,
                 SourceObject = submissionSet.Id,
@@ -78,9 +83,11 @@ public static class TestDataGeneratorService
                 TargetObject = documentEntry.Id,
             };
 
-            registryObjects.Add(documentEntry);
+            configureDocument?.Invoke(documentEntry, submissionSet, association);  
+
+			registryObjects.Add(documentEntry);
             registryObjects.Add(submissionSet);
-            registryObjects.Add(associaiton);
+            registryObjects.Add(association);
             maxCount++;
         }
 

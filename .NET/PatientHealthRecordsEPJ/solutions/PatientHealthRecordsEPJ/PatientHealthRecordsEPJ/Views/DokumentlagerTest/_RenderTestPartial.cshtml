@@ -1,0 +1,666 @@
+﻿@using Hl7.Fhir.Model
+
+@model DokumentlagerTestCaseViewModel
+
+@{
+	Layout = null;
+
+	var test = Model.Test;
+	var groupIndex = Model.GroupIndex;
+	var testIndex = Model.TestIndex;
+
+	var sessionData = Context.Session.SessionData();
+
+	string ShowJsonData(string json)
+	{
+		if (string.IsNullOrEmpty(json))
+		{
+			return "- ingen data -";
+		}
+		else
+		{
+			return json;
+		}
+	}
+
+	string Active(bool? active)
+	{
+		return active == true ? "<span class='active'>AKTIV</span>" : "<span class='inactive'>IKKE AKTIV</span>";
+	}
+
+	string Blocked(bool? blocked)
+	{
+		return blocked == true ? "<span class='active'>JA, ER BLOKKERT</span>" : "<span class='inactive'>NEI, IKKE BLOKKERT</span>";
+	}
+
+	string OutcomeIcon(bool? success)
+	{
+		if (success == null)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		return success == true ? "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>" : "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+	}
+
+	string NotRunIcon()
+	{
+		return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		//return "<span style='color: gray; font-style:italic'><i class='bi bi-hourglass'></i></span>";
+	}
+
+	string SpinnerIcon()
+	{
+		return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+	}
+
+	string BigSpinnerIcon()
+	{
+		return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+	}
+
+	string StatusIcon(DokumentlagerTestCaseStatus status)
+	{
+		if (status == DokumentlagerTestCaseStatus.NotRun)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		if (status == DokumentlagerTestCaseStatus.Queued)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		if (status == DokumentlagerTestCaseStatus.Running)
+		{
+			//return "<span style='color:green;font-weight:bold'><i class='bi bi-play'></i></span>";
+			return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+			//return "<i class='bi bi-gear spinner-icon'></i>";
+		}
+
+		if (status == DokumentlagerTestCaseStatus.Success)
+		{
+			return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+		}
+
+		if (status == DokumentlagerTestCaseStatus.Failed)
+		{
+			return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		}
+
+		return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+	}
+
+	/*string LookupStatusIcon(LookupStatus status)
+	{
+		if (status == LookupStatus.NotRun)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+			}
+
+		if (status == LookupStatus.Running)
+		{
+			//return "<span style='color:green;font-weight:bold'><i class='bi bi-play'></i></span>";
+			return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+			//return "<i class='bi bi-gear spinner-icon'></i>";
+			}
+
+		if (status == LookupStatus.Success)
+		{
+			return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+			}
+
+		if (status == LookupStatus.Failed)
+		{
+			return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+			}
+
+		return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		} */
+
+	string LookupDocumentReferenceStatusIcon(Lookup lookup)
+	{
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.NotRun)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.Running)
+		{
+			//return "<span style='color:green;font-weight:bold'><i class='bi bi-play'></i></span>";
+			//return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+			return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+			//return "<i class='bi bi-gear spinner-icon'></i>";
+		}
+
+		if (lookup.RetrieveDocumentReferenceIsSuccess)
+		{
+			return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+		}
+		else
+		{
+			return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		}
+
+		// if (status == LookupStatus.Failed)
+		// {
+		// 	return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		// }
+
+		//return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+	}
+
+	string LookupDocumentStatusIcon(Lookup lookup)
+	{
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.NotRun)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.Running)
+		{
+			//return "<span style='color:green;font-weight:bold'><i class='bi bi-play'></i></span>";
+			//return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+			return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+			//return "<i class='bi bi-gear spinner-icon'></i>";
+		}
+
+		if (lookup.OpenDocumentIsSuccess)
+		{
+			return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+		}
+		else
+		{
+			return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		}
+
+		// if (status == LookupStatus.Failed)
+		// {
+		// 	return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		// }
+
+		//return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+	}
+
+	string LookupResultIcon(bool? expectSuccess, bool? isSuccess)
+	{
+		if (expectSuccess == null)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+		if (expectSuccess == true)
+		{
+			if (isSuccess == null)
+			{
+				return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+			}
+			return isSuccess == true ? "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>" : "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		}
+		else
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+	}
+
+	string LookupDocumentReferenceResultIcon(Lookup lookup)
+	{
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.NotRun)
+		{
+			return NotRunIcon();
+		}
+
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.Running)
+		{
+			return SpinnerIcon();
+		}
+
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.Visible)
+		{
+			return VisibleIcon();
+		}
+
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.NotVisible)
+		{
+			return InvisibleIcon();
+		}
+
+		return NotRunIcon();
+
+		/*if (lookup.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+		{
+			if (lookup.RetrieveDocumentReferenceIsSuccessWithObfuscation == true)
+			{
+				return SuccessObfuscatedIcon();
+			}
+			else
+			{
+				return FailIcon();
+			}
+		}
+		else if (lookup.RetrieveDocumentReferenceExpectVisible == true)
+		{
+			if (lookup.RetrieveDocumentReferenceIsSuccess == true)
+			{
+				return VisibleIcon();
+			}
+			else
+			{
+				return FailIcon();
+			}
+		}	 */
+	}
+
+	string LookupDocumentResultIcon(Lookup lookup)
+	{
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.NotRun)
+		{
+			return NotRunIcon();
+		}
+
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.Running)
+		{
+			return SpinnerIcon();
+		}
+		
+		if (lookup.OpenDocumentIsSuccess == true)
+		{
+			return VisibleIcon();
+		}
+		else
+		{
+			return FailIcon();
+		}
+	}
+
+	string SuccessIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+	}
+
+	string SuccessObfuscatedIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-asterisk'></i></span>";
+	}
+
+	string FailIcon()
+	{
+		return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+	}
+
+	string NeutralIcon()
+	{
+		return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+	}
+
+	string VisibleIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-eye'></i></span>";
+	}
+
+	string InvisibleIcon()
+	{
+		return "<span style='color:red;font-weight:bold'><i class='bi bi-eye-slash'></i></span>";
+	}
+
+}
+
+
+@{
+	var rowClass = "";
+	if (Model.Run.Status == DokumentlagerTestCaseStatus.NotRun)
+	{
+		rowClass = "row-not-run";
+	}
+
+	if (Model.Run.Status == DokumentlagerTestCaseStatus.Queued)
+	{
+		rowClass = "row-queued";
+	}
+
+	if (Model.Run.Status == DokumentlagerTestCaseStatus.Running)
+	{
+		rowClass = "row-running";
+	}
+
+	if (Model.Run.Status == DokumentlagerTestCaseStatus.Success)
+	{
+		rowClass = "row-success";
+	}
+
+	if (Model.Run.Status == DokumentlagerTestCaseStatus.Failed)
+	{
+		rowClass = "row-failed";
+	}
+}
+
+
+<tr class="test-row @rowClass" data-test-index="@testIndex" data-group-index="@groupIndex">
+
+	<td class="big-icon">
+		@* @Html.Raw(OutcomeIcon(test.Result?.Success)) *@
+		@Html.Raw(StatusIcon(Model.Run.Status))
+		
+	</td>
+	<td>
+		@test.Name
+		<br />
+		
+		@* <div class="badge-running">
+			RUNNING
+		</div> *@
+
+		@{
+			if (Model.Run.Status == DokumentlagerTestCaseStatus.Running)
+			{
+				<div class="badge-running">
+					RUNNING
+				</div>
+			}
+		}
+	</td>
+	<td>@test.ExpectedResult</td>
+	<td>@test.Comment</td>
+	<td>
+		@{
+			var securityLabels = string.Join(' ', test.SecurityLabels);
+		}
+
+		<span>@securityLabels</span>
+
+	</td>
+	<td>
+		@* dokument *@
+	</td>
+	<td>
+		Lagret
+	</td>
+	<td>
+		<table>
+			@* <thead>
+													<tr>
+
+													</tr>
+												</thead> *@
+			<tbody>
+				<tr>
+					<td><div class="field">PurposeOfUse:</div> </td>
+					<td>
+						@test.PurposeOfUse
+					</td>
+				</tr>
+			</tbody>
+
+		</table>
+
+	</td>
+	<td>
+		<table class="table table-sm">
+			<thead>
+				<tr>
+					<th> @* Ikon  *@</th>
+					<th>Hvor</th>
+					<th>Forventet</th>
+					<th>Testet @* Faktisk *@ @* Resultat *@</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (test.Lookup?.LookupDokumentlager != null)
+				{
+					<tr>
+						<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.Lookup.LookupDokumentlager))</td>
+						<td>Dokumentlager</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupDokumentlager.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+							{
+								<div>
+									@Html.Raw(SuccessObfuscatedIcon())
+								</div>
+							}
+							else
+								if (test.Lookup.LookupDokumentlager.RetrieveDocumentReferenceExpectVisible == true)
+								{
+									<div>@Html.Raw(VisibleIcon())</div>
+								}
+								else
+								{
+									<div>@Html.Raw(InvisibleIcon())</div>
+								}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentReferenceResultIcon(test.Lookup.LookupDokumentlager))
+							</div>
+						</td>
+					</tr>
+				}
+
+				@if (test.Lookup?.LookupAPI != null)
+				{
+					<tr>
+						@*<td class="big-icon">@Html.Raw(test.Lookup.LookupAPI.Success == true ? SuccessIcon() : FailIcon())</td>*@
+						<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.Lookup.LookupAPI))</td>
+						<td>REST API</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupAPI.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+							{
+								<div>
+									@Html.Raw(SuccessObfuscatedIcon())
+								</div>
+							}
+							else
+								if (test.Lookup.LookupAPI.RetrieveDocumentReferenceExpectVisible == true)
+								{
+									<div>@Html.Raw(VisibleIcon())</div>
+								}
+								else
+								{
+									<div>@Html.Raw(InvisibleIcon())</div>
+								}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentReferenceResultIcon(test.Lookup.LookupAPI))
+							</div>
+						</td>
+					</tr>
+				}
+
+				@if (test.Lookup?.LookupKJ != null)
+				{
+					<tr>
+						<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.Lookup.LookupKJ))</td>
+						<td>KJ portal</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupKJ.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+							{
+								<div>
+									@Html.Raw(SuccessObfuscatedIcon())
+								</div>
+							}
+							else
+								if (test.Lookup.LookupKJ.RetrieveDocumentReferenceExpectVisible == true)
+								{
+									<div>@Html.Raw(VisibleIcon())</div>
+								}
+								else
+								{
+									<div>@Html.Raw(InvisibleIcon())</div>
+								}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentReferenceResultIcon(test.Lookup.LookupKJ))
+							</div>
+						</td>
+					</tr>
+				}
+
+				@if (test.Lookup?.LookupHelsenorge != null)
+				{
+					<tr>
+						<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.Lookup.LookupHelsenorge))</td>
+						<td>Helsenorge</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupHelsenorge.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+							{
+								<div>
+									@Html.Raw(SuccessObfuscatedIcon())
+								</div>
+							}
+							else
+								if (test.Lookup.LookupHelsenorge.RetrieveDocumentReferenceExpectVisible == true)
+								{
+									<div>@Html.Raw(VisibleIcon())</div>
+								}
+								else
+								{
+									<div>@Html.Raw(InvisibleIcon())</div>
+								}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentReferenceResultIcon(test.Lookup.LookupHelsenorge))
+							</div>
+						</td>
+					</tr>
+				}
+
+			</tbody>
+		</table>
+	</td>
+	<td>
+		<table class="table table-sm">
+			<thead>
+				<tr>
+					<th> @* Ikon  *@</th>
+					<th>Hvor</th>
+					<th>Forventet</th>
+					<th>Testet @* Faktisk *@ @* Resultat *@</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (test.Lookup?.LookupDokumentlager != null)
+				{
+					<tr>
+						<td class="big-icon">@Html.Raw(LookupDocumentStatusIcon(test.Lookup.LookupDokumentlager))</td>
+						<td>Dokumentlager</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupDokumentlager.OpenDocumentExpectSuccess == true)
+							{
+								<div>@Html.Raw(VisibleIcon())</div>
+							}
+							else
+							{
+								<div>@Html.Raw(InvisibleIcon())</div>
+							}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentResultIcon(test.Lookup.LookupDokumentlager))
+							</div>
+						</td>
+					</tr>
+				}
+
+				@if (test.Lookup?.LookupAPI != null)
+				{
+					<tr>
+						@*<td class="big-icon">@Html.Raw(test.Lookup.LookupAPI.Success == true ? SuccessIcon() : FailIcon())</td>*@
+						<td class="big-icon">@Html.Raw(LookupDocumentStatusIcon(test.Lookup.LookupAPI))</td>
+						<td>REST API</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupAPI.OpenDocumentExpectSuccess == true)
+							{
+								<div>@Html.Raw(VisibleIcon())</div>
+							}
+							else
+							{
+								<div>@Html.Raw(InvisibleIcon())</div>
+							}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentResultIcon(test.Lookup.LookupAPI))
+							</div>
+						</td>
+					</tr>
+				}
+
+				@if (test.Lookup?.LookupKJ != null)
+				{
+					<tr>
+						<td class="big-icon">@Html.Raw(LookupDocumentStatusIcon(test.Lookup.LookupKJ))</td>
+						<td>KJ portal</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupKJ.OpenDocumentExpectSuccess == true)
+							{
+								<div>@Html.Raw(VisibleIcon())</div>
+							}
+							else
+							{
+								<div>@Html.Raw(InvisibleIcon())</div>
+							}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentResultIcon(test.Lookup.LookupKJ))
+							</div>
+						</td>
+					</tr>
+				}
+
+				@if (test.Lookup?.LookupHelsenorge != null)
+				{
+					<tr>
+						<td class="big-icon">@Html.Raw(LookupDocumentStatusIcon(test.Lookup.LookupHelsenorge))</td>
+						<td>Helsenorge</td>
+						<td class="ex-icon">
+							@if (test.Lookup.LookupHelsenorge.OpenDocumentExpectSuccess == true)
+							{
+								<div>@Html.Raw(VisibleIcon())</div>
+							}
+							else
+							{
+								<div>@Html.Raw(InvisibleIcon())</div>
+							}
+						</td>
+						<td class="re-icon">
+							<div>
+								@Html.Raw(LookupDocumentResultIcon(test.Lookup.LookupHelsenorge))
+							</div>
+						</td>
+					</tr>
+				}
+
+			</tbody>
+		</table>
+	</td>
+	<td>
+		ATNA logg
+	</td>
+	<td>
+		@if (test.IsTryPatchDocument)
+		{
+			<div>
+				@Html.Raw(StatusIcon(test.PatchDocumentStatus))
+			</div>
+		}
+		else
+		{
+			<div>-</div>
+		}
+	</td>
+	<td>
+		@if (test.IsTryDeleteDocument)
+		{
+			<div>
+				@Html.Raw(StatusIcon(test.DeleteDocumentStatus))
+			</div>			
+		}
+		else
+		{
+			<div>-</div>
+		}
+	</td>
+</tr>								

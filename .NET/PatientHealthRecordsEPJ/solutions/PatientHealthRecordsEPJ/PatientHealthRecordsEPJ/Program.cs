@@ -1,13 +1,14 @@
 // override XmlException: Resolving of external URIs was prohibited.
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
 using NorskHelsenettUpload.Ihe.Mhd.Interfaces;
 using NorskHelsenettUpload.Ihe.Mhd.Services;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ;
+using PatientHealthRecordsEPJ.DokumentlagerTest;
 using PatientHealthRecordsEPJ.Services;
 using StackExchange.Redis;
-using Microsoft.AspNetCore.Http.Features;
 
 const long OneGb = 1L * 1024 * 1024 * 1024;
 
@@ -68,15 +69,27 @@ builder.Services
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IOidcClientService, OidcClientService>();
 
+builder.Services.AddScoped<IUserTokenService, UserTokenService>();
+
 builder.Services.AddScoped<IPhrApiCaller, PhrApiCaller>();
 builder.Services.AddScoped<IPhrApiService, PhrApiService>();
 builder.Services.AddScoped<IBundleCreator, BundleCreator>();
+builder.Services.AddScoped<ICreateDocumentService, CreateDocumentService>();
 
 builder.Services.AddControllersWithViews()
 #if DEBUG
 	.AddRazorRuntimeCompilation()
 #endif
-; 
+;
+
+builder.Services.AddDistributedMemoryCache();
+
+// Services for Dokumentlager tests
+builder.Services.AddSingleton<ITestRunStore, InMemoryTestRunStore>();
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+builder.Services.AddScoped<IDokumentlagerTestRunner, DokumentlagerTestRunner>();
+builder.Services.AddHostedService<QueuedHostedService>();
+// End of services for Dokumentlager tests
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession(options =>
@@ -108,12 +121,26 @@ builder.Services.AddHttpClient("PersonApiClient", client =>
 	client.BaseAddress = new Uri(builder.Configuration["PersontjenestenEndpoints:test"]!);
 }).UseHelseIdDPoP();
 
+builder.Services.AddHttpClient("KjernejournalLoginApiClient", client =>
+{	
+	client.BaseAddress = new Uri(builder.Configuration["KjernejournalLoginEndpoints:Test"]!);
+}).UseHelseIdDPoP(configureClient =>
+{
+	configureClient.Audience = "nhn:kjernejournal";
+	configureClient.Scopes = "nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+
+	// PrivateJwk, ClientId and TokenEndpoint is the same as for Persontjenesten
+});
+
 //builder.Services.AddHttpClient("CreateDocumentsWithReferenceApiClient", client => client.BaseAddress = new Uri(builder.Configuration["OrgRegEndpoints:Dev"]!))
 builder.Services.AddHttpClient("ProvideDocumentBundleApiClient", client => client.BaseAddress = new Uri("https://api.pjd.test.nhn.no"))
 	.UseHelseIdDPoP(configureClient =>
 	{
-		configureClient.Audience = "nhn:phr";
-		configureClient.Scopes = "nhn:phr/mhd/create-documents-with-reference";
+		//configureClient.Audience = "nhn:phr";
+		//configureClient.Scopes = "nhn:phr/mhd/create-documents-with-reference";
+
+		configureClient.Audience = "nhn:phr-document-repository";
+		configureClient.Scopes = "nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference";
 
 		// PrivateJwk, ClientId and TokenEndpoint is the same as for Persontjenesten
 	}); 
@@ -121,6 +148,7 @@ builder.Services.AddHttpClient("ProvideDocumentBundleApiClient", client => clien
 builder.Services.AddScoped<OrganizationService>();	// Used to get organization name from Persontjenesten
 builder.Services.AddScoped<PersonApiService>();     // Used to get person from Persontjenesten
 builder.Services.AddScoped<ProvideDocumentBundleApiService>();     // Used to provide document bundle to PHR API
+builder.Services.AddScoped<KjernejournalLoginApiService>();     // Used to handle Kjernejournal login
 
 var app = builder.Build();
 

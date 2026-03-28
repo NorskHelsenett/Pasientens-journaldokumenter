@@ -6,7 +6,7 @@
   interruptible: true
   stage: image-scan
   image:
-    name: ncr.sky.nhn.no/dockerhub/aquasec/trivy:latest
+    name: ncr.sky.nhn.no/dockerhub/aquasec/trivy:0.69.2@sha256:3d1f862cb6c4fe13c1506f96f816096030d8d5ccdb2380a3069f7bf07daa86aa
     entrypoint: [""]
   variables:
     # No need to clone the repo, we exclusively work on artifacts.  See

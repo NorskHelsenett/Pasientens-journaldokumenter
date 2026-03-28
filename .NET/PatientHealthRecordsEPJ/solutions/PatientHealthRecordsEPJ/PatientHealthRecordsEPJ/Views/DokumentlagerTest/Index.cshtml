@@ -1,0 +1,548 @@
+﻿@using Hl7.Fhir.Model
+
+@model DokumentlagerTestViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+
+	string ShowJsonData(string json)
+	{
+		if (string.IsNullOrEmpty(json))
+		{
+			return "- ingen data -";
+		}
+		else
+		{
+			return json;
+		}
+	}
+
+	string Active(bool? active)
+	{
+		return active == true ? "<span class='active'>AKTIV</span>" : "<span class='inactive'>IKKE AKTIV</span>";
+	}
+
+	string Blocked(bool? blocked)
+	{
+		return blocked == true ? "<span class='active'>JA, ER BLOKKERT</span>" : "<span class='inactive'>NEI, IKKE BLOKKERT</span>";
+	}
+
+	string OutcomeIcon(bool? success)
+	{
+		if (success == null)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		return success == true ? "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>" : "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+	}
+
+	string SuccessIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+	}
+
+	string SuccessObfuscatedIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-asterisk'></i></span>";
+	}
+
+	string FailIcon()
+	{
+		return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+	}
+
+	string NeutralIcon()
+	{
+		return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+	}
+
+	string VisibleIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-eye'></i></span>";
+	}
+
+	string InvisibleIcon()
+	{
+		return "<span style='color:red;font-weight:bold'><i class='bi bi-eye-slash'></i></span>";
+	}
+
+}
+
+<style>
+	.head {
+		font-size: 11px;
+		font-style: italic;
+	}
+
+	tr.document-item {
+		cursor: pointer;
+	}
+
+	tr.document-detail {
+		display: none;
+	}
+
+	iframe {
+		width: 100%;
+		height: 800px;
+		/* border:none;  */
+		border: 1px solid #aaa;
+	}
+
+	textarea {
+		position: relative;
+		color: black;
+		height: auto;
+	}
+
+	.active {
+		color: green;
+	}
+
+	.inactive {
+		color: red;
+	}
+
+	.group {
+		font-size: 1.5rem;
+	}
+
+	.big-icon {
+		font-size: 20px;
+	}
+
+	.big-spinner
+	{
+		font-size:1.5rem; 
+	}
+
+	.ex-icon {
+		opacity: 0.6;
+	}
+
+	.re-icon {
+		opacity: 0.6;
+	}
+
+	.field {
+		background-color: #ddd;
+		padding: 4px;
+		border-radius: 3px;
+		font-size: 14px;
+	}
+	
+	.badge-running
+	{
+		display:inline-block; 
+		background-color: darkgoldenrod;
+		/* color: black; */
+		padding: 4px 10px;
+		border-radius: 4px;
+		font-size: 1.3rem;
+		margin-top:10px; 
+	}
+
+</style>
+
+<style>
+	.row-not-run
+	{
+
+	}
+
+	.row-queued
+	{
+
+	}
+
+	.row-running
+	{
+		/* background-color:greenyellow;  */
+		background-color: #e0e0e0;
+	}
+
+	.row-success
+	{
+		/* background-color:limegreen;  */
+		background-color: lightgreen;
+	}
+
+	.row-failed
+	{
+		/* background-color:red;  */
+		background-color: hsl(6.1, 66.3%, 82.5%); 
+	}
+
+</style>
+
+<style>
+	.spinner-icon {
+		display: inline-block;
+		animation: spin 1s linear infinite;
+	}
+
+	@@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+
+		to {
+			transform: rotate(360deg);
+		}
+	}
+</style>
+
+<script>
+	var tests = @Html.Raw(Model.TestsJson);  	
+</script>
+
+<script>
+
+	async function reset() {
+		await fetch("/DokumentlagerTest/Reset")
+				.then(response => response.text())
+				.then(data => {
+					console.log("reset: Received data from server for test lookup: ", data);
+
+				})
+				.catch(error => {
+					console.error("Error fetching test lookup result: ", error);
+				}
+			);
+	}
+
+	async function pause() {
+		await fetch("/DokumentlagerTest/Pause")
+				.then(response => response.text())
+				.then(data => {
+					console.log("pause: Received data from server for test lookup: ", data);
+
+				})
+				.catch(error => {
+					console.error("Error fetching test lookup result: ", error);
+				}
+			);
+	}
+
+	async function continueTest() {
+		await fetch("/DokumentlagerTest/Continue")
+				.then(response => response.text())
+				.then(data => {
+					console.log("continue: Received data from server for test lookup: ", data);
+
+				})
+				.catch(error => {
+					console.error("Error fetching test lookup result: ", error);
+				}
+			);
+	}
+
+	async function getStatus(groupIndex, testIndex) {
+		await fetch("/DokumentlagerTest/Status?groupIndex=" + groupIndex + "&testIndex=" + testIndex)
+				.then(response => response.json())
+				.then(test => {
+					console.log("getStatus: Received data from server for test lookup: ", test);
+
+					return test; 
+
+				})
+				.catch(error => {
+					console.error("Error fetching test lookup result: ", error);
+				}
+			);
+	}
+
+	async function pollStatus(runId) {
+		while (true) {
+			const response = await fetch(`/DokumentlagerTest/status/${runId}`);
+			const data = await response.json();
+
+			console.log(data);
+
+			if (data.status === "Completed" || data.status === "Failed") {
+				return data;
+			}
+
+			await new Promise(resolve => setTimeout(resolve, 1000));
+		}
+	}
+
+	async function runTests() {
+
+		console.log("Resetting all tests");
+
+		await reset(); 
+
+		console.log("Running tests");
+
+		var groupIndex = 0; 
+		var testIndex = 0;
+
+		for (const testGroup of tests.testGroups) {
+			console.log(testGroup.name);
+
+			testIndex = 0; 
+
+			for (const test of testGroup.testCases) {
+
+				await runTest(test, groupIndex, testIndex);
+
+				testIndex++; 
+			}
+
+			groupIndex++; 
+		}
+	}
+
+	async function startTest(groupIndex, testIndex) {
+		const response = await fetch(`/DokumentlagerTest/run?groupIndex=${groupIndex}&testIndex=${testIndex}`, {
+			method: 'POST'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to start test');
+		}
+
+		return await response.json(); 
+		//return await response.json().then(data => { return data; });
+	}
+
+	async function runTest(test, groupIndex, testIndex) {
+
+		console.log(test.name, groupIndex, testIndex);
+
+		const lookup = test.lookup;
+		const lookupDokumentlager = lookup.lookupDokumentlager;
+		const lookupAPI = lookup.lookupAPI;
+		const lookupKJ = lookup.lookupKJ;
+		const lookupHelsenorge = lookup.lookupHelsenorge;
+
+		console.log(lookupDokumentlager, lookupAPI, lookupKJ, lookupHelsenorge);
+
+		var testRow = document.querySelector(`tr.test-row[data-test-index='${testIndex}'][data-group-index='${groupIndex}']`);		
+
+		if (testRow != null && testRow != undefined) {
+
+			console.log("FOUND row in table for test: ", testRow);
+			console.log("Running test");
+
+			// Kick off test execution on server, and return immediatly while test continues to run in background. We will poll for status until test is finished.
+			const started = await startTest(groupIndex, testIndex);
+
+				/*.then(data => {
+					console.log("Received data from server when starting test: ", data);
+					return data; 
+				})
+				.catch(error => {
+					console.error("Error starting test: ", error);
+				}
+			);	*/
+
+			console.log(started);
+
+			const runId = started.runId; 
+			
+			// Poll for status until test is finished, and update table row with results when finished. For now we will just log status to console, but this can be updated to show live status in the table if desired.
+			var finished = false;
+			do
+			{
+				await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+
+				const response = await fetch(`/DokumentlagerTest/status?runId=${runId}`);
+				const data = await response.json();
+
+				console.log(data);
+
+				const renderResponse = await fetch(`/DokumentlagerTest/renderTest?runId=${runId}`);
+				//const renderResponse = await fetch(`/DokumentlagerTest/renderTest?groupIndex=${groupIndex}&testIndex=${testIndex}`);
+				const renderHtml = await renderResponse.text();
+
+				//console.log("Received render response: ", renderHtml);
+
+				// Replace table row with new rendered HTML from server, which will include updated status and results for the test. This allows us to show live updates in the table as the test is running.
+				if (testRow != null && testRow != undefined) {
+					testRow.outerHTML = renderHtml;
+					testRow = document.querySelector(`tr.test-row[data-test-index='${testIndex}'][data-group-index='${groupIndex}']`); // Update reference to the new row after replacing HTML
+				}
+
+				if (data.status === "Success" || data.status === "Failed") {
+					//return data;
+					finished = true; 
+				}
+
+				//const finalResult = await pollStatus(started.runId);
+
+				//console.log(finalResult); 
+
+				/*await getStatus(groupIndex, testIndex)
+					.then(test => {
+						console.log("Status for test: ", test);
+						console.log("Status: ", test.status);
+
+						if (test.result != null && test.result.isSuccess != null)
+						{
+							finished = true; 
+							console.log("Test finished with result: ", test.result.isSuccess);
+						}
+						else
+						{
+							console.log("Test not finished yet, waiting and polling again...");
+						}
+					})
+					.catch(error => {
+						console.error("Error fetching test lookup result: ", error);
+					}
+				);*/
+
+			} while (!finished);
+		}
+
+	}
+</script>
+
+<div style="max-width:1900px;margin:0 auto">
+
+	<h4 class="display-6">Ende-til-ende tester for NHN dokumentlager</h4>
+
+	<div style="display:flex;gap:40px">
+		<div>
+
+			<h5>Innlogget som:</h5>
+			<div>
+				<h6>@sessionData.Name / @sessionData.AuthorizationName - @sessionData.OrganizationName</h6>
+			</div>
+		</div>
+
+		<div>
+
+			<h5>Pasient:</h5>
+
+			<div>
+				<h6>@sessionData.PatientName <span style="font-size:14px;">(@sessionData.PatientId) @* / Kvinne (33 år) *@</span></h6>
+			</div>
+		</div>
+	</div>
+
+	<br />
+
+	@* <h4>Tester: </h4> *@
+
+	@if (!Model.IsSuccess)
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					Error: @Model.ErrorMessage
+				</div>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+
+					<button id="runTests" class="btn btn-primary btn-lg" onclick="runTests()" style="width:300px"> <i class="bi bi-play"></i> Run tests</button>
+					<br />
+					<br />
+
+					<h4>
+						Total resultat
+					</h4>
+					<table class="table w-auto">
+						<thead>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="big-icon">
+									@Html.Raw(SuccessIcon())
+								</td>
+								<td>
+									Suksess tester
+								</td>
+								<td>
+									14
+								</td>
+							</tr>
+							<tr>
+								<td class="big-icon">
+									@Html.Raw(FailIcon())
+								</td>
+								<td>
+									Feilede tester
+								</td>
+								<td>
+									7
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<br />
+
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<table class="table test-table">
+						<thead>
+							<tr>
+								<th>@* Ikon *@</th>
+								<th>Test</th>
+								<th>Forventet resultat</th>
+								<th>Kommentar</th>
+								<th>Metadata</th>
+								<th>Dokument</th>
+								<th>Lagring</th>								
+								@* <th>Oppslag</th> *@
+								<th>Attest</th>
+								<th>Åpne dokumentliste</th>
+								<th>Åpne dokument</th>
+								<th>ATNA logg</th>
+								<th>Endre</th>
+								<th>Slett</th>
+							</tr>
+						</thead>
+						<tbody>
+							@{
+								var groupIndex = 0; 
+								var testIndex = 0;
+							}
+
+							@foreach (var group in Model.Tests.TestGroups)
+							{
+								testIndex = 0; 
+
+								<tr>
+									<td colspan="100" class="group">@group.Name</td>
+								</tr>
+
+								@foreach (var test in group.TestCases!)
+								{
+									var testModel = new DokumentlagerTestCaseViewModel(); 
+									testModel.Test = test; 
+									testModel.GroupIndex = groupIndex;
+									testModel.TestIndex = testIndex;
+									testModel.Run = new TestRunInfo() { Status = DokumentlagerTestCaseStatus.NotRun };
+
+									<partial name="_RenderTestPartial" model="testModel" />
+
+									testIndex++;									
+								}
+
+								groupIndex++; 
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+	}
+</div>
+

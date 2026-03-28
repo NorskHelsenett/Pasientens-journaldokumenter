@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using PatientHealthRecordsEPJ.ImageConversion;
 using PatientHealthRecordsEPJ.Mapper.Xml;
 using PatientHealthRecordsEPJ.Models;
+using PatientHealthRecordsEPJ.Services;
 using System.Diagnostics;
 using System.Text;
 using System.Xml;
@@ -28,7 +29,9 @@ public class DocumentController : BaseController
 		IHttpContextAccessor httpContextAccessor, 
 		IMemoryCache memoryCache, 
 		IWebHostEnvironment webHostEnvironment,		
-		IOidcClientService oidcClientService) : base(sessionOptions)
+		IOidcClientService oidcClientService,
+		IUserTokenService userTokenService
+		) : base(sessionOptions, userTokenService)
 	{
 		_logger = logger;
 		_httpContextAccessor = httpContextAccessor;
@@ -46,38 +49,14 @@ public class DocumentController : BaseController
 		return redirectUrl;
 	}
 
-	public async Task<IActionResult> RefreshToken()
-	{
-		var redirectUrl = GetRedirectUrl();
-
-		await _oidcClientService.InitializeAsync(redirectUrl);
-
-		var loginResult = session.SessionData();
-
-		var result = await _oidcClientService.RefreshTokenAsync(loginResult.RefreshToken);
-
-		if (result.IsError)
-		{
-			throw new Exception($"{result.Error}: {result.ErrorDescription}");
-		}
-
-		loginResult.AccessToken = result.AccessToken;
-		loginResult.RefreshToken = result.RefreshToken;
-		loginResult.SaveToSession(session);
-
-		return Ok(result.AccessToken);
-	}
-
 	public async Task<IActionResult> Index(string url)
 	{
-		var loginResult = session.SessionData();
+		var loginResult = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
-		if (loginResult.AccessToken == null)
+		if (loginResult.PjdAccessToken == null)
 		{
 			return Redirect("/");
-		}
-
-		await RefreshToken();
+		}		
 
 		sessionLoginResult = session.SessionData();
 
@@ -122,7 +101,7 @@ public class DocumentController : BaseController
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", patient));
 		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString())); 
 		
-		var apiResult = await ApiCaller.CallApi(HttpMethod.Get, url, sessionLoginResult.AccessToken!, document: true, headerKeyValues: headerKeyValues);
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Get, url, sessionLoginResult.PjdAccessToken!, document: true, headerKeyValues: headerKeyValues);
 
 		if (apiResult.IsSuccess)
 		{

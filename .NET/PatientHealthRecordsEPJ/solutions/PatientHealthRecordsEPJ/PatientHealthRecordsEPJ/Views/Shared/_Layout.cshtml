@@ -136,6 +136,12 @@
 								<a class="nav-link text-dark @selected" asp-area="" asp-controller="HelseId" asp-action="Index">HelseID@*  token *@</a>
 							</li>
 
+							selected = path.StartsWith("/dokumentlagertest") ? selectedClass : string.Empty;
+
+							<li class="nav-item">
+								<a class="nav-link text-dark @selected" asp-area="" asp-controller="DokumentlagerTest" asp-action="Index">Dokumentlager Test</a>
+							</li>
+
 							<li class="nav-item">
 								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
 							</li>

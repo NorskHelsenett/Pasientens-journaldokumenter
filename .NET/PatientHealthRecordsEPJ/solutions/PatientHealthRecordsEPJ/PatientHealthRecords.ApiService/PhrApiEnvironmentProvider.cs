@@ -33,7 +33,7 @@ public class PhrApiEnvironmentProvider : IPhrApiEnvironmentProvider
 
 	public PhrApiEnvironment GetCurrentEnvironment()
 	{
-		var envId = _httpContextAccessor.HttpContext!.Session.GetString(SessionKey)
+		var envId = _httpContextAccessor?.HttpContext?.Session.GetString(SessionKey)
 					?? _options.ActiveEnvironment; // default fallback
 
 		var env = _options.Environments.FirstOrDefault(x => x.Environment == envId);
