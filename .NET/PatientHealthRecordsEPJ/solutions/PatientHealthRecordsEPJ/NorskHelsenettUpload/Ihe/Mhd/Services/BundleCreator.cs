@@ -116,8 +116,8 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			{
 				WriteIndented = true,
 				Converters = { new DateTimeConverter() }
-			}
-			.ForFhir(typeof(Bundle).Assembly)
+			}			
+			.ForFhir() // replaces .ForFhir(typeof(Bundle).Assembly)
 			.Pretty();
 
 			return JsonSerializer.Serialize(bundle, options);
