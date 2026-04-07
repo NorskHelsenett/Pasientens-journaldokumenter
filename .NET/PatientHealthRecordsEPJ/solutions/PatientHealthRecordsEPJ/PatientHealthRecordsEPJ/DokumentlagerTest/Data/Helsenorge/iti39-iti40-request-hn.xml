@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+	<soapenv:Header xmlns:wsa="http://www.w3.org/2005/08/addressing">
+		<wsa:ReplyTo soapenv:mustUnderstand="1">
+			<wsa:Address>http://www.w3.org/2005/08/addressing/anonymous</wsa:Address>
+		</wsa:ReplyTo>
+		<wsa:To>https://bjarne-sykehus.t-xcads.pjd.nhn.no/XCA/services/RespondingGatewayService</wsa:To>
+		<wsa:MessageID>urn:uuid:ac897068-9b28-446a-9914-2a974fc61f1c</wsa:MessageID>
+		<wsa:Action>urn:ihe:iti:2007:CrossGatewayRetrieve</wsa:Action>
+		<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">			
+			<wsu:Timestamp
+                xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+				<wsu:Created>2026-04-06T20:05:20.524Z</wsu:Created>
+				<wsu:Expires>2026-04-06T20:20:20.524Z</wsu:Expires>
+			</wsu:Timestamp>
+		</wsse:Security>
+		<sense:context xmlns:sense="http://sense.ith-icoserve.com/context/"
+            xmlns:wsctx="http://docs.oasis-open.org/ws-caf/2005/10/wsctx">
+			<wsctx:context-identifier>urn:uuid:3e7d2ab2-edc8-43ba-a915-f18029ecc254</wsctx:context-identifier>
+			<wsctx:context-service>
+				<sense:service>XCA</sense:service>
+			</wsctx:context-service>
+		</sense:context>
+	</soapenv:Header>
+	<soapenv:Body>
+		<ns3:RetrieveDocumentSetRequest xmlns:ns3="urn:ihe:iti:xds-b:2007"
+            xmlns:ns8="urn:ihe:iti:rmd:2017" xmlns:ns7="urn:oasis:names:tc:ebxml-regrep:xsd:lcm:3.0"
+            xmlns:ns6="urn:ihe:rad:xdsi-b:2009"
+            xmlns:ns5="urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0"
+            xmlns:ns4="urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0"
+            xmlns:ns2="urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0">
+			<ns3:DocumentRequest>
+				<ns3:HomeCommunityId>urn:oid:_HOMECOMMUNITY_ID_</ns3:HomeCommunityId>
+				<ns3:RepositoryUniqueId>_REPOSITORY_UNIQUE_ID_</ns3:RepositoryUniqueId>
+				<ns3:DocumentUniqueId>_DOCUMENT_UNIQUE_ID_</ns3:DocumentUniqueId>
+			</ns3:DocumentRequest>
+		</ns3:RetrieveDocumentSetRequest>
+	</soapenv:Body>
+</soapenv:Envelope>

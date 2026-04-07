@@ -67,6 +67,11 @@
 		return "<span style='color:red;font-weight:bold'><i class='bi bi-eye-slash'></i></span>";
 	}
 
+	string SpinnerIcon()
+	{
+		return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+	}
+
 }
 
 <style>
@@ -112,9 +117,8 @@
 		font-size: 20px;
 	}
 
-	.big-spinner
-	{
-		font-size:1.5rem; 
+	.big-spinner {
+		font-size: 1.5rem;
 	}
 
 	.ex-icon {
@@ -132,46 +136,42 @@
 		font-size: 14px;
 	}
 	
-	.badge-running
-	{
-		display:inline-block; 
+	.badge-running {
+		display: inline-block;
 		background-color: darkgoldenrod;
 		/* color: black; */
 		padding: 4px 10px;
 		border-radius: 4px;
 		font-size: 1.3rem;
-		margin-top:10px; 
+		margin-top: 10px;
+	}
+
+	.events-title {
+		color: goldenrod;
 	}
 
 </style>
 
 <style>
-	.row-not-run
-	{
-
+	.row-not-run {
 	}
 
-	.row-queued
-	{
-
+	.row-queued {
 	}
 
-	.row-running
-	{
+	.row-running {
 		/* background-color:greenyellow;  */
 		background-color: #e0e0e0;
 	}
 
-	.row-success
-	{
+	.row-success {
 		/* background-color:limegreen;  */
 		background-color: lightgreen;
 	}
 
-	.row-failed
-	{
+	.row-failed {
 		/* background-color:red;  */
-		background-color: hsl(6.1, 66.3%, 82.5%); 
+		background-color: hsl(6.1, 66.3%, 82.5%);
 	}
 
 </style>
@@ -194,7 +194,7 @@
 </style>
 
 <script>
-	var tests = @Html.Raw(Model.TestsJson);  	
+	var tests = @Html.Raw(Model.TestsJson);
 </script>
 
 <script>
@@ -244,7 +244,7 @@
 				.then(test => {
 					console.log("getStatus: Received data from server for test lookup: ", test);
 
-					return test; 
+					return test;
 
 				})
 				.catch(error => {
@@ -272,31 +272,39 @@
 
 		console.log("Resetting all tests");
 
-		await reset(); 
+		await reset();
+
+		const homeCommunityId = document.querySelector("#selectSource").value;
+
+		if (homeCommunityId == undefined || homeCommunityId == null || homeCommunityId == "" || homeCommunityId == "0")
+		{
+			alert("Du må velge en kilde som du vil teste mot");
+			return;
+		}
 
 		console.log("Running tests");
 
-		var groupIndex = 0; 
+		var groupIndex = 0;
 		var testIndex = 0;
 
 		for (const testGroup of tests.testGroups) {
 			console.log(testGroup.name);
 
-			testIndex = 0; 
+			testIndex = 0;
 
 			for (const test of testGroup.testCases) {
 
-				await runTest(test, groupIndex, testIndex);
+				await runTest(homeCommunityId, test, groupIndex, testIndex);
 
-				testIndex++; 
+				testIndex++;
 			}
 
-			groupIndex++; 
+			groupIndex++;
 		}
 	}
 
-	async function startTest(groupIndex, testIndex) {
-		const response = await fetch(`/DokumentlagerTest/run?groupIndex=${groupIndex}&testIndex=${testIndex}`, {
+	async function startTest(homeCommunityId, groupIndex, testIndex) {
+		const response = await fetch(`/DokumentlagerTest/run?homeCommunityId=${homeCommunityId}&groupIndex=${groupIndex}&testIndex=${testIndex}`, {
 			method: 'POST'
 		});
 
@@ -304,13 +312,13 @@
 			throw new Error('Failed to start test');
 		}
 
-		return await response.json(); 
+		return await response.json();
 		//return await response.json().then(data => { return data; });
 	}
 
-	async function runTest(test, groupIndex, testIndex) {
+	async function runTest(homeCommunityId, test, groupIndex, testIndex) {
 
-		console.log(test.name, groupIndex, testIndex);
+		console.log(test.name, homeCommunityId, groupIndex, testIndex);
 
 		const lookup = test.lookup;
 		const lookupDokumentlager = lookup.lookupDokumentlager;
@@ -320,7 +328,8 @@
 
 		console.log(lookupDokumentlager, lookupAPI, lookupKJ, lookupHelsenorge);
 
-		var testRow = document.querySelector(`tr.test-row[data-test-index='${testIndex}'][data-group-index='${groupIndex}']`);		
+		var testRow = document.querySelector(`tr.test-row[data-test-index='${testIndex}'][data-group-index='${groupIndex}']`);
+		var totalResultsDiv = document.querySelector(`.total-results`);
 
 		if (testRow != null && testRow != undefined) {
 
@@ -328,11 +337,11 @@
 			console.log("Running test");
 
 			// Kick off test execution on server, and return immediatly while test continues to run in background. We will poll for status until test is finished.
-			const started = await startTest(groupIndex, testIndex);
+			const started = await startTest(homeCommunityId, groupIndex, testIndex);
 
 				/*.then(data => {
 					console.log("Received data from server when starting test: ", data);
-					return data; 
+					return data;
 				})
 				.catch(error => {
 					console.error("Error starting test: ", error);
@@ -341,7 +350,7 @@
 
 			console.log(started);
 
-			const runId = started.runId; 
+			const runId = started.runId;
 			
 			// Poll for status until test is finished, and update table row with results when finished. For now we will just log status to console, but this can be updated to show live status in the table if desired.
 			var finished = false;
@@ -368,12 +377,26 @@
 
 				if (data.status === "Success" || data.status === "Failed") {
 					//return data;
-					finished = true; 
+					finished = true;
 				}
+
+				// Render total results
+
+				const renderTotalResultResponse = await fetch(`/DokumentlagerTest/renderTotalResult`);
+				const renderTotalResultHtml = await renderTotalResultResponse.text();
+
+				//console.log("Received render response: ", renderHtml);
+
+				// Replace total results with new rendered HTML from server
+				if (totalResultsDiv != null && totalResultsDiv != undefined) {
+					totalResultsDiv.outerHTML = renderTotalResultHtml;
+					totalResultsDiv = document.querySelector(`.total-results`); // Update reference to the new div after replacing HTML
+				}
+
 
 				//const finalResult = await pollStatus(started.runId);
 
-				//console.log(finalResult); 
+				//console.log(finalResult);
 
 				/*await getStatus(groupIndex, testIndex)
 					.then(test => {
@@ -382,7 +405,7 @@
 
 						if (test.result != null && test.result.isSuccess != null)
 						{
-							finished = true; 
+							finished = true;
 							console.log("Test finished with result: ", test.result.isSuccess);
 						}
 						else
@@ -398,6 +421,17 @@
 			} while (!finished);
 		}
 
+	}
+
+	function onChangeSource() {
+
+		const selectSource = document.getElementById("selectSource");
+
+		const homeCommunityId = selectSource.value;
+		
+		const url = "DokumentlagerTest?homeCommunityId=" + homeCommunityId;
+
+		location.href = url;
 	}
 </script>
 
@@ -441,52 +475,124 @@
 	else
 	{
 		<div class="container-fluid">
+
 			<div class="row">
 				<div class="col-md-12">
 
-					<button id="runTests" class="btn btn-primary btn-lg" onclick="runTests()" style="width:300px"> <i class="bi bi-play"></i> Run tests</button>
-					<br />
-					<br />
+					@{
+						List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+						{
+							"test" => KildeInfo.KildeListTest,
+							"qa" => KildeInfo.KildeListQA,
+							_ => null
+						};
+					}
 
-					<h4>
-						Total resultat
-					</h4>
-					<table class="table w-auto">
-						<thead>
-						</thead>
-						<tbody>
-							<tr>
-								<td class="big-icon">
-									@Html.Raw(SuccessIcon())
-								</td>
-								<td>
-									Suksess tester
-								</td>
-								<td>
-									14
-								</td>
-							</tr>
-							<tr>
-								<td class="big-icon">
-									@Html.Raw(FailIcon())
-								</td>
-								<td>
-									Feilede tester
-								</td>
-								<td>
-									7
-								</td>
-							</tr>
-						</tbody>
-					</table>
+					<div>
+						<strong>Velg instans av dokumentlager: </strong>
+						<select id="selectSource" onchange="onChangeSource()">
+							<option value="0">-- Velg kilde --</option>
+							@foreach (var kilde in kildeList)
+							{
+								var _checked = kilde.HomeCommunityId == Model.SelectedHomeCommunityId ? "selected" : string.Empty;
 
+								if (kilde.HomeCommunityId == Model.SelectedHomeCommunityId)
+								{
+									<option value="@kilde.HomeCommunityId" selected>@kilde.HomeCommunityId - @kilde.Name</option>
+								}
+								else
+								{
+									<option value="@kilde.HomeCommunityId">@kilde.HomeCommunityId - @kilde.Name</option>
+								}
+							}
+
+						</select>
+						<br />
+						<br />
+					</div>
+
+
+					<button id="runTests" class="btn btn-primary btn-lg" onclick="runTests()" style="width:300px"> <i class="bi bi-play"></i> Kjør tester @* Run tests *@</button>
+					<br />
 					<br />
 
 				</div>
 			</div>
-		</div>
 
-		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<partial name="_RenderTotalResultPartial" />
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-12">
+					<div class="alert alert-info" role="alert">
+
+						<details>
+
+							<summary>
+								<i class="bi bi-info"></i>
+								@* All tests will perform the following actions (with variations). You can read the columns from left to right which corresponds to the actions performed by the test.
+
+					<ol>
+						<li>Upload bundle (and save to registry and repository)</li>
+						<li>Open document list/references
+							<ol>
+								<li>With REST API</li>
+								<li>With KJ portal</li>
+								<li>With Helsenorge</li>
+							</ol>
+						</li>
+							
+						<li>Open document
+
+							<ol>
+								<li>With REST API</li>
+								<li>With KJ portal</li>
+								<li>With Helsenorge</li>
+							</ol>
+
+						</li>
+						<li>Check ATNA log</li>
+						<li>Change/PATCH security labels</li>
+						<li>Delete document</li>						
+					</ol> *@					
+
+								Alle tester vil foreta følgende handlinger (med variasjoner). Klikk her for å se. Du kan lese kolonnene fra venstre mot høyre som korresponderer til handlingene i testen. <br />								
+							</summary>
+
+							<ol>
+								<li>Last opp dokument/bundle (og lagre til registry og repository)</li>
+								<li>
+									Åpne dokumentliste (dokumentreferanser)
+									<ol>
+										<li>Med REST API</li>
+										<li>Med KJ portal</li>
+										<li>Med Helsenorge</li>
+									</ol>
+								</li>
+							
+								<li>
+									Åpne dokument
+
+									<ol>
+										<li>Med REST API</li>
+										<li>Med KJ portal</li>
+										<li>Med Helsenorge</li>
+									</ol>
+
+								</li>
+								<li>Sjekk ATNA log</li>
+								<li>Endre/PATCH security label</li>
+								<li>Slett dokument</li>
+							</ol>
+						</details>
+					</div>
+				</div>
+			</div>
+
+			
 			<div class="row">
 				<div class="col-md-12">
 					<table class="table test-table">
@@ -494,15 +600,16 @@
 							<tr>
 								<th>@* Ikon *@</th>
 								<th>Test</th>
-								<th>Forventet resultat</th>
-								<th>Kommentar</th>
+								@* <th>Forventet resultat</th> *@
+								@* <th>Kommentar</th> *@
 								<th>Metadata</th>
 								<th>Dokument</th>
-								<th>Lagring</th>								
+								<th>Lagring</th>
 								@* <th>Oppslag</th> *@
 								<th>Attest</th>
 								<th>Åpne dokumentliste</th>
 								<th>Åpne dokument</th>
+								@* <th>Hendelser</th> *@
 								<th>ATNA logg</th>
 								<th>Endre</th>
 								<th>Slett</th>
@@ -510,13 +617,13 @@
 						</thead>
 						<tbody>
 							@{
-								var groupIndex = 0; 
+								var groupIndex = 0;
 								var testIndex = 0;
 							}
 
 							@foreach (var group in Model.Tests.TestGroups)
 							{
-								testIndex = 0; 
+								testIndex = 0;
 
 								<tr>
 									<td colspan="100" class="group">@group.Name</td>
@@ -524,25 +631,25 @@
 
 								@foreach (var test in group.TestCases!)
 								{
-									var testModel = new DokumentlagerTestCaseViewModel(); 
-									testModel.Test = test; 
+									var testModel = new DokumentlagerTestCaseViewModel();
+									testModel.Test = test;
 									testModel.GroupIndex = groupIndex;
 									testModel.TestIndex = testIndex;
 									testModel.Run = new TestRunInfo() { Status = DokumentlagerTestCaseStatus.NotRun };
 
 									<partial name="_RenderTestPartial" model="testModel" />
 
-									testIndex++;									
+									testIndex++;
 								}
 
-								groupIndex++; 
+								groupIndex++;
 							}
 						</tbody>
 					</table>
 				</div>
 			</div>
+			
 		</div>
-
 	}
 </div>
 

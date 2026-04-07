@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+	<soapenv:Header xmlns:wsa="http://www.w3.org/2005/08/addressing">
+		<wsa:ReplyTo soapenv:mustUnderstand="1">
+			<wsa:Address>http://www.w3.org/2005/08/addressing/anonymous</wsa:Address>
+		</wsa:ReplyTo>
+		<wsa:To>https://bjarne-sykehus.t-xcads.pjd.nhn.no/XCA/services/RespondingGatewayService</wsa:To>
+		<wsa:MessageID>urn:uuid:04181bcc-c065-4b1e-9b9a-483e83c6bec0</wsa:MessageID>
+		<wsa:Action>urn:ihe:iti:2007:CrossGatewayQuery</wsa:Action>				
+		<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+			<u:Timestamp xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+				<u:Created>2025-07-31T18:49:15Z</u:Created>
+				<u:Expires>2025-07-31T19:04:15Z</u:Expires>
+			</u:Timestamp>
+		</wsse:Security>
+		<sense:context xmlns:sense="http://sense.ith-icoserve.com/context/"
+					xmlns:wsctx="http://docs.oasis-open.org/ws-caf/2005/10/wsctx">
+			<wsctx:context-identifier>urn:uuid:4ba6493f-b1e1-4a09-bd19-85b3ff34d126</wsctx:context-identifier>
+			<wsctx:context-service>
+				<sense:service>XCA</sense:service>
+			</wsctx:context-service>
+		</sense:context>
+	</soapenv:Header>
+	<soapenv:Body>
+		<ns5:AdhocQueryRequest xmlns:ns5="urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0"
+            xmlns:ns8="urn:ihe:iti:rmd:2017" xmlns:ns7="urn:oasis:names:tc:ebxml-regrep:xsd:lcm:3.0"
+            xmlns:ns6="urn:ihe:rad:xdsi-b:2009" xmlns:ns4="urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0"
+            xmlns:ns3="urn:ihe:iti:xds-b:2007" xmlns:ns2="urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0">
+			<ns5:ResponseOption returnType="LeafClass" returnComposedObjects="true" />
+			<ns2:AdhocQuery id="urn:uuid:14d4debf-8f97-4251-9a74-a90016b0af0d"
+                home="urn:oid:_HOMECOMMUNITY_ID_">
+				<ns2:Slot name="$XDSDocumentEntryStatus">
+					<ns2:ValueList>
+						<ns2:Value>('urn:oasis:names:tc:ebxml-regrep:StatusType:Approved')</ns2:Value>
+					</ns2:ValueList>
+				</ns2:Slot>				
+				<ns2:Slot name="$XDSDocumentEntryConfidentialityCode">
+					<ns2:ValueList>
+						<ns2:Value>('N^^2.16.578.1.12.4.1.1.9603')</ns2:Value>
+						<ns2:Value>('N^^2.16.840.1.113883.5.25')</ns2:Value>
+						<ns2:Value>('R^^2.16.840.1.113883.5.25')</ns2:Value>
+					</ns2:ValueList>
+				</ns2:Slot>
+				<ns2:Slot name="$XDSDocumentEntryPatientId">
+					<ns2:ValueList>
+						<ns2:Value>
+							'_PATIENT_ID_AND_SYSTEM_&amp;ISO'
+						</ns2:Value>
+					</ns2:ValueList>
+				</ns2:Slot>
+			</ns2:AdhocQuery>
+		</ns5:AdhocQueryRequest>
+	</soapenv:Body>
+</soapenv:Envelope>

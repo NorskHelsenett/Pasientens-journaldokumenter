@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+	<soapenv:Header xmlns:wsa="http://www.w3.org/2005/08/addressing">
+		<wsa:ReplyTo soapenv:mustUnderstand="1">
+			<wsa:Address>http://www.w3.org/2005/08/addressing/anonymous</wsa:Address>
+		</wsa:ReplyTo>
+		<wsa:To>https://bjarne-sykehus.t-xcads.pjd.nhn.no/XCA/services/RespondingGatewayService</wsa:To>
+		<wsa:MessageID>urn:uuid:4cae4a50-122e-4387-bc97-7387b78ca00b</wsa:MessageID>
+		<wsa:Action>urn:ihe:iti:2007:CrossGatewayQuery</wsa:Action>
+		<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">			
+			<wsu:Timestamp
+                xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                wsu:Id="TS">
+				<wsu:Created>2026-04-06T15:47:01.995Z</wsu:Created>
+				<wsu:Expires>2026-04-06T16:02:01.995Z</wsu:Expires>
+			</wsu:Timestamp>
+		</wsse:Security>
+		<sense:context xmlns:sense="http://sense.ith-icoserve.com/context/"
+            xmlns:wsctx="http://docs.oasis-open.org/ws-caf/2005/10/wsctx">
+			<wsctx:context-identifier>uuid:40dc393e-9fcf-4097-903b-0cf6d7f5ab84</wsctx:context-identifier>
+			<wsctx:context-service>
+				<sense:service>XCA</sense:service>
+			</wsctx:context-service>
+		</sense:context>
+	</soapenv:Header>
+	<soapenv:Body>
+		<ns5:AdhocQueryRequest xmlns:ns5="urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0"
+            xmlns:ns8="urn:ihe:iti:rmd:2017" xmlns:ns7="urn:oasis:names:tc:ebxml-regrep:xsd:lcm:3.0"
+            xmlns:ns6="urn:ihe:rad:xdsi-b:2009"
+            xmlns:ns4="urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0"
+            xmlns:ns3="urn:ihe:iti:xds-b:2007"
+            xmlns:ns2="urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0">
+			<ns5:ResponseOption returnType="LeafClass" returnComposedObjects="true" />
+			<ns2:AdhocQuery id="urn:uuid:14d4debf-8f97-4251-9a74-a90016b0af0d"
+                home="urn:oid:_HOMECOMMUNITY_ID_">
+				<ns2:Slot name="$XDSDocumentEntryStatus">
+					<ns2:ValueList>
+						<ns2:Value>(\u0027urn:oasis:names:tc:ebxml-regrep:StatusType:Approved\u0027)</ns2:Value>
+					</ns2:ValueList>
+				</ns2:Slot>				
+				<ns2:Slot name="$XDSDocumentEntryPatientId">
+					<ns2:ValueList>
+						<ns2:Value>
+							\u0027_PATIENT_ID_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;ISO\u0027
+						</ns2:Value>
+					</ns2:ValueList>
+				</ns2:Slot>
+			</ns2:AdhocQuery>
+		</ns5:AdhocQueryRequest>
+	</soapenv:Body>
+</soapenv:Envelope>

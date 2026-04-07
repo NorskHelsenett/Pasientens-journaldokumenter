@@ -82,7 +82,7 @@ public class DokumentlagerTestController : BaseController
 		_scopeFactory = scopeFactory;
 	}
 
-	public async Task<IActionResult> Index()
+	public async Task<IActionResult> Index(string? homeCommunityId = null)
 	{
 		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
@@ -101,9 +101,17 @@ public class DokumentlagerTestController : BaseController
 		if (!sessionData.IsAuthenticated)
 			return Redirect("/");
 
+		sessionData.DokumentlagerTestStatus.Status = DokumentlagerTestStatusEnum.Stopped;
+		sessionData.DokumentlagerTests = new DokumentlagerTests();
+		_store.Clear(); 
+
+		sessionData.SaveToSession(session);
+
 		var model = await GetTests(sessionData.PatientId!);
 
 		model.TestsJson = JsonSerializer.Serialize(model.Tests, new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+		model.SelectedHomeCommunityId = homeCommunityId;
 
 		return View(model);
 	}
@@ -177,8 +185,7 @@ public class DokumentlagerTestController : BaseController
 			createdUtc = run.CreatedUtc
 		});
 	}
-
-	//public IActionResult RenderTest(int groupIndex, int testIndex)
+	
 	public IActionResult RenderTest(string runId)
 	{
 		if (!_store.TryGet(runId, out var run) || run is null)
@@ -203,6 +210,20 @@ public class DokumentlagerTestController : BaseController
 		return View("_RenderTestPartial", model);
 	}
 
+	public async Task<IActionResult> RenderTotalResult()
+	{ 
+		//var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);		
+
+		this.sessionData = session.SessionData();		
+
+		var model = await GetTests(sessionData.PatientId!);
+
+		//var runs = _store.GetAllRuns();
+		model.Runs = _store.GetAllRuns().ToList(); 
+
+		return View("_RenderTotalResultPartial", model);
+	}
+
 	private async Task<DokumentlagerTestViewModel> GetTests(
 		string patient
 		)
@@ -211,7 +232,13 @@ public class DokumentlagerTestController : BaseController
 
 		var sessionData = session.SessionData();
 
-		var tests = sessionData.DokumentlagerTests; 
+		//sessionData.DokumentlagerTests.TestGroups.First().TestCases = [sessionData.DokumentlagerTests.TestGroups.First().TestCases.Last()];
+
+		//sessionData.SaveToSession(session); 
+
+		var tests = sessionData.DokumentlagerTests;
+		
+		//tests.TestGroups.First().TestCases = [tests.TestGroups.First().TestCases.First()];
 
 		foreach (var group in tests.TestGroups)
 		{
@@ -243,7 +270,7 @@ public class DokumentlagerTestController : BaseController
 
 	//[HttpPost("run")]
 	[HttpPost]
-	public async Task<IActionResult> Run([FromQuery] int groupIndex, [FromQuery] int testIndex)
+	public async Task<IActionResult> Run([FromQuery] string homeCommunityId, [FromQuery] int groupIndex, [FromQuery] int testIndex)
 	{
 		var sessionData = session.SessionData();
 		var patientId = sessionData.PatientId;
@@ -254,7 +281,7 @@ public class DokumentlagerTestController : BaseController
 		var testGroup = sessionData.DokumentlagerTests.TestGroups[groupIndex];
 		var test = testGroup.TestCases[testIndex];
 
-		var run = _store.Create(test, sessionData,groupIndex, testIndex, patientId);
+		var run = _store.Create(homeCommunityId, test, sessionData,groupIndex, testIndex, patientId);
 
 		await _queue.QueueAsync(async cancellationToken =>
 		{

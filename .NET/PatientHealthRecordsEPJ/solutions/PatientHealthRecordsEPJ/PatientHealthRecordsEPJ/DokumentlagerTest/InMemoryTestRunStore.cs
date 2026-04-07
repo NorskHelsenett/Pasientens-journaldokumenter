@@ -5,19 +5,22 @@ namespace PatientHealthRecordsEPJ.DokumentlagerTest;
 
 public interface ITestRunStore
 {
-	TestRunInfo Create(DokumentlagerTestCase test, SessionData sessessionData, int groupIndex, int testIndex, string patientId);
+	TestRunInfo Create(string homeCommunityId, DokumentlagerTestCase test, SessionData sessessionData, int groupIndex, int testIndex, string patientId);
 	bool TryGet(string runId, out TestRunInfo? run);
 	void Update(TestRunInfo run);
+	void Clear();
+	IEnumerable<TestRunInfo> GetAllRuns();
 }
 
 public sealed class InMemoryTestRunStore : ITestRunStore
 {
 	private readonly ConcurrentDictionary<string, TestRunInfo> _runs = new();
 
-	public TestRunInfo Create(DokumentlagerTestCase test, SessionData sessionData, int groupIndex, int testIndex, string patientId)
+	public TestRunInfo Create(string homeCommunityId, DokumentlagerTestCase test, SessionData sessionData, int groupIndex, int testIndex, string patientId)
 	{
 		var run = new TestRunInfo
 		{
+			HomeCommunityId = homeCommunityId,
 			GroupIndex = groupIndex,
 			TestIndex = testIndex,
 			PatientId = patientId,
@@ -40,5 +43,15 @@ public sealed class InMemoryTestRunStore : ITestRunStore
 	public void Update(TestRunInfo run)
 	{
 		_runs[run.RunId] = run;
+	}
+	
+	public IEnumerable<TestRunInfo> GetAllRuns()
+	{
+		return _runs.Values;
+	}
+
+	public void Clear()
+	{
+		_runs.Clear(); 
 	}
 }

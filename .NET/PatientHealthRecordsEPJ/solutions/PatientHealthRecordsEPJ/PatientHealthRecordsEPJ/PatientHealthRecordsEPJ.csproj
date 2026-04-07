@@ -12,6 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="DokumentlagerTest\Data\Helsenorge\iti39-iti40-request-hn.xml" />
+    <Content Include="DokumentlagerTest\Data\Helsenorge\iti38-request.xml" />
+    <Content Include="DokumentlagerTest\Data\Helsenorge\SamlToken_HN01.xml" />
+    <Content Include="DokumentlagerTest\Data\Kjernejournal-portal\iti38-request.xml" />
+    <Content Include="DokumentlagerTest\Data\Kjernejournal-portal\iti39-iti40-request-kj.xml" />
+    <Content Include="DokumentlagerTest\Data\Kjernejournal-portal\SamlToken_KJ01.xml" />
     <Content Include="Resources\binding\bindings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

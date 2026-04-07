@@ -1,0 +1,191 @@
+﻿<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+			  ID="_75bf1560-333f-4c07-8026-af6cb29d0de5" IssueInstant="2026-04-06T15:47:01.974Z"
+			  Version="2.0">
+	<saml:Issuer>https://helseid-xdssaml.test.nhn.no</saml:Issuer>
+	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+		<SignedInfo>
+			<CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+			<SignatureMethod
+				Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />
+			<Reference URI="#_75bf1560-333f-4c07-8026-af6cb29d0de5">
+				<Transforms>
+					<Transform
+						Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+					<Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+				</Transforms>
+				<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+				<DigestValue>3ChgfQYNEOa/wW46HV4TH1MYNj6SDpnIg4IPeZ/MjBI=</DigestValue>
+			</Reference>
+		</SignedInfo>
+		<SignatureValue>
+			lElgjvG/07wKsT5k6fJjkWsv8iUoKVHlKdjQ\u002BM372tg1SyWrEJZ1tGUpi2\u002B8JD1CrD7YbsPGo7gpcIyk29aq3gwLYh1iJE6L8wyCydqDcqDqEQgJRAd8Y2lw0oa0sgccedf151IzllRBqZHSubeQQ3iFdvfBLAX5UbdEsPGQw6IZFne3Yp8AnIPDEZiZJ8IaE2T249fhJJtjmijUGCe7iTOIsnQ6XXxu1eZlkX0IIwuapPrV44R20674QNgHROzL5LdNk7SxBaUhh1kqNaD9fKk7m/bNDDLLjwleNi7xP7zg3KyjGTaDwsSaFx86tJ\u002BLBizGWyql/mKsOqb2T1sGl2/BINQ4vAttFyitHjNc9ExgBbnxX3Xc72yRzu/5N4gXDS391xvpKM2Zlr69kjzeMB/TpLCBfOscbhzusJHLWPG1ThXCshPbWaFI2CFPNRBHmj\u002BzCjC8HQk98hFurKUWKp2sMMabuhYVKXGZRhu3SLMYY9keqj7\u002BG3CbcBc3zyiv
+		</SignatureValue>
+		<KeyInfo>
+			<X509Data>
+				<X509Certificate>
+					MIIGTzCCBDegAwIBAgILAZrJWW\u002BfA1PUzAAwDQYJKoZIhvcNAQELBQAwbjELMAkGA1UEBhMCTk8xGDAWBgNVBGEMD05UUk5PLTk4MzE2MzMyNzETMBEGA1UECgwKQnV5cGFzcyBBUzEwMC4GA1UEAwwnQnV5cGFzcyBDbGFzcyAzIFRlc3Q0IENBIEcyIFNUIEJ1c2luZXNzMB4XDTIzMDgwMTA4MDg1M1oXDTI2MDgwMTIxNTkwMFowczELMAkGA1UEBhMCTk8xGzAZBgNVBAoMEk5PUlNLIEhFTFNFTkVUVCBTRjEQMA4GA1UECwwHSGVsc2VJRDEbMBkGA1UEAwwSTk9SU0sgSEVMU0VORVRUIFNGMRgwFgYDVQRhDA9OVFJOTy05OTQ1OTg3NTkwggGiMA0GCSqGSIb3DQEBAQUAA4IBjwAwggGKAoIBgQC03te0E4QLDjqGCXqrvoRbXbZcbLw6Oyhs0LGmd2zprB8zC3fKgEBJDzPuVzBbmtdBReV\u002BDdvoraMFlzff4qbCtPsUEmtw4ohFlaX8SEebgkZ0pdsy9rtSbIGyvcsEUCP1xC8q6RsXpvkBMiSfP00VOUOfsK/RMXPGlu2iUi80fqDLRiTlTWGw3FDV5L3rDjQrSC8pLD8WjD\u002BuCSF81w7NioL1MhsqKG8v1hrRmGJVoRW\u002Brnxm1cZeB25BkZwyvy\u002BTVfBMqZDgBe2shqOc7\u002BJ3rttXrRyEN3FIbJznIoESM8Uig9el5tG2CXYgvvPU7zQDjy\u002B1d4fYHj3bCBDIUgOA3vRRnA1i\u002BV\u002BeIPxmOfrqRY8\u002BfRbd6t2IehhCgyW5qoiyhjYravt03RbGL05hxO9R8fXbyU5VUuTDTMA0KHnvKLrt82MH9poTFBni1ZjbUcB0iBBFI6A/Bu3K/hND79FTT8W1lbJzpifaaKP\u002B1XcPukacR5IHZ68tZ47YzygTd7UCAwEAAaOCAWcwggFjMAkGA1UdEwQCMAAwHwYDVR0jBBgwFoAUp/67bFmIrXQuRl56aPnRu7/PtoswHQYDVR0OBBYEFGl1wjQjGFeojCQ6MM1li7CQwhvNMA4GA1UdDwEB/wQEAwIGQDAfBgNVHSAEGDAWMAoGCGCEQgEaAQMCMAgGBgQAj3oBATBBBgNVHR8EOjA4MDagNKAyhjBodHRwOi8vY3JsLnRlc3Q0LmJ1eXBhc3NjYS5jb20vQlBDbDNDYUcyU1RCUy5jcmwwewYIKwYBBQUHAQEEbzBtMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcGJzLnRlc3Q0LmJ1eXBhc3NjYS5jb20wPAYIKwYBBQUHMAKGMGh0dHA6Ly9jcnQudGVzdDQuYnV5cGFzc2NhLmNvbS9CUENsM0NhRzJTVEJTLmNlcjAlBggrBgEFBQcBAwQZMBcwFQYIKwYBBQUHCwIwCQYHBACL7EkBAjANBgkqhkiG9w0BAQsFAAOCAgEAPdxOpsX7betsTS7197VcsjyRjnDnUTe/TUdKbgrdWxIwZTo7aNwqhliSu5XIWR019QLLPntYJ/\u002BG4clRkNdkmgKy\u002B6INDtLnbOhN/jl7pJXTTgn2qvalEBE2IR9Gt0cTU88HTutz2cbAKoZBMSdw/thsXVoPzQ0OTRhq2S3Y7a9YUfgSaEf4/OfDg4ZU17JOxvbn7kJ3m0BHRykwLD\u002B1tLC8FsCV6UtvsyDzxj5bXIGpKLjoKFuETiUJd7UEjbRl75bOEnEojyLQx4XNTkw9Li3Z\u002BPFo71Z\u002BnENSpTNjyntUgZp/62spoA5vhvQi8pfsxKTFaUH9dakkPDJM1QZ1c8kSjW3nwhLgcZk5q64hfTsrJT7ZOckbaq53/1nE46B4tcMMJAnXjxG70WzvWfADOORwE/sGDmlCd1/nq\u002Bd/0V\u002Br8VzZdSVEn9eVBddrIAerW95Jevc12f4N86ez6f6lrXhPzBPUFhg8bqiIX2vj7umiQURipJWvNp7\u002B3r/otBeQ8PO5bbIZtmf2tCnJEHs8kpCyX62JIwjQGSJnfRXa6hjq\u002BEt9M5d\u002Bzco1ArNPAJ73jnHTObKeSgu3TuAmiFadhmVKG\u002BsLsPOQk6D0guYVULIKS5d/pDTjffaIo\u002BaWz62q5LDrC8m4F6qHgRiI7BEcaZCrVyRllLXr4bCsuFk6oDk=
+				</X509Certificate>
+			</X509Data>
+		</KeyInfo>
+	</Signature>
+	<saml:Subject>
+		<saml:NameID>_SUBJECT_ID_</saml:NameID>
+		<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer" />
+	</saml:Subject>
+	<saml:Conditions NotBefore="2026-04-06T15:47:01.974Z"
+		NotOnOrAfter="2026-04-06T16:47:01.974Z">
+		<saml:AudienceRestriction>
+			<saml:Audience>nhn:dokumentdeling-saml</saml:Audience>
+		</saml:AudienceRestriction>
+	</saml:Conditions>
+	<saml:AttributeStatement>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:subject-id">
+			<saml:AttributeValue>GR\u00D8NN VITS</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:role">
+			<saml:AttributeValue>
+				\u0026lt;Role xmlns="urn:hl7-org:v3" xsi:type="CE"
+				code="LE" codeSystem="urn:oid:2.16.578.1.12.4.1.1.9060"
+				codeSystemName="Kategori helsepersonell" displayName="Lege"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:homeCommunityId">
+			<saml:AttributeValue>2.16.578.1.12.4.1.7.1.1</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:2.0:subject:npi">
+			<saml:AttributeValue>_SUBJECT_ID_</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:purposeOfUse">
+			<saml:AttributeValue>
+				\u0026lt;PurposeOfUse xmlns="urn:hl7-org:v3"
+				xsi:type="CE" code="_PURPOSE_OF_USE_"
+				codeSystem="urn:oid:2.16.840.1.113883.1.11.20448"
+				codeSystemName="PurposeOfUse (HL7)" displayName="Treatment"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xacml:2.0:resource:resource-id">
+			<saml:AttributeValue>
+				_PATIENT_ID_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;amp;ISO
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:SecurityLevel">
+			<saml:AttributeValue>4</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:Scope">
+			<saml:AttributeValue>journaldokumenter_helsepersonell</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:Authentication_method">
+			<saml:AttributeValue a:nil="true"
+				xmlns:a="http://www.w3.org/2001/XMLSchema-instance" />
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xacml:1.0:subject:subject-id">
+			<saml:AttributeValue>GR\u00D8NN VITS</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:organization">
+			<saml:AttributeValue>STIFTELSEN BETANIEN HOSPITAL SKIEN</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:organization-id">
+			<saml:AttributeValue>
+				\u0026lt;id xmlns="urn:hl7-org:v3" xsi:type="II"
+				extension="981275721" root="urn:oid:2.16.578.1.12.4.1.4.101"
+				assigningAuthorityName="https://www.brreg.no/" displayable="true"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:child-organization">
+			<saml:AttributeValue>
+				\u0026lt;id xmlns="urn:hl7-org:v3" xsi:type="II"
+				extension="873255102" root="urn:oid:2.16.578.1.12.4.1.4.101"
+				assigningAuthorityName="https://www.brreg.no/" displayable="true"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xacml:2.0:subject:role">
+			<saml:AttributeValue>
+				\u0026lt;Role xmlns="urn:hl7-org:v3" xsi:type="CE"
+				code="LE" codeSystem="urn:oid:2.16.578.1.12.4.1.1.9060"
+				codeSystemName="Kategori helsepersonell" displayName="Lege"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:ihe:iti:xca:2010:homeCommunityId">
+			<saml:AttributeValue>_HOMECOMMUNITY_ID_</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:npi">
+			<saml:AttributeValue>_SUBJECT_ID_</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:ihe:iti:xua:2017:subject:provider-identifier">
+			<saml:AttributeValue>
+				\u0026lt;id xmlns="urn:hl7-org:v3" type="II"
+				extension="_SUBJECT_ID_" root="2.16.578.1.12.4.1.4.4" displayable="false"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xacml:1.0:resource:resource-id">
+			<saml:AttributeValue>
+				_PATIENT_ID_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;amp;ISO
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:client_id">
+			<saml:AttributeValue>b91a22f0-c42e-4e56-9b2e-32d7b7a4adb5</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute
+			Name="urn:nhn:trust-framework:1.0:ext:subject:child-organization-name">
+			<saml:AttributeValue>BETANIEN HOSPITAL</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute
+			Name="urn:nhn:trust-framework:1.0:ext:resource:child-organization-name">
+			<saml:AttributeValue>BETANIEN HOSPITAL</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute
+			Name="urn:nhn:trust-framework:1.0:ext:resource:child-organization">
+			<saml:AttributeValue>
+				\u0026lt;id xmlns="urn:hl7-org:v3" xsi:type="II"
+				extension="873255102" root="urn:oid:2.16.578.1.12.4.1.4.101"
+				assigningAuthorityName="https://www.brreg.no/" displayable="true"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xacml:2.0:action:purpose">
+			<saml:AttributeValue>
+				\u0026lt;Purpose xmlns="urn:hl7-org:v3" xsi:type="CE"
+				code="TREAT" codeSystem="urn:oid:2.16.840.1.113883.1.11.20448"
+				displayName="Treatment"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute
+			Name="urn:nhn:trust-framework:1.0:ext:care-relationship:healthcare-service">
+			<saml:AttributeValue>
+				\u0026lt;HealthcareService xmlns="urn:hl7-org:v3"
+				xsi:type="CE" code="01" codeSystem="urn:oid:2.16.578.1.12.4.1.1.8666"
+				displayName="Bedriftshelsetjeneste"
+				assigningAuthorityName="https://volven.no/"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute
+			Name="urn:nhn:trust-framework:1.0:ext:care-relationship:purpose-of-use-details">
+			<saml:AttributeValue>
+				\u0026lt;purpose-of-use-details xmlns="urn:hl7-org:v3"
+				xsi:type="CE" code="BEHANDLER"
+				codeSystem="urn:AuditEventHL7Norway/CodeSystem/carerelation"
+				displayName="Bruker har behandlingsansvar for pasienten"
+				assigningAuthorityName="https://www.hl7.no/"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute
+			Name="urn:nhn:trust-framework:1.0:ext:care-relationship:decision-ref">
+			<saml:AttributeValue>
+				\u0026lt;decision-ref>\u0026lt;id
+				value="367fa71c-2b78-46c8-8187-5854d2d51c63" />\u0026lt;user-selected
+				value="True" />\u0026lt;/decision-ref>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:ihe:iti:xua:2012:acp">
+			<saml:AttributeValue>_ACP_</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:ihe:iti:bppc:2007:docid">
+			<saml:AttributeValue>_DOC_ID_</saml:AttributeValue>
+		</saml:Attribute>
+	</saml:AttributeStatement>
+	<saml:AuthnStatement AuthnInstant="2026-04-06T10:33:08.000Z"
+		SessionNotOnOrAfter="2026-04-06T16:47:01.000Z">
+		<saml:AuthnContext>
+			<saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:X509</saml:AuthnContextClassRef>
+		</saml:AuthnContext>
+	</saml:AuthnStatement>
+</saml:Assertion>

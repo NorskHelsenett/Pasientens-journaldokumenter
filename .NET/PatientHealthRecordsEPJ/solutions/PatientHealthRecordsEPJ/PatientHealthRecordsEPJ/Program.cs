@@ -1,4 +1,5 @@
 // override XmlException: Resolving of external URIs was prohibited.
+using Hl7.Fhir.ElementModel.Types;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
@@ -143,7 +144,25 @@ builder.Services.AddHttpClient("ProvideDocumentBundleApiClient", client => clien
 		configureClient.Scopes = "nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference";
 
 		// PrivateJwk, ClientId and TokenEndpoint is the same as for Persontjenesten
-	}); 
+	});
+
+builder.Services.AddHttpClient(DokumentlagerTestRunner.DokumentlagerTestHttpClientName, client =>
+{
+	// Configure the HttpClient instance if needed (e.g., set base address)
+})
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+	var clientHandler = new HttpClientHandler
+	{
+		// (Optional) Disable SSL certificate validation for development purposes
+		ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
+		{
+			return true; 
+		}
+	};	
+
+	return clientHandler;
+});
 
 builder.Services.AddScoped<OrganizationService>();	// Used to get organization name from Persontjenesten
 builder.Services.AddScoped<PersonApiService>();     // Used to get person from Persontjenesten

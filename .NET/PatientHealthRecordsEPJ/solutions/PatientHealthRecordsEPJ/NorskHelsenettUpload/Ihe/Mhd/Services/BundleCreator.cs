@@ -35,14 +35,14 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 				Meta = new Meta
 				{
 					Profile = ["https://profiles.ihe.net/ITI/MHD/StructureDefinition/IHE.MHD.Comprehensive.ProvideBundle"],
-					Security =
+					/*Security =
 					[
 						new Coding
 						{
 							System = "http://terminology.hl7.org/CodeSystem/v3-ActReason",
 							Code = "HTEST"
 						}
-					]
+					] */
 				}
 			};
 

@@ -1,0 +1,89 @@
+﻿<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+	ID="_3c449791-075e-436e-b962-e14fb3b94285" IssueInstant="2026-04-06T13:18:52.078Z" Version="2.0">
+	<saml:Issuer>sikkerhet.helsenorge.no</saml:Issuer>
+	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+		<SignedInfo>
+			<CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+			<SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />
+			<Reference URI="#_3c449791-075e-436e-b962-e14fb3b94285">
+				<Transforms>
+					<Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+					<Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+				</Transforms>
+				<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+				<DigestValue>uWHWUMQywZYySbT7OMx5poFMKS2Klr/con8PXEXizXY=</DigestValue>
+			</Reference>
+		</SignedInfo>
+		<SignatureValue>
+			naY7LV1XWJpM8emiAhRFish\u002BmLyNOzc5cxK1Wkhwg48i0YDqAGjzfXwJw2Vfn\u002B8c28wMFEJRvow9WgJ27ezYnOsLD9jOnH22SdIxyl2eExL\u002BO2gLIHQq5Yq06UG\u002Bq3UgMQkYlzvNzdhrixEUjulr5qCG3QmkYjTm1m2VYjBpVpU7JmZ8Ro7fLDg71XcnSISaXK/8oeuYzgUOtACIkZgb3ti21tAzdryhASgK\u002BKwz5rx7P5mG/Nx4H/CLarEHmjM0/vXsno0XBYPcDG5/83hYDane6CdB43aEp11HfkoLocCC3wakhC72QYS1sOWiwh8l47I8UT9y7Agzo5QMi8bE9DQpYmqUbQ\u002BlP/RkItY3uvKpOIB3hGnWqq30mRsTJ1vBVo/cyA1xXWZzuTeJV82odoYYeGKRy4jNDxdNwMmK/88fYDuAC7aWvc8x2M0p1baSKHgH8tB5tm3VQa4AVAd3WqFiV0IgnwbHckdO6Bqo26hE65j4WXy6w5IsYmwPnQnT
+		</SignatureValue>
+		<KeyInfo>
+			<X509Data>
+				<X509Certificate>
+					MIIGYDCCBEigAwIBAgILAav51qUP6unELxwwDQYJKoZIhvcNAQELBQAwbjELMAkGA1UEBhMCTk8xGDAWBgNVBGEMD05UUk5PLTk4MzE2MzMyNzETMBEGA1UECgwKQnV5cGFzcyBBUzEwMC4GA1UEAwwnQnV5cGFzcyBDbGFzcyAzIFRlc3Q0IENBIEcyIFNUIEJ1c2luZXNzMB4XDTI2MDMxNjEwNTEzNFoXDTI5MDMxNjIyNTkwMFowgYMxCzAJBgNVBAYTAk5PMRswGQYDVQQKDBJOT1JTSyBIRUxTRU5FVFQgU0YxFjAUBgNVBAsMDWhlbHNlbm9yZ2Uubm8xJTAjBgNVBAMMHGhlbHNlbm9yZ2Uubm8gU2lra2VyaGV0IFRFU1QxGDAWBgNVBGEMD05UUk5PLTk5NDU5ODc1OTCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBAKgHwTgxMGM3XQpb26EIfWAISlpu5LkhsTMBjVPnxHt6gfOT0e3166CmSonkaoUua5rH1X7kEpl6IztVfvYSSRZTEgTvtOSjXZb4CHrMD/QikekTM6L4Xns9vxrsHViSnvx8Et3lwt74D1Oy0A5Za/Ey1JofdAHpvMjRvUo2uH7YODzXitnKX/ZTWpsQv9c6sdRoiIMUmstQPiYfAY8Q\u002BTBz6quR4ox/txfjUYPKjdM/Xv35LaVrQhN5OsAklIVCs44Z0ZZZo1oYOyaJ0j04tqyb4qqiy1ijTmOpSUwGMhiPIA7/fTOvZH7R3UrZ3sg56qSkmphprfHvXDeLz\u002BuqvwelilsUF/CCwwT17CaremxLPm4pnnnBvobyC1Bl7\u002BZj6YjKLR8yz28uAgOVsA4KZKdkduMs24rysZwYDE0UJVwHoOD4tA\u002BnD/tj4/qNaFNftknHcpIuVDW11MJFCelxz62\u002BjRD5w4suZ6cdUGPitZeX2JjhiMQccPV15RUE7MIA2wIDAQABo4IBZzCCAWMwCQYDVR0TBAIwADAfBgNVHSMEGDAWgBSn/rtsWYitdC5GXnpo\u002BdG7v8\u002B2izAdBgNVHQ4EFgQUpiR2N\u002BL3y6Bd4\u002B6/jqtYe\u002BNK4vUwDgYDVR0PAQH/BAQDAgZAMB8GA1UdIAQYMBYwCgYIYIRCARoBAwIwCAYGBACPegEBMEEGA1UdHwQ6MDgwNqA0oDKGMGh0dHA6Ly9jcmwudGVzdDQuYnV5cGFzc2NhLmNvbS9CUENsM0NhRzJTVEJTLmNybDB7BggrBgEFBQcBAQRvMG0wLQYIKwYBBQUHMAGGIWh0dHA6Ly9vY3NwYnMudGVzdDQuYnV5cGFzc2NhLmNvbTA8BggrBgEFBQcwAoYwaHR0cDovL2NydC50ZXN0NC5idXlwYXNzY2EuY29tL0JQQ2wzQ2FHMlNUQlMuY2VyMCUGCCsGAQUFBwEDBBkwFzAVBggrBgEFBQcLAjAJBgcEAIvsSQECMA0GCSqGSIb3DQEBCwUAA4ICAQA6LxCmSRc8b/0wOOIy\u002BHKSbWt0p7atXhsdpa8Ngs5cC9NNSOjlhuBs9vKugZIYtpk20319x6Ek/mlg4bBfY2Bkicisg6sEZjGUeNwjeYXc\u002Bpa7FOsC6I66sryo5\u002Blch4vR30L0xl92lkfaNgKorBxP0JZjMT8KRauCgeRyKKk/AopH5hNBrB18L5wvmS9QWQcM8YmVuixUZq/WKjM9OxCCAUeVgvS7GYGxZqZ63hgVEXPLxJALavGEyPLWmoY0q2DAI8pMJExxIEyXGNbBrr4a4KOJUNQeTLTXp4g4idSZT6OtBlTrxfPPd1beOXlb\u002BZoatqJY4uzxYG12X5OGB6\u002Bfx1n0l6H1Oc20MG7kV3zSTjRgrcizWK3Hp2uhQUp9xkxOaKGvNuBmw7YsFV2zENOR25PefYf5Hsup9UbkMB/oxWf/ozXHPqRowULPMQ4YLjV3vtHctU1reqELWEOR6JZvm0aTs2WhZUNf/RrZuowbXIetWi16fz6roIQV1YGLE/fnWqttv\u002BcQEi4LhbpfAYYvaqZtCpiCVOvyGNI9r76TesuakNkq64dEIXFqDIJUhlkOtaz4f4lHGYnbr6f7e1kZGOzPYR7dMdem6NXFSt6UkoRUC4uHJsSgHGz1OR21Lf/AdpVrbA9M6wQHi/Gh2H5paFxshengBe6bcNIz/q147w==
+				</X509Certificate>
+			</X509Data>
+		</KeyInfo>
+	</Signature>
+	<saml:Subject>
+		<saml:NameID>_PATIENT_ID_</saml:NameID>
+		<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer" />
+	</saml:Subject>
+	<saml:Conditions NotBefore="2026-04-06T13:18:52.078Z" NotOnOrAfter="2026-04-06T13:38:52.078Z">
+		<saml:AudienceRestriction>
+			<saml:Audience>https://xds-web.test.nhn.no/</saml:Audience>
+		</saml:AudienceRestriction>
+	</saml:Conditions>
+	<saml:AttributeStatement>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:subject-id">
+			<saml:AttributeValue>Usnobbet Klokke</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:organization">
+			<saml:AttributeValue>Norsk Helsenett</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:organization-id">
+			<saml:AttributeValue>994598759</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:ihe:iti:xca:2010:homeCommunityId">
+			<saml:AttributeValue>urn:oid:2.16.578.1.12.4.1.7.1.1</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:2.0:subject:npi">
+			<saml:AttributeValue>_PATIENT_ID_</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:ihe:iti:xua:2017:subject:provider-identifier">
+			<saml:AttributeValue>
+				&lt;id xmlns="urn:hl7-org:v3" type="II" extension="_PATIENT_ID_"
+				root="_PATIENT_ID_SYSTEM_" displayable="false" />
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xspa:1.0:subject:purposeofuse">
+			<saml:AttributeValue>
+				&lt;PurposeOfUse xmlns="urn:hl7-org:v3" type="CE" code="13"
+				codeSystem="1.0.14265.1" codeSystemName="ISO 14265 Classification of Purposes for processing
+				personal health information" displayName="Subject of care uses"/>
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="urn:oasis:names:tc:xacml:2.0:resource:resource-id">
+			<saml:AttributeValue>_PATIENT_ID_AND_SYSTEM_&amp;ISO</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="SecurityLevel">
+			<saml:AttributeValue>4</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="Scope">
+			<saml:AttributeValue>
+				innsynregisterbruk,innsynregisterinnhold,innsynpasientjournal,prover
+			</saml:AttributeValue>
+		</saml:Attribute>
+		<saml:Attribute Name="client_id">
+			<saml:AttributeValue>urn:oid:2.16.578.1.12.4.1.7.1.1.1</saml:AttributeValue>
+		</saml:Attribute>
+	</saml:AttributeStatement>
+	<saml:AuthnStatement AuthnInstant="2026-04-06T13:18:52.081Z"
+		SessionNotOnOrAfter="2026-04-06T13:38:52.081Z">
+		<saml:AuthnContext>
+			<saml:AuthnContextClassRef>
+				urn:oasis:names:tc:SAML:2.0:ac:classes:X509
+			</saml:AuthnContextClassRef>
+		</saml:AuthnContext>
+	</saml:AuthnStatement>
+</saml:Assertion>

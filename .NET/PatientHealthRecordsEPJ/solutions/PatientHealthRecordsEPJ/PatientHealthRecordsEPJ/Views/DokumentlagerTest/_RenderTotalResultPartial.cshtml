@@ -1,0 +1,108 @@
+﻿@using Hl7.Fhir.Model
+
+@model DokumentlagerTestViewModel
+
+@{
+	Layout = null;
+
+	var sessionData = Context.Session.SessionData();
+}
+
+@{
+	string SpinnerIcon()
+	{
+		return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+	}
+
+	string SuccessIcon()
+	{
+		return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+	}
+
+	string FailIcon()
+	{
+		return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+	}
+}
+
+<div class="total-results">
+
+	<h4>
+		Total resultat
+	</h4>
+
+	@{
+		//var allTests = Model.Tests.TestGroups.SelectMany(testGroup => testGroup.TestCases!).ToList();
+		//var allTests = Model.Runs.Where(run => run.Test != null).SelectMany<TestRunInfo, DokumentlagerTestCase>(run => run.Test);
+
+		List<DokumentlagerTestCase> allTests = new();
+		List<TestRunInfo> runs = Model.Runs ?? new();
+
+		/*if (Model.Runs != null)
+		foreach (var run in Model.Runs)
+		{
+			if (run.Test != null)
+			{
+				allTests.Add(run.Test);
+			}
+		}*/
+
+		/*var notRunCount = allTests.Where(test => test.Status == DokumentlagerTestCaseStatus.NotRun).Count();
+		var failedCount = allTests.Where(test => test.Status == DokumentlagerTestCaseStatus.Failed).Count();
+		var queuedCount = allTests.Where(test => test.Status == DokumentlagerTestCaseStatus.Queued).Count();
+		var runningCount = allTests.Where(test => test.Status == DokumentlagerTestCaseStatus.Running).Count();
+		var successCount = allTests.Where(test => test.Status == DokumentlagerTestCaseStatus.Success).Count();*/
+
+		var notRunCount = runs.Where(run => run.Status == DokumentlagerTestCaseStatus.NotRun).Count();
+		var failedCount = runs.Where(run => run.Status == DokumentlagerTestCaseStatus.Failed).Count();
+		var queuedCount = runs.Where(run => run.Status == DokumentlagerTestCaseStatus.Queued).Count();
+		var runningCount = runs.Where(run => run.Status == DokumentlagerTestCaseStatus.Running).Count();
+		var successCount = runs.Where(run => run.Status == DokumentlagerTestCaseStatus.Success).Count();
+	}
+
+	<table class="table w-auto">
+		<thead>
+		</thead>
+		<tbody>
+			@if (runningCount > 0)
+			{
+				<tr>
+					<td class="big-icon">
+						@Html.Raw(SpinnerIcon())
+					</td>
+					<td>
+						Kjører
+					</td>
+					<td>
+						@runningCount
+					</td>
+				</tr>
+			}
+			<tr>
+				<td class="big-icon">
+					@Html.Raw(SuccessIcon())
+				</td>
+				<td>
+					Suksess tester
+				</td>
+				<td>
+					@successCount
+				</td>
+			</tr>
+			<tr>
+				<td class="big-icon">
+					@Html.Raw(FailIcon())
+				</td>
+				<td>
+					Feilede tester
+				</td>
+				<td>
+					@failedCount
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<br />
+
+</div>

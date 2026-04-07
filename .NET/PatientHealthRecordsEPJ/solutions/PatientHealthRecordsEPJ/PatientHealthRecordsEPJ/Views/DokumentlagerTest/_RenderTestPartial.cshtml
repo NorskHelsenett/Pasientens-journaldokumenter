@@ -43,9 +43,15 @@
 		return success == true ? "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>" : "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
 	}
 
-	string NotRunIcon()
+	string OverallNotRunIcon()
 	{
 		return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		//return "<span style='color: gray; font-style:italic'><i class='bi bi-hourglass'></i></span>";
+	}
+
+	string NotRunIcon()
+	{
+		return "<span style='color: gray; font-style:italic'><i class='bi bi-dash'></i></span>";
 		//return "<span style='color: gray; font-style:italic'><i class='bi bi-hourglass'></i></span>";
 	}
 
@@ -251,7 +257,7 @@
 		}	 */
 	}
 
-	string LookupDocumentResultIcon(Lookup lookup)
+	/*string LookupDocumentResultIcon(Lookup lookup)
 	{
 		if (lookup.OpenDocumentStatus == LookupDocumentStatus.NotRun)
 		{
@@ -271,6 +277,31 @@
 		{
 			return FailIcon();
 		}
+	}*/
+
+	string LookupDocumentResultIcon(Lookup lookup)
+	{
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.NotRun)
+		{
+			return NotRunIcon();
+		}
+
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.Running)
+		{
+			return SpinnerIcon();
+		}
+
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.OpenDocumentSuccess)
+		{
+			return VisibleIcon();
+		}
+
+		if (lookup.OpenDocumentStatus == LookupDocumentStatus.OpenDocumentFailed)
+		{
+			return InvisibleIcon();
+		}
+
+		return NotRunIcon();		
 	}
 
 	string SuccessIcon()
@@ -301,6 +332,114 @@
 	string InvisibleIcon()
 	{
 		return "<span style='color:red;font-weight:bold'><i class='bi bi-eye-slash'></i></span>";
+	}
+
+	string DeleteDocumentsAfter30DaysIcon()
+	{
+		return "<span style='color:green;font-weight:bold;white-space:nowrap;font-weight:normal'><i class='bi bi-trash' title='Schedule document deletion after 30 days'></i> 30 days</span>";
+		//return "<span style='color:green;font-weight:bold'><i class='bi bi-journal-x' title='Schedule document deletion after 30 days'></i></span>";
+	}
+
+	string DeleteDocumentsNowIcon()
+	{
+		return "<span style='color:green;font-weight:bold;white-space:nowrap;font-weight:normal'><i class='bi bi-trash' title='Delete documents immediatly'></i> now </span>";
+		//return "<span style='color:green;font-weight:bold'><i class='bi bi-journal-x' title='Schedule document deletion after 30 days'></i></span>";
+	}
+
+	string DeathStatusIcon(DokumentlagerTestEvents testEvents)
+	{
+		if (testEvents.SimulateDeathStatus == DokumentlagerTestCaseStatus.NotRun)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		if (testEvents.SimulateDeathStatus == DokumentlagerTestCaseStatus.Running)
+		{
+			//return "<span style='color:green;font-weight:bold'><i class='bi bi-play'></i></span>";
+			//return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+			return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+			//return "<i class='bi bi-gear spinner-icon'></i>";
+		}
+
+		if (testEvents.SimulateDeathIsSuccess)
+		{
+			return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+		}
+		else
+		{
+			return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		}
+	}
+
+	string AddressProtectionStatusIcon(DokumentlagerTestEvents testEvents)
+	{
+		if (testEvents.SimulateAddressProtectionStatus == DokumentlagerTestCaseStatus.NotRun)
+		{
+			return "<span style='color: gray; font-style:italic'><i class='bi bi-rocket'></i></span>";
+		}
+
+		if (testEvents.SimulateAddressProtectionStatus == DokumentlagerTestCaseStatus.Running)
+		{
+			//return "<span style='color:green;font-weight:bold'><i class='bi bi-play'></i></span>";
+			//return "<i class='bi bi-arrow-repeat spinner-icon big-spinner'></i>";
+			return "<i class='bi bi-arrow-repeat spinner-icon'></i>";
+			//return "<i class='bi bi-gear spinner-icon'></i>";
+		}
+
+		if (testEvents.SimulateAddressProtectionIsSuccess)
+		{
+			return "<span style='color:green;font-weight:bold'><i class='bi bi-check-circle'></i></span>";
+		}
+		else
+		{
+			return "<span style='color: red; font-weight:bold'><i class='bi bi-x-circle'></i></span>";
+		}
+	}
+
+	string DeathResultIcon(DokumentlagerTestEvents testEvents)
+	{
+		if (testEvents.SimulateDeathStatus == DokumentlagerTestCaseStatus.NotRun)
+		{
+			return NotRunIcon();
+		}
+
+		if (testEvents.SimulateDeathStatus == DokumentlagerTestCaseStatus.Running)
+		{
+			return SpinnerIcon();
+		}
+		
+		if (testEvents.SimulateDeathIsSuccess == true)
+		{
+			//return VisibleIcon();
+			return DeleteDocumentsAfter30DaysIcon();
+		}
+		else
+		{
+			return FailIcon();
+		}
+	}
+
+	string AddressProtectionResultIcon(DokumentlagerTestEvents testEvents)
+	{
+		if (testEvents.SimulateAddressProtectionStatus == DokumentlagerTestCaseStatus.NotRun)
+		{
+			return NotRunIcon();
+		}
+
+		if (testEvents.SimulateAddressProtectionStatus == DokumentlagerTestCaseStatus.Running)
+		{
+			return SpinnerIcon();
+		}
+		
+		if (testEvents.SimulateAddressProtectionIsSuccess == true)
+		{
+			//return VisibleIcon();
+			return DeleteDocumentsNowIcon();
+		}
+		else
+		{
+			return FailIcon();
+		}
 	}
 
 }
@@ -343,7 +482,7 @@
 		
 	</td>
 	<td>
-		@test.Name
+		@Html.Raw(test.Name.Replace("\n", "<br/>"))
 		<br />
 		
 		@* <div class="badge-running">
@@ -359,8 +498,8 @@
 			}
 		}
 	</td>
-	<td>@test.ExpectedResult</td>
-	<td>@test.Comment</td>
+	@* <td>@test.ExpectedResult</td> *@
+	@* <td>@test.Comment</td> *@
 	<td>
 		@{
 			var securityLabels = string.Join(' ', test.SecurityLabels);
@@ -373,7 +512,49 @@
 		@* dokument *@
 	</td>
 	<td>
-		Lagret
+		@if (test.Lookup?.LookupDokumentlager != null)
+		{
+			// Saved to registry?
+
+			if (test.Lookup.LookupDokumentlager.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.NotRun)
+			{
+				<div> - </div>
+			}
+			else if (test.Lookup.LookupDokumentlager.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.Running)
+			{
+				<div>
+					@Html.Raw(LookupDocumentReferenceStatusIcon(test.Lookup.LookupDokumentlager)) Laster opp bundle
+				</div>
+			}
+			else
+			{
+				if (test.Lookup.LookupDokumentlager.RetrieveDocumentReferenceIsSuccess)
+				{
+					<div>
+						@Html.Raw(SuccessIcon()) Lagret til registry
+					</div>
+				}
+				else
+				{
+					<div>
+						@Html.Raw(FailIcon()) Ikke lagret til registry
+					</div>
+				}
+			}
+
+			// Saved to repository?
+		
+			if (test.Lookup.LookupDokumentlager.OpenDocumentIsSuccess)
+			{
+				<div>
+					@Html.Raw(SuccessIcon()) Lagret til repository
+				</div>
+			}
+			else
+			{
+				
+			}
+		}
 	</td>
 	<td>
 		<table>
@@ -395,6 +576,13 @@
 
 	</td>
 	<td>
+		@if (test.Events != null && test.LookupAfterEvents != null)
+		{
+			<div class="events-title">
+				Før hendelser
+			</div>
+		}
+
 		<table class="table table-sm">
 			<thead>
 				<tr>
@@ -528,8 +716,217 @@
 
 			</tbody>
 		</table>
+
+		@if (test.Events != null)
+		{
+			<div class="events-title">
+				Hendelser
+			</div>
+
+			<table class="table table-sm">
+				<thead>
+					<tr>
+						<th> @* Ikon  *@</th>
+						<th>Hvor</th>
+						<th>Hendelse</th>
+						<th>Forventet</th>
+						<th>Testet @* Faktisk *@ @* Resultat *@</th>
+					</tr>
+				</thead>
+				<tbody>
+					@if (test.Events?.IsTrySimulateDeath == true)
+					{
+						<tr>
+							<td class="big-icon">@Html.Raw(DeathStatusIcon(test.Events))</td>
+							<td>Persontjenesten</td>
+							<td>Død</td>
+							<td class="ex-icon">
+								@if (test.Events.SimulateDeathExpectScheduledDocumentDeletion)
+								{
+									<div>@Html.Raw(DeleteDocumentsAfter30DaysIcon())</div>
+								}
+							</td>
+							<td class="re-icon">
+								<div>
+									@Html.Raw(DeathResultIcon(test.Events))
+								</div>
+							</td>
+						</tr>
+					}
+
+					@if (test.Events?.IsTrySimulateAddressProtection == true)
+					{
+						<tr>
+							<td class="big-icon">@Html.Raw(AddressProtectionStatusIcon(test.Events))</td>
+							<td>PVK</td>
+							<td>Adressesbeskyttelse</td>
+							<td class="ex-icon">
+								@if (test.Events.SimulateAddressProtectionExpectDocumentDeletion)
+								{
+									<div>@Html.Raw(DeleteDocumentsNowIcon())</div>
+								}
+							</td>
+							<td class="re-icon">
+								<div>
+									@Html.Raw(AddressProtectionResultIcon(test.Events))
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+
+			@if (test.LookupAfterEvents != null)
+			{
+
+				<div class="events-title">
+					Etter hendelser
+				</div>
+
+				<table class="table table-sm">
+					<thead>
+						<tr>
+							<th> @* Ikon  *@</th>
+							<th>Hvor</th>
+							<th>Forventet</th>
+							<th>Testet @* Faktisk *@ @* Resultat *@</th>
+						</tr>
+					</thead>
+					<tbody>
+						@if (test.LookupAfterEvents?.LookupDokumentlager != null)
+						{
+							<tr>
+								<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.LookupAfterEvents.LookupDokumentlager))</td>
+								<td>Dokumentlager</td>
+								<td class="ex-icon">
+									@if (test.LookupAfterEvents.LookupDokumentlager.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+									{
+										<div>
+											@Html.Raw(SuccessObfuscatedIcon())
+										</div>
+									}
+									else
+										if (test.LookupAfterEvents.LookupDokumentlager.RetrieveDocumentReferenceExpectVisible == true)
+										{
+											<div>@Html.Raw(VisibleIcon())</div>
+										}
+										else
+										{
+											<div>@Html.Raw(InvisibleIcon())</div>
+										}
+								</td>
+								<td class="re-icon">
+									<div>
+										@Html.Raw(LookupDocumentReferenceResultIcon(test.LookupAfterEvents.LookupDokumentlager))
+									</div>
+								</td>
+							</tr>
+						}
+
+						@if (test.LookupAfterEvents?.LookupAPI != null)
+						{
+							<tr>
+								@*<td class="big-icon">@Html.Raw(test.Lookup.LookupAPI.Success == true ? SuccessIcon() : FailIcon())</td>*@
+								<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.LookupAfterEvents.LookupAPI))</td>
+								<td>REST API</td>
+								<td class="ex-icon">
+									@if (test.LookupAfterEvents.LookupAPI.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+									{
+										<div>
+											@Html.Raw(SuccessObfuscatedIcon())
+										</div>
+									}
+									else
+										if (test.LookupAfterEvents.LookupAPI.RetrieveDocumentReferenceExpectVisible == true)
+										{
+											<div>@Html.Raw(VisibleIcon())</div>
+										}
+										else
+										{
+											<div>@Html.Raw(InvisibleIcon())</div>
+										}
+								</td>
+								<td class="re-icon">
+									<div>
+										@Html.Raw(LookupDocumentReferenceResultIcon(test.LookupAfterEvents.LookupAPI))
+									</div>
+								</td>
+							</tr>
+						}
+
+						@if (test.LookupAfterEvents?.LookupKJ != null)
+						{
+							<tr>
+								<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.LookupAfterEvents.LookupKJ))</td>
+								<td>KJ portal</td>
+								<td class="ex-icon">
+									@if (test.LookupAfterEvents.LookupKJ.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+									{
+										<div>
+											@Html.Raw(SuccessObfuscatedIcon())
+										</div>
+									}
+									else
+										if (test.LookupAfterEvents.LookupKJ.RetrieveDocumentReferenceExpectVisible == true)
+										{
+											<div>@Html.Raw(VisibleIcon())</div>
+										}
+										else
+										{
+											<div>@Html.Raw(InvisibleIcon())</div>
+										}
+								</td>
+								<td class="re-icon">
+									<div>
+										@Html.Raw(LookupDocumentReferenceResultIcon(test.LookupAfterEvents.LookupKJ))
+									</div>
+								</td>
+							</tr>
+						}
+
+						@if (test.LookupAfterEvents?.LookupHelsenorge != null)
+						{
+							<tr>
+								<td class="big-icon">@Html.Raw(LookupDocumentReferenceStatusIcon(test.LookupAfterEvents.LookupHelsenorge))</td>
+								<td>Helsenorge</td>
+								<td class="ex-icon">
+									@if (test.LookupAfterEvents.LookupHelsenorge.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
+									{
+										<div>
+											@Html.Raw(SuccessObfuscatedIcon())
+										</div>
+									}
+									else
+										if (test.LookupAfterEvents.LookupHelsenorge.RetrieveDocumentReferenceExpectVisible == true)
+										{
+											<div>@Html.Raw(VisibleIcon())</div>
+										}
+										else
+										{
+											<div>@Html.Raw(InvisibleIcon())</div>
+										}
+								</td>
+								<td class="re-icon">
+									<div>
+										@Html.Raw(LookupDocumentReferenceResultIcon(test.LookupAfterEvents.LookupHelsenorge))
+									</div>
+								</td>
+							</tr>
+						}
+
+					</tbody>
+				</table>
+			}
+		}
+
 	</td>
 	<td>
+		@if (test.Events != null && test.LookupAfterEvents != null)
+		{
+			<div class="events-title">
+				Før hendelser
+			</div>
+		}
 		<table class="table table-sm">
 			<thead>
 				<tr>
@@ -636,6 +1033,7 @@
 			</tbody>
 		</table>
 	</td>
+	
 	<td>
 		ATNA logg
 	</td>
@@ -656,7 +1054,7 @@
 		{
 			<div>
 				@Html.Raw(StatusIcon(test.DeleteDocumentStatus))
-			</div>			
+			</div>
 		}
 		else
 		{

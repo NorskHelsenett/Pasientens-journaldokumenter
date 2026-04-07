@@ -76,6 +76,8 @@ public class DokumentlagerTestCase
 
 	//public DokumentlagerTestCaseExpected? Expected { get; set; }
 	public DokumentlagerTestCaseLookup? Lookup { get; set; } = new DokumentlagerTestCaseLookup();
+	public DokumentlagerTestEvents? Events { get; set; }	// Simulate death or address protection
+	public DokumentlagerTestCaseLookup? LookupAfterEvents { get; set; } // = new DokumentlagerTestCaseLookup();
 
 	// PATCH document
 	public bool IsTryPatchDocument { get; set; } = true;
@@ -88,6 +90,21 @@ public class DokumentlagerTestCase
 	public DokumentlagerTestResult? UploadDocumentResult { get; set; }
 
 	public DokumentlagerTestResult? Result { get; set; } = new DokumentlagerTestResult();    // Overall result for the test case, based on the lookups and expected results	
+}
+
+public class DokumentlagerTestEvents
+{
+	public bool IsTrySimulateDeath { get; set; }
+	public bool IsTrySimulateAddressProtection { get; set; }
+
+	public bool SimulateDeathExpectScheduledDocumentDeletion { get; set; } = true; // After 30 days
+	public bool SimulateDeathIsSuccess { get; set; }
+
+	public bool SimulateAddressProtectionExpectDocumentDeletion { get; set; } = true;	// Delete documents immediatly, for V NORN_ANG
+	public bool SimulateAddressProtectionIsSuccess { get; set; }
+
+	public DokumentlagerTestCaseStatus SimulateDeathStatus { get; set; } = DokumentlagerTestCaseStatus.NotRun;
+	public DokumentlagerTestCaseStatus SimulateAddressProtectionStatus { get; set; } = DokumentlagerTestCaseStatus.NotRun;
 }
 
 //public class DokumentlagerTestCaseExpected
@@ -108,7 +125,7 @@ public class Lookup
 	public bool IsTryRetrieveDocumentReference { get; set; } = true;	
 
 	public bool RetrieveDocumentReferenceExpectVisible { get; set; } = true;
-	public bool RetrieveDocumentReferenceIsSuccess { get; set; } = true;
+	public bool RetrieveDocumentReferenceIsSuccess { get; set; } // = true;
 
 	public bool RetrieveDocumentReferenceExpectVisibleWithObfuscation { get; set; } = false;
 	public bool RetrieveDocumentReferenceIsSuccessWithObfuscation { get; set; } = false;
@@ -118,7 +135,7 @@ public class Lookup
 	public bool IsTryOpenDocument { get; set; } = true;
 
 	public bool OpenDocumentExpectSuccess { get; set; } = true;
-	public bool OpenDocumentIsSuccess { get; set; } = true;
+	public bool OpenDocumentIsSuccess { get; set; }
 
 	// Lookup ATNA/Audit Event log
 	public bool IsTryReadAuditEvents { get; set; } = true;
@@ -168,6 +185,7 @@ public class DokumentlagerTestResult
 
 public sealed class TestRunInfo
 {
+	public string HomeCommunityId { get; set; }
 	public string RunId { get; set; } = Guid.NewGuid().ToString("N");
 	public int GroupIndex { get; set; }
 	public int TestIndex { get; set; }

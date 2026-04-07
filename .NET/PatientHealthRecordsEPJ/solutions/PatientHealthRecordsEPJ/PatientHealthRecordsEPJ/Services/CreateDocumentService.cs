@@ -11,12 +11,13 @@ using XcaXds.Commons.Models.Custom.RegistryDtos;
 using XcaXds.Commons.Models.Custom.RegistryDtos.TestData;
 using XcaXds.Commons.Serializers;
 using XcaXds.Commons.Services;
+using static XcaXds.Commons.Commons.Constants.Xds.QueryParameters;
 
 namespace PatientHealthRecordsEPJ.Services;
 
 public interface ICreateDocumentService
 {
-	Task<ProvideDocumentBundleRequest> GenerateRandomTestDocuments(ProvideDocumentBundleRequest request, SessionData sessionData, int entriesToGenerate, Action<DocumentEntryDto, SubmissionSetDto, AssociationDto>? configureDocument = null);
+	Task<ProvideDocumentBundleRequest> GenerateRandomTestDocuments(ProvideDocumentBundleRequest request, SessionData sessionData, int entriesToGenerate, Action<DocumentEntryDto, SubmissionSetDto, AssociationDto>? configureDocument = null, Action<Document>? configureDocument2 = null);
 	Task<Document> CreateDocument(ProvideDocumentBundleRequest request, SessionData sessionData, string fileName, string contentType, byte[] content, DateTime lastModified, bool createRandom = false); 
 }; 
 
@@ -35,7 +36,8 @@ public class CreateDocumentService : ICreateDocumentService
 		(ProvideDocumentBundleRequest request, 
 		SessionData sessionData, 
 		int entriesToGenerate,
-		Action<DocumentEntryDto, SubmissionSetDto, AssociationDto>? configureDocument = null
+		Action<DocumentEntryDto, SubmissionSetDto, AssociationDto>? configureDocument = null,
+		Action<Document>? configureDocument2 = null
 		)
 	{
 		var testDataFiles = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "TestData"));
@@ -114,6 +116,8 @@ public class CreateDocumentService : ICreateDocumentService
 					generatedTestObject.CreationTime!.Value,
 					createRandom: true
 					);
+
+				configureDocument2?.Invoke(document);				
 
 				request.DocumentCollection.WithDocument(document, selectDocument: true);
 			}

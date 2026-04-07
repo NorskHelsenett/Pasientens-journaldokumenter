@@ -8,6 +8,8 @@ public class DokumentlagerTestViewModel
 	public bool IsSuccessRawPvk { get; set; }
 	public string ErrorMessage { get; set; }
 
+	public string? SelectedHomeCommunityId { get; set; }
+
 	public string? TestsJson { get; set; }
 
 	public StatusResult? Status { get; set; }
@@ -20,7 +22,9 @@ public class DokumentlagerTestViewModel
 
 	public ApiResult ApiResult { get; set; }
 
-	public DokumentlagerTests Tests { get; set; } = null!; 
+	public DokumentlagerTests Tests { get; set; } = null!;
+
+	public List<TestRunInfo> Runs { get; set; } = null!;
 }
 
 
