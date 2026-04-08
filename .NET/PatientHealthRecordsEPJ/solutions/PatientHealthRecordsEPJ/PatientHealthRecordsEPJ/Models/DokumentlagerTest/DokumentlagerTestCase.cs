@@ -1,3 +1,5 @@
+using PatientHealthRecords.ApiService;
+
 namespace PatientHealthRecordsEPJ.Models;
 
 public enum DokumentlagerTestStatusEnum
@@ -185,6 +187,9 @@ public class DokumentlagerTestResult
 
 public sealed class TestRunInfo
 {
+	//public string ActiveEnvironment { get; set; }
+	//public PhrApiOptions MyProperty { get; set; }
+	public PhrApiEnvironment ApiEnvironment { get; set; }
 	public string HomeCommunityId { get; set; }
 	public string RunId { get; set; } = Guid.NewGuid().ToString("N");
 	public int GroupIndex { get; set; }

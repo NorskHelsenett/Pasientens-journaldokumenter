@@ -1,11 +1,12 @@
-﻿using PatientHealthRecordsEPJ.Models;
+﻿using PatientHealthRecords.ApiService;
+using PatientHealthRecordsEPJ.Models;
 using System.Collections.Concurrent;
 
 namespace PatientHealthRecordsEPJ.DokumentlagerTest; 
 
 public interface ITestRunStore
 {
-	TestRunInfo Create(string homeCommunityId, DokumentlagerTestCase test, SessionData sessessionData, int groupIndex, int testIndex, string patientId);
+	TestRunInfo Create(PhrApiEnvironment apiEnvironment, string homeCommunityId, DokumentlagerTestCase test, SessionData sessessionData, int groupIndex, int testIndex, string patientId);
 	bool TryGet(string runId, out TestRunInfo? run);
 	void Update(TestRunInfo run);
 	void Clear();
@@ -16,10 +17,11 @@ public sealed class InMemoryTestRunStore : ITestRunStore
 {
 	private readonly ConcurrentDictionary<string, TestRunInfo> _runs = new();
 
-	public TestRunInfo Create(string homeCommunityId, DokumentlagerTestCase test, SessionData sessionData, int groupIndex, int testIndex, string patientId)
+	public TestRunInfo Create(PhrApiEnvironment apiEnvironment, string homeCommunityId, DokumentlagerTestCase test, SessionData sessionData, int groupIndex, int testIndex, string patientId)
 	{
 		var run = new TestRunInfo
 		{
+			ApiEnvironment = apiEnvironment,
 			HomeCommunityId = homeCommunityId,
 			GroupIndex = groupIndex,
 			TestIndex = testIndex,

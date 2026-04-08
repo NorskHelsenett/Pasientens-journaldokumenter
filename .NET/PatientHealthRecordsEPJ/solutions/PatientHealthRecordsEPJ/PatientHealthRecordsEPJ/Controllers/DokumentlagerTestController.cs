@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Xml;
 using NorskHelsenettUpload;
 using NorskHelsenettUpload.FluidExtensions; 
 using NorskHelsenettUpload.Ihe.Mhd.Interfaces;
@@ -278,10 +279,12 @@ public class DokumentlagerTestController : BaseController
 		if (string.IsNullOrWhiteSpace(patientId))
 			return BadRequest("PatientId missing from session.");
 
+		var apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment(); 		
+
 		var testGroup = sessionData.DokumentlagerTests.TestGroups[groupIndex];
 		var test = testGroup.TestCases[testIndex];
 
-		var run = _store.Create(homeCommunityId, test, sessionData,groupIndex, testIndex, patientId);
+		var run = _store.Create(apiEnvironment, homeCommunityId, test, sessionData,groupIndex, testIndex, patientId);
 
 		await _queue.QueueAsync(async cancellationToken =>
 		{

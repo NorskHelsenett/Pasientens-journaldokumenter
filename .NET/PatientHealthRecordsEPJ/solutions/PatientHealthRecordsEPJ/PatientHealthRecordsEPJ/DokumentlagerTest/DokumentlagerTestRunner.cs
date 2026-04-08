@@ -174,7 +174,8 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 		var test = run.Test;
 		var sessionData = run.SessionData;
 
-		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+		//var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+		var _apiEnvironment = run.ApiEnvironment; 
 
 		//test.Status = Random.Shared.Next(0, 2) == 0
 		//	? DokumentlagerTestCaseStatus.Success
@@ -592,7 +593,8 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 		var test = run.Test;
 		var sessionData = run.SessionData;
 
-		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+		//var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+		var _apiEnvironment = run.ApiEnvironment; 
 
 		var homeCommunityId = run.HomeCommunityId;
 
