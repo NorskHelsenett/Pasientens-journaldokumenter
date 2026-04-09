@@ -175,7 +175,11 @@
 						</iframe>
 					}
 
-					@if (Model.ContentType == "application/xml" || Model.ContentType == "text/plain" || Model.ContentType == "application/rtf")
+					@if (Model.ContentType == "application/xml" 
+						|| Model.ContentType == "text/plain" 
+						|| Model.ContentType == "application/rtf" 
+						|| Model.ContentType == "application/fhir+json" 
+						|| Model.ContentType == "application/json")
 					{
 						<iframe id="contentIframe">
 						</iframe>

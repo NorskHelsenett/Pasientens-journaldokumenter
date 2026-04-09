@@ -263,6 +263,18 @@ public class DocumentController : BaseController
 
 									model.IsSuccess = true;																	
 								}
+								else if (mediaType == "application/fhir+json" || mediaType == "application/json")
+								{
+									var text = string.Empty;
+
+									text = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
+
+									model.Html = text;
+
+									model.ContentType = mediaType;
+
+									model.IsSuccess = true;
+								}
 
 								if (removeTextNodeForDisplay)
 								{
