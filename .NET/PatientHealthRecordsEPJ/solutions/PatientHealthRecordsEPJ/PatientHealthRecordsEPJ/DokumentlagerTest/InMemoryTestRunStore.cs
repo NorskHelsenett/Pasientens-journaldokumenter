@@ -6,7 +6,7 @@ namespace PatientHealthRecordsEPJ.DokumentlagerTest;
 
 public interface ITestRunStore
 {
-	TestRunInfo Create(PhrApiEnvironment apiEnvironment, string homeCommunityId, DokumentlagerTestCase test, SessionData sessessionData, int groupIndex, int testIndex, string patientId);
+	TestRunInfo Create(PhrApiEnvironment apiEnvironment, string homeCommunityId, DokumentlagerTestCase test, SessionData sessessionData, int groupIndex, int testIndex, string patientId);	
 	bool TryGet(string runId, out TestRunInfo? run);
 	void Update(TestRunInfo run);
 	void Clear();

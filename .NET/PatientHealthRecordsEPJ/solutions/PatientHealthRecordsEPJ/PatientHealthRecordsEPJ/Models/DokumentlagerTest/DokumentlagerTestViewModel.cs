@@ -1,3 +1,4 @@
+using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Personverninnstillinger;
 
 namespace PatientHealthRecordsEPJ.Models;
@@ -11,6 +12,8 @@ public class DokumentlagerTestViewModel
 	public string? SelectedHomeCommunityId { get; set; }
 
 	public string? TestsJson { get; set; }
+
+	public PhrApiEnvironment? ApiEnvironment { get; set; }
 
 	public StatusResult? Status { get; set; }
 	public StatusPvkResult? StatusPvk { get; set; } // Raw PVK settings

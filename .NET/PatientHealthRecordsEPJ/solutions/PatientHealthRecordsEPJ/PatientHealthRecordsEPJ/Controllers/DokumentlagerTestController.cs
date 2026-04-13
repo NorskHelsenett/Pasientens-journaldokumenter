@@ -17,6 +17,7 @@ using PatientHealthRecordsEPJ.Personverninnstillinger;
 using PatientHealthRecordsEPJ.Services;
 using System.Text;
 using System.Text.Json;
+using XcaXds.Commons.Models.ClinicalDocument.Types;
 using XcaXds.Commons.Models.Custom.RegistryDtos;
 using static NorskHelsenettUpload.Constants.CodeSystems.Hl7.ConfidentialityCode;
 using static NorskHelsenettUpload.Constants.CodeSystems.Hl7.PurposeOfUse;
@@ -35,6 +36,7 @@ public class DokumentlagerTestController : BaseController
 	private ISession session => _httpContextAccessor.HttpContext!.Session;
 	private readonly IWebHostEnvironment _webHostEnvironment;
 	private readonly IOidcClientService _oidcClientService;
+	private readonly PhrApiOptions _phrApiOptions; 
 	private readonly IPhrApiEnvironmentProvider _phrApiEnvironmentProvider;
 	private readonly IBundleCreator _bundleCreator;
 	private readonly OrganizationService _organizationService;
@@ -56,6 +58,7 @@ public class DokumentlagerTestController : BaseController
 		IMemoryCache memoryCache, 
 		IWebHostEnvironment webHostEnvironment,		
 		IOidcClientService oidcClientService,
+		PhrApiOptions phrApiOptions,
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		IBundleCreator bundleCreator,
 		OrganizationService organizationService,
@@ -72,6 +75,7 @@ public class DokumentlagerTestController : BaseController
 		_httpContextAccessor = httpContextAccessor;
 		_webHostEnvironment = webHostEnvironment;
 		_oidcClientService = oidcClientService;
+		_phrApiOptions = phrApiOptions;
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 		_bundleCreator = bundleCreator;
 		_organizationService = organizationService;
@@ -113,6 +117,8 @@ public class DokumentlagerTestController : BaseController
 		model.TestsJson = JsonSerializer.Serialize(model.Tests, new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
 		model.SelectedHomeCommunityId = homeCommunityId;
+
+		model.ApiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
 
 		return View(model);
 	}
@@ -271,7 +277,7 @@ public class DokumentlagerTestController : BaseController
 
 	//[HttpPost("run")]
 	[HttpPost]
-	public async Task<IActionResult> Run([FromQuery] string homeCommunityId, [FromQuery] int groupIndex, [FromQuery] int testIndex)
+	public async Task<IActionResult> Run(string envId, [FromQuery] string homeCommunityId, [FromQuery] int groupIndex, [FromQuery] int testIndex)
 	{
 		var sessionData = session.SessionData();
 		var patientId = sessionData.PatientId;
@@ -279,7 +285,18 @@ public class DokumentlagerTestController : BaseController
 		if (string.IsNullOrWhiteSpace(patientId))
 			return BadRequest("PatientId missing from session.");
 
-		var apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment(); 		
+		//var apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment(); 		
+
+		var apiEnvironment = _phrApiOptions.Environments.FirstOrDefault(x => x.Environment == envId);
+		if (apiEnvironment == null)
+		{
+			_logger.LogError($"{Environment.MachineName}: Run: Environment '{envId}' not found in configuration.");
+
+			return BadRequest(new
+			{				
+				status = DokumentlagerTestCaseStatus.Failed.ToString()
+			});
+		}
 
 		var testGroup = sessionData.DokumentlagerTests.TestGroups[groupIndex];
 		var test = testGroup.TestCases[testIndex];

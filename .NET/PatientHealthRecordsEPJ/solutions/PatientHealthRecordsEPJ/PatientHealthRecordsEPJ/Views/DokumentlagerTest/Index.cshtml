@@ -199,6 +199,8 @@
 
 <script>
 
+	const apiEnvironment = '@Model.ApiEnvironment!.Environment'; 
+
 	async function reset() {
 		await fetch("/DokumentlagerTest/Reset")
 				.then(response => response.text())
@@ -294,7 +296,7 @@
 
 			for (const test of testGroup.testCases) {
 
-				await runTest(homeCommunityId, test, groupIndex, testIndex);
+				await runTest(apiEnvironment, homeCommunityId, test, groupIndex, testIndex);
 
 				testIndex++;
 			}
@@ -303,8 +305,8 @@
 		}
 	}
 
-	async function startTest(homeCommunityId, groupIndex, testIndex) {
-		const response = await fetch(`/DokumentlagerTest/run?homeCommunityId=${homeCommunityId}&groupIndex=${groupIndex}&testIndex=${testIndex}`, {
+	async function startTest(apiEnvironment, homeCommunityId, groupIndex, testIndex) {
+		const response = await fetch(`/DokumentlagerTest/run?envId=${apiEnvironment}&homeCommunityId=${homeCommunityId}&groupIndex=${groupIndex}&testIndex=${testIndex}`, {
 			method: 'POST'
 		});
 
@@ -316,9 +318,9 @@
 		//return await response.json().then(data => { return data; });
 	}
 
-	async function runTest(homeCommunityId, test, groupIndex, testIndex) {
+	async function runTest(apiEnvironment, homeCommunityId, test, groupIndex, testIndex) {
 
-		console.log(test.name, homeCommunityId, groupIndex, testIndex);
+		console.log(test.name, apiEnvironment, homeCommunityId, groupIndex, testIndex);
 
 		const lookup = test.lookup;
 		const lookupDokumentlager = lookup.lookupDokumentlager;
@@ -337,7 +339,7 @@
 			console.log("Running test");
 
 			// Kick off test execution on server, and return immediatly while test continues to run in background. We will poll for status until test is finished.
-			const started = await startTest(homeCommunityId, groupIndex, testIndex);
+			const started = await startTest(apiEnvironment, homeCommunityId, groupIndex, testIndex);
 
 				/*.then(data => {
 					console.log("Received data from server when starting test: ", data);
