@@ -179,13 +179,17 @@
 						|| Model.ContentType == "text/plain" 
 						|| Model.ContentType == "application/rtf" 
 						|| Model.ContentType == "application/fhir+json" 
-						|| Model.ContentType == "application/json")
+						|| Model.ContentType == "application/json"
+						|| Model.IsUnknownContentType
+					)
 					{
+						var rawContent = Model.IsUnknownContentType ? Html.Raw(System.Net.WebUtility.HtmlEncode(Model.Html)) : Html.Raw(Model.Html); 
+
 						<iframe id="contentIframe">
 						</iframe>
 
 						<script type="text/javascript">
-							setIframeContent('contentIframe', `@Html.Raw(Model.Html)`);
+							setIframeContent('contentIframe', `@rawContent`);
 						</script>
 					}
 

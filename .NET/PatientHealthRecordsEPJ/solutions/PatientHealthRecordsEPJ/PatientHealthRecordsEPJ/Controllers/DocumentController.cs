@@ -275,6 +275,19 @@ public class DocumentController : BaseController
 
 									model.IsSuccess = true;
 								}
+								else if (extension == ".bin") // Unknown media type, but we can still try to display it as text if it's base64 encoded and not too large
+								{
+									var text = string.Empty;
+
+									text = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
+
+									model.Html = text;
+
+									model.ContentType = mediaType;
+									model.IsUnknownContentType = true; 
+
+									model.IsSuccess = true;
+								}
 
 								if (removeTextNodeForDisplay)
 								{
@@ -500,6 +513,11 @@ public class DocumentController : BaseController
 
 	private static string GetExtension(string contentType)
 	{
+		//if (contentType.Contains("/xml") || contentType.Contains("+xml"))
+		//{
+		//	return ".xml";
+		//}
+		
 		return contentType switch
 		{
 			//
@@ -581,7 +599,7 @@ public class DocumentController : BaseController
 			//
 			// Default fallback: use the content type itself
 			//
-			_ => contentType
+			_ => ".bin" // contentType
 		};
 	}
 

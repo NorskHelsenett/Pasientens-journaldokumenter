@@ -50,6 +50,7 @@ public class GetDocumentViewModel
 
 	public Pagination Pagination { get; set; }
 
+	public bool IsUnknownContentType { get; set; }
 	public string? ContentType { get; set; }
 	public string? Html { get; set; }	
 	public string? ImageBase64String { get; set; }
