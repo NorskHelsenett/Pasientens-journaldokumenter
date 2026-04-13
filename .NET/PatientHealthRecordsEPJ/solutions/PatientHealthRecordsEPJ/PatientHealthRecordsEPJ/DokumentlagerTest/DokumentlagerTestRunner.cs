@@ -1,10 +1,6 @@
-﻿using Duende.IdentityModel.Internal;
-using Hl7.Fhir.Model;
-using Hl7.Fhir.Model.CdsHooks;
+﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using Hl7.Fhir.Specification;
 using Microsoft.AspNetCore.WebUtilities;
-using MigraDocCore.DocumentObjectModel;
 using NorskHelsenettUpload;
 using NorskHelsenettUpload.FluidExtensions;
 using NorskHelsenettUpload.Ihe.Mhd.Interfaces;
@@ -13,25 +9,17 @@ using NorskHelsenettUpload.Models;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ.Models;
 using PatientHealthRecordsEPJ.Models.DokumentlagerTest;
-using PatientHealthRecordsEPJ.Models.HelsenorgeLogin;
 using PatientHealthRecordsEPJ.Services;
 using PatientHealthRecordsEPJ.UploadDocuments.Lists;
-using PdfSharpCore;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
-using XcaXds.Commons.Extensions;
-using XcaXds.Commons.Models.ClinicalDocument;
 using XcaXds.Commons.Models.Custom.RegistryDtos;
 using XcaXds.Commons.Models.Soap;
 using XcaXds.Commons.Models.Soap.XdsTypes;
 using XcaXds.Commons.Serializers;
 using static NorskHelsenettUpload.Constants.CodeSystems.Hl7.ConfidentialityCode;
-using static NorskHelsenettUpload.Constants.CodeSystems.Hl7.PurposeOfUse;
-using static NorskHelsenettUpload.Constants.CodeSystems.Volven.ConfidentialityCode;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace PatientHealthRecordsEPJ.DokumentlagerTest;
 
@@ -1027,7 +1015,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 						var title = kjDocumentReference.Name.GetFirstValue();
 
-						if (title.Contains("***"))
+						if (title.Contains("***") || title.Contains("Sperret"))
 						{
 							lookupKJ.RetrieveDocumentReferenceStatus = LookupDocumentReferenceStatus.VisibleWithObfuscation;
 						}
@@ -1223,7 +1211,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 						var title = hnDocumentReference.Name.GetFirstValue();
 
-						if (title.Contains("***"))
+						if (title.Contains("***") || title.Contains("Sperret"))
 						{
 							lookupHelsenorge.RetrieveDocumentReferenceStatus = LookupDocumentReferenceStatus.VisibleWithObfuscation;
 						}

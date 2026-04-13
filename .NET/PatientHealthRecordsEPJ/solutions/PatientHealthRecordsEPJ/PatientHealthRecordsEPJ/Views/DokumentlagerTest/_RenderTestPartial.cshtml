@@ -226,11 +226,16 @@
 			return VisibleIcon();
 		}
 
+		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.VisibleWithObfuscation)
+		{
+			return SuccessObfuscatedIcon(); 
+		}
+
 		if (lookup.RetrieveDocumentReferenceStatus == LookupDocumentReferenceStatus.NotVisible)
 		{
 			return InvisibleIcon();
 		}
-
+				
 		return NotRunIcon();
 
 		/*if (lookup.RetrieveDocumentReferenceExpectVisibleWithObfuscation == true)
