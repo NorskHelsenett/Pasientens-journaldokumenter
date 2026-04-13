@@ -327,7 +327,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 		var validate = false; 
 
-		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument, validate);
+		var apiResult = await _provideDocumentsBundleApiService.ProvideBundle.ProvideDocumentBundleAsync(bundleDocument, validate, apiEnvironment: _apiEnvironment);
 
 		test.Status = DokumentlagerTestCaseStatus.Success;
 		test.Result.Success = true;

@@ -21,7 +21,7 @@ public class ProvideBundle
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
 	}
 
-	public async Task<ApiResult> ProvideDocumentBundleAsync(string content, bool validate)
+	public async Task<ApiResult> ProvideDocumentBundleAsync(string content, bool validate, PhrApiEnvironment? apiEnvironment = null)
     {
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
 
@@ -30,9 +30,9 @@ public class ProvideBundle
 
 		StringContent stringContent = new StringContent(content, Encoding.UTF8, mediaType: "application/fhir+json");
 
-		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+		apiEnvironment ??= _phrApiEnvironmentProvider.GetCurrentEnvironment();
 
-		var apiUrl = _apiEnvironment.ProvideDocumentBundleUrl;
+		var apiUrl = apiEnvironment.ProvideDocumentBundleUrl;
 
 		if (validate)
 		{
