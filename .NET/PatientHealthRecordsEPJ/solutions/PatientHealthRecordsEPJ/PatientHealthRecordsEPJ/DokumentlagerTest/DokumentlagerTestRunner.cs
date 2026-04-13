@@ -994,10 +994,10 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				lookupKJ.RetrieveDocumentReferenceStatus = LookupDocumentReferenceStatus.Running;
 				_store.Update(run);
 
-				var iti38RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Kjernejournal-portal\iti38-request.xml");
+				var iti38RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Kjernejournal-portal{Path.PathSeparator}iti38-request.xml");
 				var iti38SoapEnvelope = File.ReadAllText(iti38RequestFilePath);
 
-				var kjSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Kjernejournal-portal\SamlToken_KJ01.xml");
+				var kjSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Kjernejournal-portal{Path.PathSeparator}SamlToken_KJ01.xml");
 				var kjSamlToken = File.ReadAllText(kjSamlFilePath);
 
 				var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti38SoapEnvelope, kjSamlToken);
@@ -1111,10 +1111,10 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				}
 				else
 				{
-					var iti39RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Kjernejournal-portal\iti39-iti40-request-kj.xml");
+					var iti39RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Kjernejournal-portal{Path.PathSeparator}iti39-iti40-request-kj.xml");
 					var iti39SoapEnvelope = File.ReadAllText(iti39RequestFilePath);
 
-					var kjSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Kjernejournal-portal\SamlToken_KJ01.xml");
+					var kjSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Kjernejournal-portal{Path.PathSeparator}SamlToken_KJ01.xml");
 					var kjSamlToken = File.ReadAllText(kjSamlFilePath);
 
 					var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti39SoapEnvelope, kjSamlToken);
@@ -1190,10 +1190,10 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				lookupHelsenorge.RetrieveDocumentReferenceStatus = LookupDocumentReferenceStatus.Running;
 				_store.Update(run);
 
-				var iti38RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Helsenorge\iti38-request.xml");
+				var iti38RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Helsenorge{Path.PathSeparator}iti38-request.xml");
 				var iti38SoapEnvelope = File.ReadAllText(iti38RequestFilePath);
 
-				var helsenorgeSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Helsenorge\SamlToken_HN01.xml");
+				var helsenorgeSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Helsenorge{Path.PathSeparator}SamlToken_HN01.xml");
 				var helsenorgeSamlToken = File.ReadAllText(helsenorgeSamlFilePath);
 
 				var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti38SoapEnvelope, helsenorgeSamlToken);
@@ -1333,10 +1333,10 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				}
 				else
 				{
-					var iti39RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Helsenorge\iti39-iti40-request-hn.xml");
+					var iti39RequestFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Helsenorge{Path.PathSeparator}iti39-iti40-request-hn.xml");
 					var iti39SoapEnvelope = File.ReadAllText(iti39RequestFilePath);
 
-					var helsenorgeSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @"DokumentlagerTest\Data\Helsenorge\SamlToken_HN01.xml");
+					var helsenorgeSamlFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, @$"DokumentlagerTest{Path.PathSeparator}Data{Path.PathSeparator}Helsenorge{Path.PathSeparator}SamlToken_HN01.xml");
 					var helsenorgeSamlToken = File.ReadAllText(helsenorgeSamlFilePath);
 
 					var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti39SoapEnvelope, helsenorgeSamlToken);
