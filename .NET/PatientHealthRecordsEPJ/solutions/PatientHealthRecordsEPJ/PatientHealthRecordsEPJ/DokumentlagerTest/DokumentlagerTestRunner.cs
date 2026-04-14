@@ -303,7 +303,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 			}
 		}
 
-		bundleRequest = await _createDocumentService.GenerateRandomTestDocuments(bundleRequest, sessionData, 1, ConfigureDocument, ConfigureDocument2);
+		 bundleRequest = await _createDocumentService.GenerateRandomTestDocuments(bundleRequest, sessionData, 1, ConfigureDocument, ConfigureDocument2);
 
 		var firstDocument = bundleRequest.DocumentCollection.Documents.FirstOrDefault();
 
@@ -390,10 +390,12 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 			if (test.Events.IsTrySimulateAddressProtection)
 			{
 				test.Events.SimulateAddressProtectionStatus = DokumentlagerTestCaseStatus.Running;
-				_store.Update(run);				
+				_store.Update(run);
+
+				var addressProtectionSetDate = DateTime.Now;
 
 				var postSimulateAddressProtectionApiUrl =
-					$"{_apiEnvironment.RootUrl}/simulate-persontjenesten-events/person-set-address-protection?nin={sessionData.PatientId}";
+					$"{_apiEnvironment.RootUrl}/simulate-persontjenesten-events/person-set-address-protection?nin={sessionData.PatientId}&year={addressProtectionSetDate.Year}&month={addressProtectionSetDate.Month}&day={addressProtectionSetDate.Day}";
 
 				var postSimulateAddressProtectionResponse = await httpClient.PostAsync(postSimulateAddressProtectionApiUrl, null);
 
@@ -741,7 +743,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 						var title = attachment.Title;
 
-						if (title.Contains("**"))
+						if (title.Contains("***") || title.Contains("Sperret"))
 						{
 							lookupAPI.RetrieveDocumentReferenceStatus = LookupDocumentReferenceStatus.VisibleWithObfuscation;
 						}
@@ -839,8 +841,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				_store.Update(run);
 
 				if (retrieveDocumentUri == null)
-				{
-					lookupAPI.OpenDocumentIsSuccess = false;
+				{					
 					lookupAPI.OpenDocumentStatus = LookupDocumentStatus.OpenDocumentFailed;
 				}
 				else
@@ -875,18 +876,26 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 					var apiGetDocumentResult = await ApiCaller.CallApi(HttpMethod.Get, retrieveDocumentUri.ToString(), sessionData.PjdAccessToken!, document: true, headerKeyValues: headerKeyValues);
 
 					if (apiGetDocumentResult.IsSuccess)
-					{
-						lookupAPI.OpenDocumentIsSuccess = true;
+					{						
 						lookupAPI.OpenDocumentStatus = LookupDocumentStatus.OpenDocumentSuccess;
 					}
 					else
-					{
-						lookupAPI.OpenDocumentIsSuccess = false;
+					{						
 						lookupAPI.OpenDocumentStatus = LookupDocumentStatus.OpenDocumentFailed;
-					}
-
-					_store.Update(run);
+					}					
 				}
+
+				if (lookupAPI.OpenDocumentExpectSuccess)
+				{
+					// Success if the document could be retrieved and opened successfully
+					lookupAPI.OpenDocumentIsSuccess = lookupAPI.OpenDocumentStatus == LookupDocumentStatus.OpenDocumentSuccess;
+				}
+				else if (!lookupAPI.OpenDocumentExpectSuccess)
+				{					
+					lookupAPI.OpenDocumentIsSuccess = lookupAPI.OpenDocumentStatus == LookupDocumentStatus.OpenDocumentFailed;
+				}
+				
+				_store.Update(run);
 			}
 
 			if (lookupAPI.IsTryReadAuditEvents)

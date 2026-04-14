@@ -439,7 +439,8 @@
 		if (testEvents.SimulateAddressProtectionIsSuccess == true)
 		{
 			//return VisibleIcon();
-			return DeleteDocumentsNowIcon();
+			//return DeleteDocumentsNowIcon();
+			return DeleteDocumentsAfter30DaysIcon();
 		}
 		else
 		{
@@ -768,7 +769,8 @@
 							<td class="ex-icon">
 								@if (test.Events.SimulateAddressProtectionExpectDocumentDeletion)
 								{
-									<div>@Html.Raw(DeleteDocumentsNowIcon())</div>
+@* 									<div>@Html.Raw(DeleteDocumentsNowIcon())</div> *@
+									<div>@Html.Raw(DeleteDocumentsAfter30DaysIcon())</div>
 								}
 							</td>
 							<td class="re-icon">

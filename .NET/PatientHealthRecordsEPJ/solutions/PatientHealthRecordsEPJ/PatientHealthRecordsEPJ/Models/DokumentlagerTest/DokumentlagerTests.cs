@@ -264,7 +264,7 @@ public class DokumentlagerTests
 					{
 						IsTrySimulateAddressProtection = true
 					},
-					LookupAfterEvents = new DokumentlagerTestCaseLookup() // Lookup after setting address protection (and delete document due to V NORN_ANG) 
+					/*LookupAfterEvents = new DokumentlagerTestCaseLookup() // Lookup after setting address protection (and delete document due to V NORN_ANG) 
 					{
 						LookupDokumentlager = new Lookup()
 						{
@@ -286,7 +286,7 @@ public class DokumentlagerTests
 							RetrieveDocumentReferenceExpectVisible = false,
 							OpenDocumentExpectSuccess = false
 						}
-					},
+					}, */
 				}
 			}
 		},
