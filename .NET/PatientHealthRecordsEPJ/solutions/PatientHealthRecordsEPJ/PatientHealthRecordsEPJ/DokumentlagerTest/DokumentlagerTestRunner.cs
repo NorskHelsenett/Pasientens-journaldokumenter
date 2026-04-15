@@ -15,6 +15,7 @@ using System.Text;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
+using XcaXds.Commons.Models.ClinicalDocument;
 using XcaXds.Commons.Models.Custom.RegistryDtos;
 using XcaXds.Commons.Models.Soap;
 using XcaXds.Commons.Models.Soap.XdsTypes;
@@ -162,6 +163,8 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 		var test = run.Test;
 		var sessionData = run.SessionData;
 
+		var patientId = test.PatientId ?? run.PatientId; 
+
 		//var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
 		var _apiEnvironment = run.ApiEnvironment; 
 
@@ -197,14 +200,14 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 		var bundleRequest = new ProvideDocumentBundleRequest();
 
-		var submissionTitle = $"SubmissionSet-{run.PatientId}-{DateTime.Now.ToString()}";
+		var submissionTitle = $"SubmissionSet-{patientId}-{DateTime.Now.ToString()}";
 
 		bundleRequest.Submission
 			.WithUniqueId(Guid.NewGuid())
 			.WithAvailabilityStatus(DocumentSubmissionMetadata.AvailabilityStatusApproved)
 			.WithSubmissionTime(DateTime.Now)
 			.WithSourceId("1.1") // TODO: what to use as sourceId? For now just a hardcoded dummy. 
-			.WithPatientId(run.PatientId)
+			.WithPatientId(patientId)
 			.WithTitle(submissionTitle);
 
 		bundleRequest.Submission.WithHomeCommunityId(homeCommunityId);
@@ -354,7 +357,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 		if (test.Lookup != null)
 		{
-			await DoLookup(run, documentReferenceId, test.Lookup);
+			await DoLookup(run, patientId, documentReferenceId, test.Lookup);
 		}
 
 		if (test.Events != null)
@@ -367,7 +370,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				var deceasedDate = DateTime.Now; 
 				
 				var postSimulateDeathApiUrl = 
-					$"{_apiEnvironment.RootUrl}/simulate-persontjenesten-events/person-death-results-in-scheduled-document-delete?nin={sessionData.PatientId}&year={deceasedDate.Year}&month={deceasedDate.Month}&day={deceasedDate.Day}";
+					$"{_apiEnvironment.RootUrl}/simulate-persontjenesten-events/person-death-results-in-scheduled-document-delete?nin={patientId}&year={deceasedDate.Year}&month={deceasedDate.Month}&day={deceasedDate.Day}";
 
 				var postSimulateDeathResponse = await httpClient.PostAsync(postSimulateDeathApiUrl, null);
 
@@ -395,7 +398,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				var addressProtectionSetDate = DateTime.Now;
 
 				var postSimulateAddressProtectionApiUrl =
-					$"{_apiEnvironment.RootUrl}/simulate-persontjenesten-events/person-set-address-protection?nin={sessionData.PatientId}&year={addressProtectionSetDate.Year}&month={addressProtectionSetDate.Month}&day={addressProtectionSetDate.Day}";
+					$"{_apiEnvironment.RootUrl}/simulate-persontjenesten-events/person-set-address-protection?nin={patientId}&year={addressProtectionSetDate.Year}&month={addressProtectionSetDate.Month}&day={addressProtectionSetDate.Day}";
 
 				var postSimulateAddressProtectionResponse = await httpClient.PostAsync(postSimulateAddressProtectionApiUrl, null);
 
@@ -418,7 +421,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 		if (test.LookupAfterEvents != null)
 		{
-			await DoLookup(run, documentReferenceId, test.LookupAfterEvents);
+			await DoLookup(run, patientId, documentReferenceId, test.LookupAfterEvents);
 		}
 
 		if (test.IsTryPatchDocument)
@@ -569,11 +572,11 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 		return new DokumentlagerTestResult
 		{
 			Success = true,
-			Message = $"Finished test {run.GroupIndex}/{run.TestIndex} for patient {run.PatientId}"
+			Message = $"Finished test {run.GroupIndex}/{run.TestIndex} for patient {patientId}"
 		};
 	}
 
-	private async System.Threading.Tasks.Task DoLookup(TestRunInfo run, Guid? documentReferenceId, DokumentlagerTestCaseLookup lookup)
+	private async System.Threading.Tasks.Task DoLookup(TestRunInfo run, string patientId, Guid? documentReferenceId, DokumentlagerTestCaseLookup lookup)
 	{
 		var lookupDokumentlager = lookup.LookupDokumentlager;
 		var lookupAPI = lookup.LookupAPI;
@@ -696,7 +699,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 				var urlencodedContent = new FormUrlEncodedContent([
 					//new("patient.identifier", sessionLoginResult.SourcePatientInfo?.NIN),
-					new("patient.identifier", run.PatientId),
+					new("patient.identifier", patientId),
 					new("status", "current"),
 					//new("_count", pageSize.ToString()),
 					//new("_page", pageIndex.ToString()),
@@ -869,7 +872,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 					// We send the patient Id in the header as nhn-patient-nin to avoid having the patient Id in the URL.             
 
-					headerKeyValues.Add(new KeyValuePair<string, string>("nhn-patient-nin", sessionData.PatientId));
+					headerKeyValues.Add(new KeyValuePair<string, string>("nhn-patient-nin", patientId));
 					headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PHR Test EPJ integration tests"));
 					headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
 
@@ -1000,7 +1003,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 				var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti38SoapEnvelope, kjSamlToken);
 
 				//var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-cross-gateway-query?home={homeCommunityId}&patientIdentifier={sessionData.PatientId}&subjectId={sessionData.PersonId}";
-				var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={sessionData.PatientId}&subjectId={sessionData.PersonId}";
+				var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={patientId}&subjectId={sessionData.PersonId}";
 				//var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-cross-gateway-query?home={homeCommunityId}&patientIdentifier=20738506678";
 
 				var forwardCrossGatewayQueryResponse = await httpClient.PostAsync(forwardCrossGatewayQueryApiUrl, new StringContent(crossGatewayQuery.OuterXml, Encoding.UTF8, Constants.MimeTypes.SoapXml));
@@ -1116,7 +1119,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 					var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti39SoapEnvelope, kjSamlToken);
 
-					var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={sessionData.PatientId}&subjectId={sessionData.PersonId}&documentUniqueId={kjRetrieveDocumentUniqueId}";
+					var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={patientId}&subjectId={sessionData.PersonId}&documentUniqueId={kjRetrieveDocumentUniqueId}";
 
 					var forwardCrossGatewayQueryResponse = await httpClient.PostAsync(forwardCrossGatewayQueryApiUrl, new StringContent(crossGatewayQuery.OuterXml, Encoding.UTF8, Constants.MimeTypes.SoapXml));
 
@@ -1195,8 +1198,8 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 				var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti38SoapEnvelope, helsenorgeSamlToken);
 
-				//var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-cross-gateway-query?home={homeCommunityId}&patientIdentifier={sessionData.PatientId}";
-				var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={sessionData.PatientId}";
+				//var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-cross-gateway-query?home={homeCommunityId}&patientIdentifier={patientId}";
+				var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={patientId}";
 				//var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-cross-gateway-query?home={homeCommunityId}&patientIdentifier=20738506678";
 
 				var forwardCrossGatewayQueryResponse = await httpClient.PostAsync(forwardCrossGatewayQueryApiUrl, new StringContent(crossGatewayQuery.OuterXml, Encoding.UTF8, Constants.MimeTypes.SoapXml));
@@ -1338,7 +1341,7 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 					var crossGatewayQuery = GetSoapEnvelopeWithSamlToken(iti39SoapEnvelope, helsenorgeSamlToken);
 
-					var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={sessionData.PatientId}&documentUniqueId={hnRetrieveDocumentUniqueId}";
+					var forwardCrossGatewayQueryApiUrl = $"{_apiEnvironment.RootUrl}/registry-repository/forward-to-responding-gateway-service?home={homeCommunityId}&patientIdentifier={patientId}&documentUniqueId={hnRetrieveDocumentUniqueId}";
 
 					var forwardCrossGatewayQueryResponse = await httpClient.PostAsync(forwardCrossGatewayQueryApiUrl, new StringContent(crossGatewayQuery.OuterXml, Encoding.UTF8, Constants.MimeTypes.SoapXml));
 

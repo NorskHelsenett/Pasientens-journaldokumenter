@@ -10,6 +10,7 @@ public class DokumentlagerTests
 {
 	public List<DokumentlagerTestGroup> TestGroups { get; set; } = new List<DokumentlagerTestGroup>
 	{
+#if true
 		new DokumentlagerTestGroup
 		{
 			Name = "Del dokument",
@@ -305,6 +306,8 @@ public class DokumentlagerTests
 			{				
 			}
 		},*/
+
+#endif
 		new DokumentlagerTestGroup
 		{
 			Name = "Barn, ungdom og foreldrerepresentasjon",
@@ -347,10 +350,14 @@ public class DokumentlagerTests
 				},
 				new DokumentlagerTestCase
 				{
-					Name = "Person mellom 16 og 18 kan se journaldokument og dokumentliste så lenge ikke V og NORN_ANG er satt",
+					Name = "Person mellom 16 og 18 kan se journaldokument og dokumentliste så lenge ikke V og NORN_ANG er satt.\n"
+					+ "\n"
+					+ "Test pasient: MOBIL JOLLE (17 år)\n"
+					,
 					ExpectedResult = "Success",
 					Comment = "",
 					Details = "",
+					PatientId = "03700889679",	 // MOBIL JOLLE, 17 år
 					SecurityLabels = new List<string>()
 					{
 						Normal
@@ -382,10 +389,14 @@ public class DokumentlagerTests
 				},
 				new DokumentlagerTestCase
 				{
-					Name = "Person mellom 16 og 18 kan IKKE se journaldokument og dokumentliste når V og NORN_ANG er satt",
+					Name = "Person mellom 16 og 18 kan IKKE se journaldokument og dokumentliste når V og NORN_ANG er satt.\n"
+					+ "\n"
+					+ "Test pasient: MOBIL JOLLE (17 år)\n"
+					,
 					ExpectedResult = "Success",
 					Comment = "",
 					Details = "",
+					PatientId = "03700889679",	 // MOBIL JOLLE, 17 år
 					SecurityLabels = new List<string>()
 					{
 						VeryRestricted, NORN_ANG
@@ -410,8 +421,8 @@ public class DokumentlagerTests
 						},
 						LookupHelsenorge = new Lookup()
 						{
-							RetrieveDocumentReferenceExpectVisible = true,
-							OpenDocumentExpectSuccess = true
+							RetrieveDocumentReferenceExpectVisible = false,
+							OpenDocumentExpectSuccess = false
 						}
 					}
 				},
