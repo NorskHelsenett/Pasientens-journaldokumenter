@@ -39,18 +39,21 @@ public class HomeController : BaseController
 
 	// Define audience of all APIs we want to call. We'll use resource indicators to get tokens scoped only to each API. 
 	public const string PhrResource = "nhn:phr";
-	public const string PhrServiceResource = "nhn:phr-service";
-	public const string PhrRepositoryResource = "nhn:phr-document-repository";
+	public const string PhrServiceResource = "nhn:phr-svc";
+	public const string PhrRepositoryResource = "nhn:phr-repo";
 	public const string KjernejournalResource = "nhn:kjernejournal";
 
 	// This is the scope of the API you want to call (get an access token for)		
 
 	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference";
 	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
-	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference nhn:phr-service/atna/read/document-repository nhn:phr-service/atna/read/document-repository-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference nhn:phr-service/atna/read/document-repository nhn:phr-service/atna/read/document-repository-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";	
+	private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/status nhn:phr-repo/mhd/create nhn:phr-repo/delete-docs-and-refs nhn:phr-svc/atna/r/repo nhn:phr-svc/atna/r/repo-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	
 	//private const string ApiScopes = "nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
 	//private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr/mhd/create-documents-with-reference nhn:phr/delete-documents-and-reference nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
-	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference nhn:phr-service/atna/read/document-repository nhn:phr-service/atna/read/document-repository-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	//private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference nhn:phr-service/atna/read/document-repository nhn:phr-service/atna/read/document-repository-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
+	private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/status nhn:phr-repo/mhd/create nhn:phr-repo/delete-docs-and-refs nhn:phr-svc/atna/r/repo nhn:phr-svc/atna/r/repo-test nhn:kjernejournal/innlogging nhn:kjernejournal/tillitsrammeverk";
 
 	//private const string ApiScopes = "nhn:phr/mhd/read-documentreferences nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:hgd-persontjenesten-api/full-access";
 	//private const string ApiScopesKjernejournalforskriften = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/mhd/create-documents-with-reference nhn:hgd-persontjenesten-api/full-access";

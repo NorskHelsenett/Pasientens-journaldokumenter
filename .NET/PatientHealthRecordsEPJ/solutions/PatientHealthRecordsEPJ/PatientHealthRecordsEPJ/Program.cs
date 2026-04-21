@@ -140,8 +140,8 @@ builder.Services.AddHttpClient("ProvideDocumentBundleApiClient", client => clien
 		//configureClient.Audience = "nhn:phr";
 		//configureClient.Scopes = "nhn:phr/mhd/create-documents-with-reference";
 
-		configureClient.Audience = "nhn:phr-document-repository";
-		configureClient.Scopes = "nhn:phr-document-repository/mhd/create-documents-with-reference nhn:phr-document-repository/delete-documents-and-reference";
+		configureClient.Audience = "nhn:phr-repo";
+		configureClient.Scopes = "nhn:phr-repo/mhd/create nhn:phr-repo/delete-docs-and-refs";
 
 		// PrivateJwk, ClientId and TokenEndpoint is the same as for Persontjenesten
 	});
