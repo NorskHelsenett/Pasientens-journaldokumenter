@@ -65,7 +65,7 @@
 		</saml:Attribute>
 		<saml:Attribute Name="urn:oasis:names:tc:xacml:2.0:resource:resource-id">
 			<saml:AttributeValue>
-				_PATIENT_ID_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;amp;ISO
+				_PATIENT_NIN_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;amp;ISO
 			</saml:AttributeValue>
 		</saml:Attribute>
 		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:SecurityLevel">
@@ -119,7 +119,7 @@
 		</saml:Attribute>
 		<saml:Attribute Name="urn:oasis:names:tc:xacml:1.0:resource:resource-id">
 			<saml:AttributeValue>
-				_PATIENT_ID_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;amp;ISO
+				_PATIENT_NIN_AND_SYSTEM_KJERNEJOURNAL_\u0026amp;amp;ISO
 			</saml:AttributeValue>
 		</saml:Attribute>
 		<saml:Attribute Name="urn:no:ehelse:saml:1.0:subject:client_id">

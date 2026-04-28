@@ -70,7 +70,9 @@ public class DokumentlagerTestCase
 
 	// If we're going to use a specific patient for the test case, set the patient id here.
 	// Otherwise, the patient selected in Test EPJ will be used. 
-	public string? PatientId { get; set; } 
+	public string? PatientId { get; set; }
+	public string? PatientFirstName { get; set; }
+	public string? PatientLastName { get; set; }
 
 	// Custom metadata when uploading
 	public List<string> SecurityLabels { get; set; } = new List<string>();

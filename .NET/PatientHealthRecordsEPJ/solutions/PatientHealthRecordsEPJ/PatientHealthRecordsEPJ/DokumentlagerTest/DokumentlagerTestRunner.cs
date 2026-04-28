@@ -244,8 +244,36 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 
 		bundleRequest.Submission.WithAuthor(author);
 
-		bundleRequest.Patient = sessionData
-				.SourcePatientInfo!
+		NorskHelsenettUpload.Ihe.Mhd.Models.SourcePatientInfo? sourcePatientInfo = null; 
+		
+		if (!string.IsNullOrWhiteSpace(test.PatientId))
+		{
+			PersonalNumber personalNumber = new PersonalNumber(test.PatientId);
+
+			var ninType = personalNumber.NumberType switch
+			{ 
+				PersonalNumberType.FNumber => NinType.NinTypeNationalIdentityNumber,
+				PersonalNumberType.DNumber => NinType.NinTypeDnumber,
+				//PersonalNumberType.HNumber => NinType.NinTypeNationalIdentityNumber, // H-nummer skal behandles som F-nummer/NIN i PJD
+				_=> NinType.NinTypeNationalIdentityNumber
+			}; 
+
+			sourcePatientInfo = new NorskHelsenettUpload.Ihe.Mhd.Models.SourcePatientInfo()
+			{
+				NIN = test.PatientId,
+				NinType = ninType,
+				Name = new PersonName() { FirstName = test.PatientFirstName, FamilyName = test.PatientLastName },
+				//DateOfBirth = test.PatientDateOfBirth
+				Gender = sessionData.SourcePatientInfo.Gender,
+				DateOfBirth = sessionData.SourcePatientInfo.DateOfBirth,
+			}; 
+		}
+		else
+		{
+			sourcePatientInfo = sessionData.SourcePatientInfo;
+		}
+
+		bundleRequest.Patient = sourcePatientInfo!
 				.WithXdsGlobalIdentifier("1.2.3") // If we fix/change this, also fix in PatientController
 				.WithXdsHomeCommunity("1.2.3")
 				;

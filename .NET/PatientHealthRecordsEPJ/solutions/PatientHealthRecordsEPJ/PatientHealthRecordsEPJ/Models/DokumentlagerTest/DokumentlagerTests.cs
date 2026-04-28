@@ -347,7 +347,7 @@ public class DokumentlagerTests
 							OpenDocumentExpectSuccess = true
 						}
 					}
-				},
+				}, 
 				new DokumentlagerTestCase
 				{
 					Name = "Person mellom 16 og 18 kan se journaldokument og dokumentliste så lenge ikke V og NORN_ANG er satt.\n"
@@ -358,6 +358,8 @@ public class DokumentlagerTests
 					Comment = "",
 					Details = "",
 					PatientId = "03700889679",	 // MOBIL JOLLE, 17 år
+					PatientFirstName = "MOBIL",
+					PatientLastName = "JOLLE",
 					SecurityLabels = new List<string>()
 					{
 						Normal
@@ -397,6 +399,8 @@ public class DokumentlagerTests
 					Comment = "",
 					Details = "",
 					PatientId = "03700889679",	 // MOBIL JOLLE, 17 år
+					PatientFirstName = "MOBIL",
+					PatientLastName = "JOLLE",
 					SecurityLabels = new List<string>()
 					{
 						VeryRestricted, NORN_ANG

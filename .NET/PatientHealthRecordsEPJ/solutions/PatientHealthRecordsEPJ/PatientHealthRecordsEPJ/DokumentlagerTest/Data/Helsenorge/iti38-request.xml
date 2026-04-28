@@ -43,9 +43,7 @@
 				</ns2:Slot>
 				<ns2:Slot name="$XDSDocumentEntryPatientId">
 					<ns2:ValueList>
-						<ns2:Value>
-							'_PATIENT_ID_AND_SYSTEM_&amp;ISO'
-						</ns2:Value>
+						<ns2:Value>'_PATIENT_ID_AND_SYSTEM_&amp;ISO'</ns2:Value>
 					</ns2:ValueList>
 				</ns2:Slot>
 			</ns2:AdhocQuery>
