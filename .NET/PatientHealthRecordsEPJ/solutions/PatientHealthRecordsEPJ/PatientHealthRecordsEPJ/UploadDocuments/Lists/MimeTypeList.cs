@@ -14,7 +14,8 @@ public class MimeTypeList
 		  new TextValue() { Value = "application/xml", Text = "XML-document (Machine readable)" },
 		  new TextValue() { Value = "text/xml", Text = "XML-document (Human readable)" },
 		  new TextValue() { Value = "application/fhir+xml", Text = "FHIR-document (XML)" },
-		  new TextValue() { Value = "application/fhir+json", Text = "FHIR-document (JSON)" }		 
+		  new TextValue() { Value = "application/fhir+json", Text = "FHIR-document (JSON)" },
+		  new TextValue() { Value = "application/hl7-v3+xml", Text = "HL7 v3-document (XML, ClinicalDocument)" },
 
 	}; 
 }

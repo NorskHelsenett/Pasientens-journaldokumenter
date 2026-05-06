@@ -475,7 +475,7 @@ public class UploadDocumentsController : BaseController
 				}
 			}
 
-			var document = await CreateDocument(file.FileName, file.ContentType, bytes, creationTime);
+			var document = await CreateDocument(file.FileName, file.ContentType, null, bytes, creationTime);
 
 			request.DocumentCollection.WithDocument(document, selectDocument: true);
 
@@ -486,7 +486,7 @@ public class UploadDocumentsController : BaseController
 		return RedirectToAction(nameof(UploadDocument));
 	}
 
-	private async Task<Document> CreateDocument(string fileName, string contentType, byte[] content, DateTime lastModified, bool createRandom = false)
+	private async Task<Document> CreateDocument(string fileName, string contentType, byte[]? cdaXmlbytes, byte[] content, DateTime lastModified, bool createRandom = false)
 	{
 		var sessionData = session.SessionData();
 		var request = sessionData.BundleRequest;
@@ -568,124 +568,134 @@ public class UploadDocumentsController : BaseController
 		//WithXdsGlobalIdentifier
 		//WithXdsHomeCommunity
 
+		if (extension == ".xml" && cdaXmlbytes == null)
+		{
+			cdaXmlbytes = content;
+		}
+
+		if (cdaXmlbytes != null)
+		{
+			// When we have CDA xml bytes, we can try to parse and extract metadata from the CDA structure.
+
+			XmlDocument doc = new XmlDocument();
+			//doc.Load(file.OpenReadStream());
+
+			using (var stream = new MemoryStream(cdaXmlbytes))
+			{
+				doc.Load(stream);
+			}
+
+			var test = doc.DocumentElement.OuterXml;
+
+			if (doc.DocumentElement.Name == "ClinicalDocument")
+			{
+				// TODO: in a real application you could properly deserialize the clinical document. 
+				// As an example we just read the base64 encoded PDF string, or the KITH xml string
+
+				var namespaceManager = new XmlNamespaceManager(doc.NameTable);
+				namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
+
+				var realmNode = doc.DocumentElement!.SelectSingleNode("//hl7:realmCode", namespaceManager);
+				var typeIdNode = doc.DocumentElement!.SelectSingleNode("//hl7:typeId", namespaceManager);
+				var templateIdNode = doc.DocumentElement!.SelectSingleNode("//hl7:templateId", namespaceManager);
+				var idNode = doc.DocumentElement!.SelectSingleNode("//hl7:id", namespaceManager);
+				var codeNode = doc.DocumentElement!.SelectSingleNode("//hl7:code", namespaceManager);   // this is the typeCode (child category), and we determine top-level classCode from it (top level category) 
+				var titleNode = doc.DocumentElement!.SelectSingleNode("//hl7:title", namespaceManager);
+				var effectiveTimeNode = doc.DocumentElement!.SelectSingleNode("//hl7:effectiveTime ", namespaceManager);
+				var confidentialityCodeNode = doc.DocumentElement!.SelectSingleNode("//hl7:confidentialityCode", namespaceManager);
+				var languageCodeNode = doc.DocumentElement!.SelectSingleNode("//hl7:languageCode", namespaceManager);
+				var setIdNode = doc.DocumentElement!.SelectSingleNode("//hl7:setId", namespaceManager);
+				var recordTargetNode = doc.DocumentElement!.SelectSingleNode("//hl7:recordTarget", namespaceManager);
+				var authorNode = doc.DocumentElement!.SelectSingleNode("//hl7:author", namespaceManager);
+				var custodianNode = doc.DocumentElement!.SelectSingleNode("//hl7:custodian", namespaceManager);
+				var informationRecipientNode = doc.DocumentElement!.SelectSingleNode("//hl7:informationRecipient", namespaceManager);
+
+				var textNode = doc.DocumentElement!.SelectSingleNode("//hl7:component/hl7:nonXMLBody/hl7:text", namespaceManager);
+
+				if (titleNode != null)
+				{
+					document.WithTitle(titleNode.InnerText);
+				}
+
+				if (codeNode != null)
+				{
+					// Set typeCode (child level) 
+					var typeCode = codeNode.Attributes?["code"]?.Value!;
+					var typeCodeSystem = codeNode.Attributes?["codeSystem"]?.Value!;
+
+					var typeCodeCoding = TypeCodeList.TypeCodes.FirstOrDefault(coding => coding.Code == typeCode);
+
+					document.Metadata.WithTypeCode(typeCodeCoding);
+
+					// Set classCode (top-level) 
+
+					var firstLetter = typeCode[0];
+
+					var classCodeCoding = ClassCodeList.ClassCodes.FirstOrDefault(coding => coding.Code.StartsWith(firstLetter));
+
+					if (classCodeCoding != null)
+					{
+						document.Metadata.WithClassCode(classCodeCoding);
+					}
+				}
+
+				if (confidentialityCodeNode != null)
+				{
+					var confidentialityCode = confidentialityCodeNode.Attributes?["code"]?.Value;
+					var confidentialityCodeSystem = confidentialityCodeNode.Attributes?["codeSystem"]?.Value;
+
+					var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == confidentialityCode);
+
+					document.Metadata.WithConfidentialityCode(confidentialityCodeCoding);
+				}
+
+				if (languageCodeNode != null)
+				{
+					document.WithLanguageCode(languageCodeNode.Attributes?["code"]?.Value);
+				}
+
+				if (textNode is not null)
+				{
+					var mediaType = textNode.Attributes["mediaType"]?.Value;
+					var representation = textNode.Attributes["representation"]?.Value;
+
+					if (mediaType == "application/pdf" && representation == "B64")
+					{
+						//model.PdfBase64String = textNode.InnerText;
+						//model.ContentType = "application/pdf";
+
+						// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
+						// "DownloadPdf" action method and point the IFRAME src to that instead? 
+						//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
+
+						textNode.InnerText = "...removed for display...";
+
+						//model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
+						//model.IsShowClinicalDocumentXml = true;
+
+						//model.IsSuccess = true;
+
+						//return model;
+					}
+					else if (mediaType == "application/xml")
+					{
+						// Extract KITH xml from ClinicalDocument
+
+						//xml = string.Empty;
+
+						//xml = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
+
+						//doc.LoadXml(xml);
+
+						// Fall through to displaying KITH xml below
+					}
+				}
+			}
+		}
 
 		switch (extension)
 		{
-			case ".xml":
-				XmlDocument doc = new XmlDocument();
-				//doc.Load(file.OpenReadStream());
-
-				using (var stream = new MemoryStream(content))
-				{
-					doc.Load(stream);
-				}
-
-				var test = doc.DocumentElement.OuterXml;
-
-				if (doc.DocumentElement.Name == "ClinicalDocument")
-				{
-					// TODO: in a real application you could properly deserialize the clinical document. 
-					// As an example we just read the base64 encoded PDF string, or the KITH xml string
-
-					var namespaceManager = new XmlNamespaceManager(doc.NameTable);
-					namespaceManager.AddNamespace("hl7", doc.DocumentElement!.NamespaceURI);
-
-					var realmNode = doc.DocumentElement!.SelectSingleNode("//hl7:realmCode", namespaceManager);
-					var typeIdNode = doc.DocumentElement!.SelectSingleNode("//hl7:typeId", namespaceManager);
-					var templateIdNode = doc.DocumentElement!.SelectSingleNode("//hl7:templateId", namespaceManager);
-					var idNode = doc.DocumentElement!.SelectSingleNode("//hl7:id", namespaceManager);
-					var codeNode = doc.DocumentElement!.SelectSingleNode("//hl7:code", namespaceManager);   // this is the typeCode (child category), and we determine top-level classCode from it (top level category) 
-					var titleNode = doc.DocumentElement!.SelectSingleNode("//hl7:title", namespaceManager);
-					var effectiveTimeNode = doc.DocumentElement!.SelectSingleNode("//hl7:effectiveTime ", namespaceManager);
-					var confidentialityCodeNode = doc.DocumentElement!.SelectSingleNode("//hl7:confidentialityCode", namespaceManager);
-					var languageCodeNode = doc.DocumentElement!.SelectSingleNode("//hl7:languageCode", namespaceManager);
-					var setIdNode = doc.DocumentElement!.SelectSingleNode("//hl7:setId", namespaceManager);
-					var recordTargetNode = doc.DocumentElement!.SelectSingleNode("//hl7:recordTarget", namespaceManager);
-					var authorNode = doc.DocumentElement!.SelectSingleNode("//hl7:author", namespaceManager);
-					var custodianNode = doc.DocumentElement!.SelectSingleNode("//hl7:custodian", namespaceManager);
-					var informationRecipientNode = doc.DocumentElement!.SelectSingleNode("//hl7:informationRecipient", namespaceManager);
-
-					var textNode = doc.DocumentElement!.SelectSingleNode("//hl7:component/hl7:nonXMLBody/hl7:text", namespaceManager);
-
-					if (titleNode != null)
-					{
-						document.WithTitle(titleNode.InnerText);
-					}
-
-					if (codeNode != null)
-					{
-						// Set typeCode (child level) 
-						var typeCode = codeNode.Attributes?["code"]?.Value!;
-						var typeCodeSystem = codeNode.Attributes?["codeSystem"]?.Value!;
-
-						var typeCodeCoding = TypeCodeList.TypeCodes.FirstOrDefault(coding => coding.Code == typeCode);
-
-						document.Metadata.WithTypeCode(typeCodeCoding);
-
-						// Set classCode (top-level) 
-
-						var firstLetter = typeCode[0];
-
-						var classCodeCoding = ClassCodeList.ClassCodes.FirstOrDefault(coding => coding.Code.StartsWith(firstLetter));
-
-						if (classCodeCoding != null)
-						{
-							document.Metadata.WithClassCode(classCodeCoding);
-						}
-					}
-
-					if (confidentialityCodeNode != null)
-					{
-						var confidentialityCode = confidentialityCodeNode.Attributes?["code"]?.Value;
-						var confidentialityCodeSystem = confidentialityCodeNode.Attributes?["codeSystem"]?.Value;
-
-						var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == confidentialityCode);
-
-						document.Metadata.WithConfidentialityCode(confidentialityCodeCoding);
-					}
-
-					if (languageCodeNode != null)
-					{
-						document.WithLanguageCode(languageCodeNode.Attributes?["code"]?.Value);
-					}
-
-					if (textNode is not null)
-					{
-						var mediaType = textNode.Attributes["mediaType"]?.Value;
-						var representation = textNode.Attributes["representation"]?.Value;
-
-						if (mediaType == "application/pdf" && representation == "B64")
-						{
-							//model.PdfBase64String = textNode.InnerText;
-							//model.ContentType = "application/pdf";
-
-							// Browsers have trouble displaying large PDF files properly when using base64 in the 'src' so create another solution with a
-							// "DownloadPdf" action method and point the IFRAME src to that instead? 
-							//var pdfBytes = Convert.FromBase64String(model.PdfBase64String); // With this I have verified that PDF files are in the correct format even though some can't currently be shown in the browser 
-
-							textNode.InnerText = "...removed for display...";
-
-							//model.ClinicalDocumentXml = PrettyPrintXml(doc.InnerXml);
-							//model.IsShowClinicalDocumentXml = true;
-
-							//model.IsSuccess = true;
-
-							//return model;
-						}
-						else if (mediaType == "application/xml")
-						{
-							// Extract KITH xml from ClinicalDocument
-
-							//xml = string.Empty;
-
-							//xml = representation == "B64" ? Encoding.UTF8.GetString(Convert.FromBase64String(textNode.InnerText)) : textNode.InnerText;
-
-							//doc.LoadXml(xml);
-
-							// Fall through to displaying KITH xml below
-						}
-					}
-				}
+			case ".xml":				
 				break;
 
 			default:
@@ -841,8 +851,10 @@ public class UploadDocumentsController : BaseController
 
 				var cdaXmlBytes = Encoding.UTF8.GetBytes(cdaXml);
 
-				var contentType = "application/xml";
-				var fileName = $"CDA_{generatedTestObject.Id}.xml"; 
+				var contentType = "application/pdf";
+				//var contentType = "application/hl7-v3+xml";
+				//var fileName = $"CDA_{generatedTestObject.Id}.xml";
+				var fileName = $"PDF_{generatedTestObject.Id}.pdf";
 
 				var document = await CreateDocument(
 					//generatedTestObject.Title,
@@ -850,6 +862,7 @@ public class UploadDocumentsController : BaseController
 					fileName,
 					contentType,
 					cdaXmlBytes,
+					randomFileAsByteArray,
 					generatedTestObject.CreationTime!.Value,					
 					createRandom: true
 					);

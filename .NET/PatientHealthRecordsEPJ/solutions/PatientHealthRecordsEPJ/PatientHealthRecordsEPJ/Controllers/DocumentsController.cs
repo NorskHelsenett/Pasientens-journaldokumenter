@@ -233,7 +233,7 @@ public class DocumentsController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Delete,
 			apiUrl,
-			sessionData.PjdAccessToken!,
+			sessionData.PjdRepositoryAccessToken!,
 			document: false,
 			headerKeyValues: headerKeyValues
 			);
