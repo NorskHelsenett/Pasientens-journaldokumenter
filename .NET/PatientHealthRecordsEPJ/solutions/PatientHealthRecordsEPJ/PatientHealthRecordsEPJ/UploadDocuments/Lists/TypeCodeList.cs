@@ -61,6 +61,11 @@ public class TypeCodeList
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "J02-2", Display = "Legeerklæring om dødsfall" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "S01-2", Display = "Tester" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "S02-2", Display = "Systematiserte diagnostiske intervju" },
-		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "S03-2", Display = "Voldsrisikovurdering" }
+		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "S03-2", Display = "Voldsrisikovurdering" },
+
+		// LOINC: 
+
+		new SimpleCoding() { System = "2.16.840.1.113883.6.1", Code = "60591-5", Display = "Patient summary Document" }
+		
 	}; 
 }

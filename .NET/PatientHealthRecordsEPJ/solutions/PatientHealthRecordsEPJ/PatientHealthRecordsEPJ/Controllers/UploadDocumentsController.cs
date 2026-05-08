@@ -625,18 +625,21 @@ public class UploadDocumentsController : BaseController
 
 					var typeCodeCoding = TypeCodeList.TypeCodes.FirstOrDefault(coding => coding.Code == typeCode);
 
-					document.Metadata.WithTypeCode(typeCodeCoding);
-
-					// Set classCode (top-level) 
-
-					var firstLetter = typeCode[0];
-
-					var classCodeCoding = ClassCodeList.ClassCodes.FirstOrDefault(coding => coding.Code.StartsWith(firstLetter));
-
-					if (classCodeCoding != null)
+					if (typeCodeCoding != null)
 					{
-						document.Metadata.WithClassCode(classCodeCoding);
+						document.Metadata.WithTypeCode(typeCodeCoding);
+
+						var firstLetter = typeCode[0];
+
+						var classCodeCoding = ClassCodeList.ClassCodes.FirstOrDefault(coding => coding.Code.StartsWith(firstLetter));
+
+						if (classCodeCoding != null)
+						{
+							document.Metadata.WithClassCode(classCodeCoding);
+						}
 					}
+
+					// Set classCode (top-level) 					
 				}
 
 				if (confidentialityCodeNode != null)
