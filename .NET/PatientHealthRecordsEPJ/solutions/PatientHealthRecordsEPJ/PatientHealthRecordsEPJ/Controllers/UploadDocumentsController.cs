@@ -1154,7 +1154,10 @@ public class UploadDocumentsController : BaseController
 		}
 		else
 		{
-			model.ResponseBody = PrettyJson(apiResult.Body);
+			if (apiResult.Body != null)
+			{
+				model.ResponseBody = PrettyJson(apiResult.Body);
+			}
 
 			if (validate)
 			{
@@ -1162,6 +1165,11 @@ public class UploadDocumentsController : BaseController
 				model.IsValidate = true;
 				model.ValidationSuccess = false;
 				model.ValidationMessage = "Validation failed. The document bundle is not valid and cannot be submitted.";
+			}
+			else if (apiResult.IsPayloadTooLarge)
+			{
+				model.ErrorMessage = apiResult.ErrorMessage;
+				model.IsError = true;
 			}
 			else
 			{

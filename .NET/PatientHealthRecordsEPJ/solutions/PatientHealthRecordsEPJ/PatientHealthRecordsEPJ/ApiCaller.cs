@@ -14,6 +14,9 @@ public class ApiResult
 
 	public int NorsCount { get; set; } // Antall sperrede dokumenter, returnert som X-SecurityLabel-Nors-Count header parameter
 	public bool IsRetrievedFromCache { get; set; } // If true, the response was retrieved from cache. This is determined by the presence of the "NHN-Retrieved-From-Cache" header with value "true" in the response.	
+
+	public bool IsPayloadTooLarge { get; set; }
+	public int PayloadSizeInBytes { get; set; }
 }
 
 public class ApiCaller
