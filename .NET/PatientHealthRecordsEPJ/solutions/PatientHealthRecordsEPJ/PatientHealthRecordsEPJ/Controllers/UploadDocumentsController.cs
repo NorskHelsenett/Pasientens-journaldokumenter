@@ -647,9 +647,21 @@ public class UploadDocumentsController : BaseController
 					var confidentialityCode = confidentialityCodeNode.Attributes?["code"]?.Value;
 					var confidentialityCodeSystem = confidentialityCodeNode.Attributes?["codeSystem"]?.Value;
 
-					var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == confidentialityCode);
+					// Try to get from Hl7
+					var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == confidentialityCode);
 
-					document.Metadata.WithConfidentialityCode(confidentialityCodeCoding);
+					if (confidentialityCodeCoding != null)
+					{
+						document.Metadata.WithConfidentialityCode_Hl7(confidentialityCodeCoding);
+					}
+					
+					// Check 9603
+					confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes_9603.FirstOrDefault(coding => coding.Code == confidentialityCode);
+
+					if (confidentialityCodeCoding != null)
+					{
+						document.Metadata.WithConfidentialityCode_9603(confidentialityCodeCoding);
+					}
 				}
 
 				if (languageCodeNode != null)
@@ -707,9 +719,9 @@ public class UploadDocumentsController : BaseController
 				//document.WithTitle(ToPascalCase(fileNameNoExtension));
 				document.WithTitle(ToTitleCase(fileNameNoExtension));
 
-				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == "N");
+				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == "N");
 
-				document.Metadata.WithConfidentialityCode(confidentiality);
+				document.Metadata.WithConfidentialityCode_Hl7(confidentiality);
 			
 				break;
 		}
@@ -724,7 +736,29 @@ public class UploadDocumentsController : BaseController
 			var practiceSettingCode = PracticeSettingCodeList.PracticeSettingCodes[Random.Shared.Next(PracticeSettingCodeList.PracticeSettingCodes.Count)];
 
 			document.Metadata.WithHealthCareFacilityType(healthCareFacilityType);
-			document.Metadata.WithPracticeSettingCode(practiceSettingCode); 
+			document.Metadata.WithPracticeSettingCode(practiceSettingCode);
+
+
+			// Confidentiality code 
+
+			document.Metadata.ConfidentialityCode_Hl7 = string.Empty;
+			document.Metadata.ConfidentialityCodeList_9603.Clear();
+
+			// Hl7
+			var confidentialityCodeCoding_Hl7 = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == "N");
+
+			if (confidentialityCodeCoding_Hl7 != null)
+			{
+				document.Metadata.WithConfidentialityCode_Hl7(confidentialityCodeCoding_Hl7);
+			}
+
+			// 9603
+			/*var confidentialityCodeCoding_9603 = ConfidentialityCodeList.ConfidentialityCodes_9603[Random.Shared.Next(ConfidentialityCodeList.ConfidentialityCodes_9603.Count)]; 
+
+			if (confidentialityCodeCoding_9603 != null)
+			{
+				document.Metadata.WithConfidentialityCode_9603(confidentialityCodeCoding_9603);
+			}*/
 		}
 
 		return document; 
@@ -953,11 +987,21 @@ public class UploadDocumentsController : BaseController
 			nameof(TextValue.Text)
 		);
 
-		model.SelectConfidentialityCodeList = new SelectList(
-			ConfidentialityCodeList.ConfidentialityCodes.Select(c =>
+		model.SelectConfidentialityCodeList_Hl7 = new SelectList(
+			ConfidentialityCodeList.ConfidentialityCodes_Hl7.Select(c =>
 			new TextValue(
 				$"{c.System}|{c.Code}|{c.Display}",
-				$"{c.Display} [{c.Code}]"
+				$"[{c.Code}] - {c.Display} "
+			)),
+			nameof(TextValue.Value),
+			nameof(TextValue.Text)
+		);
+
+		model.SelectConfidentialityCodeList_9603 = new SelectList(
+			ConfidentialityCodeList.ConfidentialityCodes_9603.Select(c =>
+			new TextValue(
+				$"{c.System}|{c.Code}|{c.Display}",
+				$"[{c.Code}] - {c.Display}"
 			)),
 			nameof(TextValue.Value),
 			nameof(TextValue.Text)

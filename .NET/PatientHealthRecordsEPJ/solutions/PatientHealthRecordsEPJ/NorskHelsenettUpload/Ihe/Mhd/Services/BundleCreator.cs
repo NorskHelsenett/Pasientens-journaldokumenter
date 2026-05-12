@@ -339,9 +339,9 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			//docRef.Contained.Add(patient);  // Deprecated; using patient reference instead
 
 			// Confidentiality
-			if (m.ConfidentialityCodeList?.Count > 0)
+			if (m.AllConfidentialityCodes?.Count > 0)
 			{
-				foreach (var cc in m.ConfidentialityCodeList)
+				foreach (var cc in m.AllConfidentialityCodes)
 				{
 					var code = ParseCoding(cc);
 					var coding = new Coding { System = "urn:oid:" + code.system, Code = code.code, Display = code.display };

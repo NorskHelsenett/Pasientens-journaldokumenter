@@ -312,7 +312,8 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 		{
 			if (test.SecurityLabels.Count > 0)
 			{
-				document.Metadata.ConfidentialityCodeList = new List<string>(); 
+				document.Metadata.ConfidentialityCode_Hl7 = string.Empty;
+				document.Metadata.ConfidentialityCodeList_9603 = new List<string>();
 
 				foreach (var securityLabel in test.SecurityLabels)
 				{
@@ -327,9 +328,20 @@ public sealed class DokumentlagerTestRunner : IDokumentlagerTestRunner
 						system = NorskHelsenettUpload.Constants.CodeSystems.Volven.ConfidentialityCode.Oid;
 					}
 
-					var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == securityLabel);
+					var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == securityLabel);
 
-					document.Metadata.WithConfidentialityCode(confidentialityCodeCoding);
+					if (confidentialityCodeCoding != null)
+					{
+						document.Metadata.WithConfidentialityCode_Hl7(confidentialityCodeCoding);
+					}
+
+					// Check 9603
+					confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes_9603.FirstOrDefault(coding => coding.Code == securityLabel);
+
+					if (confidentialityCodeCoding != null)
+					{
+						document.Metadata.WithConfidentialityCode_9603(confidentialityCodeCoding);
+					}
 				}
 			}
 		}

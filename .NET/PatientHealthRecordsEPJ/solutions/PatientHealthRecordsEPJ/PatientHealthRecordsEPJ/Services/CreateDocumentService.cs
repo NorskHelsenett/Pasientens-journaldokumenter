@@ -330,9 +330,23 @@ public class CreateDocumentService : ICreateDocumentService
 						var confidentialityCode = confidentialityCodeNode.Attributes?["code"]?.Value;
 						var confidentialityCodeSystem = confidentialityCodeNode.Attributes?["codeSystem"]?.Value;
 
-						var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == confidentialityCode);
+						// Check Hl7
+						var confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == confidentialityCode);
 
-						document.Metadata.WithConfidentialityCode(confidentialityCodeCoding);
+						if (confidentialityCodeCoding != null)
+						{
+							document.Metadata.WithConfidentialityCode_Hl7(confidentialityCodeCoding);
+						}
+
+						// Check 9603
+						confidentialityCodeCoding = ConfidentialityCodeList.ConfidentialityCodes_9603.FirstOrDefault(coding => coding.Code == confidentialityCode);
+
+						if (confidentialityCodeCoding != null)
+						{
+							document.Metadata.WithConfidentialityCode_9603(confidentialityCodeCoding);
+						}
+
+
 					}
 
 					if (languageCodeNode != null)
@@ -385,9 +399,9 @@ public class CreateDocumentService : ICreateDocumentService
 				//document.WithTitle(ToPascalCase(fileNameNoExtension));
 				document.WithTitle(ToTitleCase(fileNameNoExtension));
 
-				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes.FirstOrDefault(coding => coding.Code == "N");
+				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == "N");
 
-				document.Metadata.WithConfidentialityCode(confidentiality);
+				document.Metadata.WithConfidentialityCode_Hl7(confidentiality);
 
 				break;
 		}

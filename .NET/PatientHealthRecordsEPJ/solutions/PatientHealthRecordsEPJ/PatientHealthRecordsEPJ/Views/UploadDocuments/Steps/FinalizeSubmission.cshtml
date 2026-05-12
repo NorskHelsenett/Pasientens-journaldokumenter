@@ -353,14 +353,26 @@
 							</table>
 
 							<table class="table table-sm">
-								@if (document.Metadata!.ConfidentialityCodeList!.Count > 0)
+								@if (!string.IsNullOrEmpty(document.Metadata!.ConfidentialityCode_Hl7))
 								{
 									<tr>
-										<td>Document Sensitivity:</td>
+										<td>Document Sensitivity (Hl7):</td>
+										<td>
+											<div style="background-color:#eee;padding:5px;border-radius:6px">
+												@Html.Raw(SystemCodeWithColors(document.Metadata!.ConfidentialityCode_Hl7))
+											</div>
+										</td>
+									</tr>
+								}
+
+								@if (document.Metadata!.ConfidentialityCodeList_9603!.Count > 0)
+								{
+									<tr>
+										<td>Document Sensitivity (9603):</td>
 										<td>
 											<div style="background-color:#eee;padding:5px;border-radius:6px">
 												@{
-													@foreach (var confCode in document.Metadata!.ConfidentialityCodeList!)
+													@foreach (var confCode in document.Metadata!.ConfidentialityCodeList_9603!)
 													{
 														<div>@Html.Raw(SystemCodeWithColors(confCode))</div>
 													}

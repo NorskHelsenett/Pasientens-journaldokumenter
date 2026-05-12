@@ -148,6 +148,24 @@ public class AtnaLogController : BaseController
 			{
 				var json = apiResult.Body;
 
+				var debugSaveToDisk = Environment.GetEnvironmentVariable("DEBUG_SAVE_TO_DISK");
+
+				if (debugSaveToDisk == "true")
+				{
+					// Save responses to disk for debugging purposes. 
+					var tempPath = System.IO.Path.GetTempPath() + @"_PJD_EPJ\API_ATNA_LOG_RESPONSE";
+
+					if (!Directory.Exists(tempPath))
+					{
+						Directory.CreateDirectory(tempPath);
+					}
+
+					var filename = $"api_atna_log_response_{DateTime.Now:yyMMddHHmmss}.json";
+
+					System.IO.File.WriteAllText(@$"{tempPath}\{filename}", json);
+				}
+
+
 				var serializerOptions = new JsonSerializerOptions().ForFhir(ModelInfo.ModelInspector).Pretty();
 				var bundle = JsonSerializer.Deserialize<Bundle>(json, serializerOptions);
 				

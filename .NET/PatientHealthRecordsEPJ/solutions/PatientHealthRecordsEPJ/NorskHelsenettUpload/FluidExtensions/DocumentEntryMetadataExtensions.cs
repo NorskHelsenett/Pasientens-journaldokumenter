@@ -69,9 +69,15 @@ public static class DocumentEntryMetadataExtensions
 		return metadata;
 	}
 
-	public static DocumentEntryMetadata WithConfidentialityCode(this DocumentEntryMetadata metadata, SimpleCoding confidentialityCode)
+	public static DocumentEntryMetadata WithConfidentialityCode_Hl7(this DocumentEntryMetadata metadata, SimpleCoding confidentialityCode)
 	{
-		metadata.ConfidentialityCodeList.Add(confidentialityCode.ToValueString());
+		metadata.ConfidentialityCode_Hl7 = confidentialityCode.ToValueString();
+		return metadata;
+	}
+
+	public static DocumentEntryMetadata WithConfidentialityCode_9603(this DocumentEntryMetadata metadata, SimpleCoding confidentialityCode)
+	{
+		metadata.ConfidentialityCodeList_9603.Add(confidentialityCode.ToValueString());
 		return metadata;
 	}
 

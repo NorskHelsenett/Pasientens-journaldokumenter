@@ -39,8 +39,19 @@ public class DocumentEntryMetadata
 	[Required]
     public string? ClassCode { get; set; }
     [Required(AllowEmptyStrings = false, ErrorMessage = "Document MUST have at least 1 confidentiality code")]
-    //public string[] ConfidentialityCodeList { get; set; } = [];
-	public List<string> ConfidentialityCodeList { get; set; } = [];
+	//public string[] ConfidentialityCodeList { get; set; } = [];
+	//public List<string> ConfidentialityCodeList_Hl7 { get; set; } = []; // N, R, V, etc. (HL7 confidentiality codes)
+	public string ConfidentialityCode_Hl7 { get; set; } = string.Empty; // N, R, V, etc. (HL7 confidentiality codes)
+	public List<string> ConfidentialityCodeList_9603 { get; set; } = [];
+
+	public List<string> AllConfidentialityCodes
+	{
+		get
+		{
+			return new List<string> { ConfidentialityCode_Hl7 }.Concat(ConfidentialityCodeList_9603).ToList();
+		}
+	}
+
 	[Required]
     public string? FormatCode { get; set; }
     [Required]

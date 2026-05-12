@@ -127,14 +127,29 @@
 				</div>
 
 				<div class="row mb-3">
-					<label for="inputPassword3" class="col-sm-2 col-form-label">Confidentiality Code(s):
+					<label for="inputPassword3" class="col-sm-2 col-form-label">HL7 Confidentiality Code:
+						<br />
+						<em>Must select 1 code</em>
+
+					</label>
+					<div class="col-sm-10">
+						<select size="4" asp-for="Metadata.ConfidentialityCode_Hl7"
+								asp-items="Model.SelectConfidentialityCodeList_Hl7"
+								class="form-control" required>
+							@* <option value="">-- Select document's confidentiality level --</option> *@
+						</select>
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<label for="inputPassword3" class="col-sm-2 col-form-label">Confidentiality Code(s), 9603:
 						<br />
 						<em>Press Ctrl to select multiple</em>
 
 					</label>
 					<div class="col-sm-10">
-						<select multiple size="8" asp-for="Metadata.ConfidentialityCodeList"
-								asp-items="Model.SelectConfidentialityCodeList"
+						<select multiple size="16" asp-for="Metadata.ConfidentialityCodeList_9603"
+								asp-items="Model.SelectConfidentialityCodeList_9603"
 								class="form-control">
 							@* <option value="">-- Select document's confidentiality level --</option> *@
 						</select>
