@@ -203,6 +203,16 @@
 									<span class="environment prod">@sessionData.EnvironmentName</span>
 								}
 
+								if (sessionData.IsAuthenticated && !string.IsNullOrWhiteSpace(sessionData.PatientId))
+								{
+									<br />
+									
+									var hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId; 
+						
+									<a href="@hnLoginUrl" target="_blank">Helsenorge &rarr;</a><br />						
+
+								}
+
 							}
 						</li>
 					</ul>
