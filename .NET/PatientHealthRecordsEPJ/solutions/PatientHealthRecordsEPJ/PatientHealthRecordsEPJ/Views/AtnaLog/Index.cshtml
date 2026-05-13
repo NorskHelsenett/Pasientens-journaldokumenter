@@ -2,9 +2,9 @@
 
 @model AtnaLogViewModel
 
-@{
+@{	
 	var sessionData = Context.Session.SessionData();
-
+	
 	string ShowJsonData(string json)
 	{
 		if (string.IsNullOrEmpty(json))
@@ -90,7 +90,7 @@
 			var name = FormatHumanName(containedPatient.Name?.FirstOrDefault());
 			var id = containedPatient.Identifier?.FirstOrDefault()?.Value;
 			//if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(id))
-				//return $"{name} ({id})";
+			//return $"{name} ({id})";
 			return (name, id);
 		}
 
@@ -99,11 +99,16 @@
 			?? patientEntity.What.Reference, patientEntity.What.Identifier?.Value);
 	}
 
-	static (string Title, List<(string Type, string? Value)> Details) GetDocumentInfo(AuditEvent auditEvent)
+	static DocumentInfo GetDocumentInfo(AuditEvent auditEvent)
 	{
+		var documentInfo = new DocumentInfo() 
+		{
+			Title = "-"
+		}; 
+
 		var entity = auditEvent.Entity;
 		if (entity == null || entity.Count == 0)
-			return ("-", new());
+			return documentInfo;
 
 		var docEntity = entity.FirstOrDefault(e =>
 			e.What?.Reference?.StartsWith("DocumentReference/", StringComparison.OrdinalIgnoreCase) == true ||
@@ -112,29 +117,38 @@
 			e.Type?.Code == "2");
 
 		if (docEntity == null)
-			return ("-", new());
+			return documentInfo;
 
 		string? titleFromDetail = docEntity.Detail?.FirstOrDefault(d => string.Equals(d.Type, "title", StringComparison.OrdinalIgnoreCase))?.Value?.ToString();
+		string? documentUniqueIdFromDetail = docEntity.Detail?.FirstOrDefault(d => string.Equals(d.Type, "documentUniqueId", StringComparison.OrdinalIgnoreCase))?.Value?.ToString();
+		string? documentReferenceIdFromDetail = docEntity.Detail?.FirstOrDefault(d => string.Equals(d.Type, "documentReferenceId", StringComparison.OrdinalIgnoreCase))?.Value?.ToString();
 		var title = titleFromDetail
 			?? docEntity.Name
 			?? docEntity.What?.Display
 			?? docEntity.What?.Reference
 			?? "-";
 
-		var details = new List<(string Type, string? Value)>();
+		documentInfo.Title = title; 
+		documentInfo.DocumentUniqueId = documentUniqueIdFromDetail ?? string.Empty;
+		documentInfo.DocumentReferenceId = documentReferenceIdFromDetail ?? string.Empty;
+
+		var details = new List<TypeAndValue>();
 		if (docEntity.Detail != null)
 		{
 			foreach (var d in docEntity.Detail)
 			{
 				var value = d.Value?.ToString();
-				details.Add((d.Type ?? "-", value));
+				details.Add(new TypeAndValue { Type = d.Type ?? "-", Value = value });
 			}
 		}
 
 		if (docEntity.What?.Reference != null)
-			details.Insert(0, ("reference", docEntity.What.Reference));
+			details.Insert(0, new TypeAndValue { Type = "reference", Value = docEntity.What.Reference });
 
-		return (title, details);
+
+		documentInfo.Details = details; 
+
+		return documentInfo;
 	}
 
 	static (string? OrgNrParent, string? ClientName, string? ClientId) GetClientInfo(AuditEvent auditEvent)
@@ -275,7 +289,7 @@
 
 	<div style="background-color:goldenrod; padding:10px; border-radius:4px">
 
-		<span>Denne loggen viser kun hendelser fra NHN Dokumentlager.</span>	
+		<span>Denne loggen viser kun hendelser fra NHN Dokumentlager.</span>
 
 	</div>
 
@@ -299,7 +313,7 @@
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-md-6">
-				@* 	<table class="table">
+					@* 	<table class="table">
 						<tr>
 							<td>hasReservationKjernejournal</td>
 							<td><strong>@Model.Status.PrivacySetting.HasReservationKjernejournal.ToString()</strong></td>
@@ -316,7 +330,7 @@
 					</table> *@
 				</div>
 			</div>
-		</div>		
+		</div>
 
 		<div class="container-fluid">
 			<div class="row">
@@ -342,7 +356,7 @@
 							<option value="0">-- Alle --</option>
 							@foreach (var kilde in kildeList)
 							{
-								var _checked = kilde.HomeCommunityId == Model.SelectedHomeCommunityId ? "selected" : string.Empty;	
+								var _checked = kilde.HomeCommunityId == Model.SelectedHomeCommunityId ? "selected" : string.Empty;
 
 								if (kilde.HomeCommunityId == Model.SelectedHomeCommunityId)
 								{
@@ -351,7 +365,7 @@
 								else
 								{
 									<option value="@kilde.HomeCommunityId">@kilde.HomeCommunityId - @kilde.Name</option>
-								}								
+								}
 							}
 
 						</select>
@@ -426,10 +440,13 @@
 									Hendelse
 								</th>
 								<th>
-									Resultat
+									Handling
 								</th>
 								<th>
 									Handling
+								</th>
+								<th>
+									Resultat
 								</th>
 								<th>Klient</th>
 								<th>
@@ -465,6 +482,13 @@
 								var typeCode = auditEvent.Type?.Code;
 								var typeDisplay = auditEvent.Type?.Display;
 
+								var subtype = auditEvent.Subtype?.FirstOrDefault(x => x.System == "urn:ihe:event-type-code");
+								var subtypeCode = subtype?.Code;
+								var subtypeDisplay = subtype?.Display;
+
+								bool isReadDocumentReferences = subtypeCode == "ITI-38";
+								bool isReadDocument = subtypeCode == "ITI-39";
+
 								var action = auditEvent.Action;
 								var recorded = auditEvent.Recorded;
 								var outcome = auditEvent.Outcome;
@@ -483,12 +507,12 @@
 
 
 								var outcomeEnumText = outcome != null ? outcome.ToString() : "-";
-								var outcomeText = string.Empty; 
+								var outcomeText = string.Empty;
 								var outComeTextColor = "green";
 								var actionEnumText = action?.ToString() ?? "-";
 								var actionText = string.Empty;
 
-								switch(outcome)
+								switch (outcome)
 								{
 									case AuditEvent.AuditEventOutcome.N0: // Success
 										{
@@ -501,7 +525,7 @@
 										{
 											outcomeText = "Minor failure";
 											outComeTextColor = "orange";
-											break;												
+											break;
 										}
 
 									case AuditEvent.AuditEventOutcome.N8: // Serious failure
@@ -518,7 +542,8 @@
 											break;
 										}
 								
-								};	
+								}
+								;
 
 								switch (action)
 								{
@@ -601,11 +626,15 @@
 									?? "-";
 
 								var patientNameAndId = GetPatientText(auditEvent) ?? ("-", "-");
-								var patientName = patientNameAndId.name;
+								//var patientName = patientNameAndId.name;
+								//var patientName = patientNameAndId.id; // name doesn't exist in audit event, so use id
+								var patientName = sessionData.PatientId;
 								var patientId = patientNameAndId.id;
 
 								var documentInfo = GetDocumentInfo(auditEvent);
 								var documentText = documentInfo.Title;
+								var documentUniqueId = documentInfo.DocumentUniqueId;
+								var documentReferenceId = documentInfo.DocumentReferenceId;
 
 								var clientInfo = GetClientInfo(auditEvent);
 								@* var clientText = !string.IsNullOrWhiteSpace(clientInfo.ClientName) && !string.IsNullOrWhiteSpace(clientInfo.OrgNrParent)
@@ -629,10 +658,10 @@
 									haveAnyRelatesTo = true;
 								}
 
-								//var destination = auditEvent.Entity?.FirstOrDefault(e => e.Role == AuditEvent.AuditEventEntityRole.Destination);									
+								//var destination = auditEvent.Entity?.FirstOrDefault(e => e.Role == AuditEvent.AuditEventEntityRole.Destination);
 
 								var kildeType = "";
-								var kilde = "";								
+								var kilde = "";
 
 								var kildeInfo = kildeList?.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId));
 
@@ -647,13 +676,23 @@
 											<div class="head">@typeCode</div>
 										}
 									</td>
+									<td style="white-space:nowrap">
+										@if (isReadDocumentReferences)
+										{
+											<strong>Read Document References</strong>
+										}
+										@if (isReadDocument)
+										{
+											<strong>Read Document</strong>
+										}
+									</td>
+									<td>
+										@actionText (@actionEnumText)
+									</td>
 									<td>
 										<div style="@outcomeStyle">
 											@outcomeText (@outcomeEnumText)
 										</div>
-									</td>
-									<td>
-										@actionText (@actionEnumText)
 									</td>
 									<td>@clientText</td>
 									<td>
@@ -705,6 +744,41 @@
 														<td style="width:220px"><strong>Type</strong></td>
 														<td>@typeSystem / @typeCode (@typeDisplay)</td>
 													</tr>
+													@if (auditEvent.Subtype?.Count > 0)
+													{
+														<tr>
+															<td><strong>Subtype</strong></td>
+															<td>
+																@if (auditEvent.Subtype?.Count > 0)
+																{
+																	foreach (var st in auditEvent.Subtype)
+																	{
+																		var stSystem = st.System;
+																		var stCode = st.Code;
+																		var stDisplay = st.Display;
+																		<div>
+																			@if (isReadDocumentReferences)
+																			{
+																				<strong>Read Document References - </strong>
+																			}
+																			@if (isReadDocument)
+																			{
+																				<strong>Read/Open Document - </strong>
+																			}
+
+																			<strong>
+																				@(stDisplay ?? "Subtype")
+																			</strong>: @(stCode ?? stSystem ?? "-")
+																		</div>
+																	}
+																}
+																else
+																{
+																	<span>-</span>
+																}
+															</td>
+														</tr>
+													}
 													<tr>
 														<td><strong>Tidspunkt</strong></td>
 														<td>@recordedText</td>
@@ -717,27 +791,28 @@
 														<td><strong>Bruker</strong></td>
 														<td>@agentName @(!string.IsNullOrWhiteSpace(agentRole) ? $"({agentRole})" : "")</td>
 													</tr>
-												<tr>
-													<td><strong>Klient</strong></td>
-													<td>														
-														<div>@clientText</div>
-														<div>Parent Organization Number: @clientInfo.OrgNrParent</div>
-														@if (!string.IsNullOrWhiteSpace(clientInfo.ClientId))
-														{
-															<div class="head">client_id: @clientInfo.ClientId</div>
-														}
-													</td>
-												</tr>
+													<tr>
+														<td><strong>Klient</strong></td>
+														<td>
+															<div>@clientText</div>
+															<div>Parent Organization Number: @clientInfo.OrgNrParent</div>
+															@if (!string.IsNullOrWhiteSpace(clientInfo.ClientId))
+															{
+																<div class="head">client_id: @clientInfo.ClientId</div>
+															}
+														</td>
+													</tr>
 													<tr>
 														<td><strong>Kilde</strong></td>
-														<td>@* @sourceText *@
+														<td>
+															@* @sourceText *@
 
 															@{
 																if (kildeInfo != null)
 																{
 																	//kildeType = "Nasjonalt lager";
 																	kildeType = "NL";
-																	kilde = kildeInfo.Name;																	
+																	kilde = kildeInfo.Name;
 
 																	// <div>@kildeType <span style="color:darkolivegreen">(@kilde)</span></div>
 																	<div><span style="color:darkolivegreen">@kilde</span></div>
@@ -756,10 +831,11 @@
 													</tr>
 													<tr>
 														<td><strong>Pasient</strong></td>
-														<td>@patientName (@sessionData.PatientId)
+														<td>
+															@patientName (@sessionData.PatientId)
 															<div>
 																<strong>Pasient Id i kilde (@kildeInfo.Name): @patientId</strong>
-															</div>																													
+															</div>
 														</td>
 													</tr>
 													<tr>
@@ -803,31 +879,31 @@
 															{
 																<span>-</span>
 															}
-													</td>
-												</tr>
-												<tr>
-													<td><strong>Entities</strong></td>
-													<td>
-														@if (entity?.Count > 0)
-														{
-															foreach (var e in entity)
+														</td>
+													</tr>
+													<tr>
+														<td><strong>Entities</strong></td>
+														<td>
+															@if (entity?.Count > 0)
 															{
-																var eType = e.Type?.Display ?? e.Type?.Code;
-																var eWhat = e.What?.Display ?? e.What?.Reference;
-																<div>
-																	<strong>@(eType ?? "Entity")</strong>: @(e.Name ?? eWhat ?? "-")
-																</div>
+																foreach (var e in entity)
+																{
+																	var eType = e.Type?.Display ?? e.Type?.Code;
+																	var eWhat = e.What?.Display ?? e.What?.Reference;
+																	<div>
+																		<strong>@(eType ?? "Entity")</strong>: @(e.Name ?? eWhat ?? "-")
+																	</div>
+																}
 															}
-														}
-														else
-														{
-															<span>-</span>
-														}
-													</td>
-												</tr>
-											</tbody>
-										</table>
-									</div>
+															else
+															{
+																<span>-</span>
+															}
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
 									</td>
 								</tr>
 

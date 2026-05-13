@@ -1,5 +1,4 @@
 using Hl7.Fhir.Model;
-using PatientHealthRecordsEPJ.Personverninnstillinger;
 
 namespace PatientHealthRecordsEPJ.Models;
 
@@ -30,3 +29,16 @@ public class AtnaLogViewModel
 	public ApiResult ApiResult { get; set; }	
 }
 
+public class TypeAndValue
+{
+	public string Type { get; set; }
+	public string? Value { get; set; }
+}
+
+public class DocumentInfo
+{
+	public string Title { get; set; } = string.Empty;
+	public string? DocumentReferenceId { get; set; }
+	public string? DocumentUniqueId { get; set; }
+	public List<TypeAndValue> Details { get; set; } = new();
+}
