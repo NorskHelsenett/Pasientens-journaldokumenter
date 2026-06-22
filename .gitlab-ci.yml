@@ -1,127 +1,83 @@
+# Manually trigger pipeline by changing this number: 1
+include:
+  - project: helsepersonell/team-plattform/nhn-ci-template
+    file: .gitlab-ci.yml
+    ref: "0.19.2"
+
 default:
   tags:
     - 2026-03-standard
 
-include:
-  - ".gitlab/*.yml"
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Security/Secret-Detection.gitlab-ci.yml
-
 variables:
-  HARBOR_PROJECT: "team-dokumentdeling"
-  HARBOR_HOST: "ncr.sky.nhn.no"
-  DIGEST_FILE_SUFFIX: "-digest.txt"
-
-  EPJ_IMAGE_NAME: "dokumentdeling-epj"
-    
-  EPJ_VALUES_CHART_IMAGE_PATH: ".epj"
+  NHN_AUTO_HARBOR: false
+  NHN_AUTO_NUPACK: false
+  DOTNET_SDK_VERSION: 10.0    
+  CONTEXT_FOLDER: "."             
+  IMAGE_NAME: "dokumentdeling-epj"
   
-  CI_REPO: "milliways.nhn.no/helsepersonell/team-dokumentdeling/dokumentdeling-epj/dokumentdeling-epj-manifests.git"
-
-  VALUES_CHART_PATH_DEV: "manifests/values.dev.yaml"
-  VALUES_CHART_PATH_TEST: "manifests/values.test.yaml"
-  VALUES_CHART_PATH_QA: "manifests/values.qa.yaml"
-  VALUES_CHART_PATH_PROD: "manifests/values.prod.yaml"
+build-image:
+  stage: build
+  extends:
+    - .nhn-image-build-only
+  rules:
+    - when: on_success
+  variables:
+    DOCKERFILE: ".NET/PatientHealthRecordsEPJ/docker/epj/Dockerfile"
+    CONTEXT_FOLDER: "."
+    SRC_FOLDER: "."
+    MANIFEST_APP_NAME: "dokumentdeling-epj"
+    IMAGE_NAME: dokumentdeling-epj
+    NHN_IMAGE_BUILD_ARG_1: $GITLAB_USER_EMAIL
+    NHN_DEFAULT_FILTER_EXTRA_PATH: .gitlab-ci.yml
+    
+scan-image:
+  extends:
+    - .nhn-image-scan-artifact
+  needs:
+    - job: 'build-image'
+      artifacts: true
+  rules:
+    - when: on_success
   
-  VERSION: "1.0.0" # Edit this to change version number
-
-  # Defines how many directory levels deep that the dependency analyzer should search for supported files
-  # https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#configuring-dependency-scanning
-  DS_MAX_DEPTH: "3"
-
-# This is a workaround to make central package management with packages.lock.json work with GitLab's dependency scanning.
-# GitLab's dependency scanning only supports Nuget's package-lock.json format version 1, but the central package management sets the version to 2.
-# This script replaces '"version": 2' with '"version": 1' in all packages.lock.json files.
-# See https://gitlab.com/gitlab-org/gitlab/-/issues/398680 for more information.
-.prepare_for_dependency_scan:
-  before_script:
-    - echo "Setting version 1 for packages.lock.json files..."
-    - >
-      find . -maxdepth $DS_MAX_DEPTH -type f -name packages.lock.json -print0 |
-      xargs -0 sed -i 's/"version": 2,/"version": 1,/'
-    - echo "Done setting version to 1 for packages.lock.json files!"
-
-# Run prepare before dependency scan job
-dependency_scanning:
-  extends: .prepare_for_dependency_scan
-
-stages:
-  - test
-  - image-build
-  - image-scan
-  - image-push # This only runs on main branch, see image-push.yml
-  - manifest-modification
-  - manifest-modification-prod
-
-# Run pipline on merge request or main branch
-workflow:
+push-image-to-harbor:
+  extends:
+    - .nhn-image-push-harbor
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_REF_NAME == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-
-image:build:api:
-  extends: .image:build:template
+    - when: on_success
   variables:
-    IMAGE_NAME: $EPJ_IMAGE_NAME
-    DOCKERFILE_PATH: /.NET/PatientHealthRecordsEPJ/docker/epj/Dockerfile
+    #IMAGE_NAME: my-image.tar
+    IMAGE_NAME: dokumentdeling-epj
+    HARBOR_PROJECT: $(HARBOR_PROJECT)
+    HARBOR_USER: $(HARBOR_USER)
+    HARBOR_TOKEN: $(HARBOR_TOKEN)
 
-image:scan:api:
-  extends: .image:scan:template
+# This is for updating the TEST and DEV values.yaml files.
+# We use the 'auto detect' app of apps template, which relies on the 'image_name' variable from the container image build jobs
+# in order to detect which manifest apps should be updated.
+AppOfApps-test:
+  extends:
+  - .app-of-apps-auto-detect-images-manifest-repo-update
   variables:
-    IMAGE_NAME: $EPJ_IMAGE_NAME
-  dependencies:
-    - image:build:api
+    NHN_JOB_RUN_MODE: "manual"
+    # This variable points to the values.XXXXXXX.yaml files, in this case 'values.dev.yml' and 'values.test.yml'
+    DEPLOY_ENVIRONMENTS: "dev test"
+    DEPLOY_BRANCH: "main"
 
-image:push:api:
-  extends: .image:push:template
-  variables:
-    IMAGE_NAME: $EPJ_IMAGE_NAME
-  dependencies:
-    - image:build:api
-
-modify-manifest:dev:
-  extends: .modify-manifest:template
-  stage: manifest-modification
-  variables:
-    VALUES_CHART_PATH: $VALUES_CHART_PATH_DEV
-    TARGET_ENVIRONMENT: Dev
-  dependencies:
-    - image:build:api
+    # This variable says which position/variable in the yaml file to updates.
+    # In our case we actually set the value to the same as the default value, to be explicit about it.
+    # In this case we want to update 'image.tag' which translates to the following yaml ->
+    # image:
+    #   tag: cd3af9c
+    IMAGE_TAG_FILTER: ".image.tag"
+    # SRC_FOLDER is default set to 'manifests' so this should not be needed, but is used here just to be explicit about it.
+    SRC_FOLDER: "manifests"
     
-modify-manifest:test:
-  extends: .modify-manifest:template
-  stage: manifest-modification
-  variables:
-    VALUES_CHART_PATH: $VALUES_CHART_PATH_TEST
-    TARGET_ENVIRONMENT: Test
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-  dependencies:
-    - image:build:api
+    # This url points to what manifest repo we want to update. In this case we update our own repo.
+    # Make sure to not have HTTPS, and don't use an ssh/git repo - only use https repo reference.
+    MANIFEST_REPO_URL: milliways.nhn.no/helsepersonell/team-dokumentdeling/dokumentdeling-epj/dokumentdeling-epj-manifests.git
 
-modify-manifest:qa:
-  extends: .modify-manifest:template
-  stage: manifest-modification
-  variables:
-    VALUES_CHART_PATH: $VALUES_CHART_PATH_QA
-    TARGET_ENVIRONMENT: Qa
+    # This username is ignored, and can be set to whatever, but it most be some value
+    GITLAB_USER: "whatever"
+    NHN_CHANGE_PATH9: ".gitlab-ci.yml"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-  dependencies:
-    - image:build:api
-    
-modify-manifest:prod:
-  extends: .modify-manifest:template
-  stage: manifest-modification-prod
-  variables:
-    VALUES_CHART_PATH: $VALUES_CHART_PATH_PROD
-    TARGET_ENVIRONMENT: Prod
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-  dependencies:
-    - image:build:api    
+    - when: manual
