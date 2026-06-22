@@ -287,7 +287,7 @@ document.Metadata
 			.WithServiceStopTime(DateTime.Now.Subtract(TimeSpan.FromDays(6)))
 			.WithClassCode(classCode)
 			.WithTypeCode(typeCode)
-			.WithConfidentialityCode(confidentialityCode)
+			.WithConfidentialityCode_Hl7(confidentialityCode)			
 			.WithHealthCareFacilityType(healthcareFacilityCode)
 			.WithPracticeSettingCode(practiceSettingCode)
 			.WithComment("Console upload document")
