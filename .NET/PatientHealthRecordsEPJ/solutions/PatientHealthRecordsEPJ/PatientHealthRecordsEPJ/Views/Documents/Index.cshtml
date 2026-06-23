@@ -733,12 +733,15 @@
 												var openUrl = $"document?url={System.Web.HttpUtility.UrlEncode(uri.ToString())}"; // Kaller DocumentController->Index metoden for å vise dokument
 												//var deleteUrl = $"documents/DeleteDocument?documentUniqueId={documentUniqueId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->Delete metoden for å slette dokument
 												var deleteUrl = $"documents/DeleteDocument?id={documentReferenceId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->Delete metoden for å slette dokument
+												var getDocumentReferenceUrl = $"documents/GetDocumentReference?id={documentReferenceId}&homeCommunityId={homeCommunityId}"; // Kaller DocumentsController->GetDocumentReference metoden for å hente dokumentreferanse
 											}
 											<div>
 												<a class="btn btn-primary" href="@openUrl" target="_blank">Åpne</a>
 
 												@if (kildeInfo != null)
 												{
+													<span> | </span>
+													<a class="btn btn-primary" href="@getDocumentReferenceUrl" target="_blank">Hent dokumentreferanse</a><br />
 													<span> | </span>
 													<a class="btn btn-primary" href="@deleteUrl" onclick="javascript:return confirm('Er du sikker på at du vil slette denne dokumentreferansen og dokumentet?')">Slett</a><br />
 												}

@@ -301,4 +301,107 @@ public class DocumentsController : BaseController
 
 		//return Redirect("/documents"); 
 	}
+
+	public async Task<IActionResult> GetDocumentReference(string id, string homeCommunityId)
+	{
+		var sessionData = session.SessionData();
+
+		id = id.NoUrn();
+		homeCommunityId = homeCommunityId.NoUrn();
+
+		var headerKeyValues = new List<KeyValuePair<string, string>>();
+
+		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-source-system", "PJD Test EPJ"));
+		headerKeyValues.Add(new KeyValuePair<string, string>("nhn-event-id", Guid.NewGuid().ToString()));
+
+		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
+
+		var apiUrl = $"{_apiEnvironment.GetDocumentReferenceUrl}/{id}?homeCommunityId={homeCommunityId}";
+
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Get,
+			apiUrl,
+			sessionData.PjdRepositoryAccessToken!,
+			document: false,
+			headerKeyValues: headerKeyValues
+			);
+
+		if (apiResult.IsSuccess)
+		{
+			try
+			{
+				var json = apiResult.Body;
+
+				var fhirDeserializer = new FhirJsonDeserializer();
+
+				/*var operationOutcome = fhirDeserializer.Deserialize<OperationOutcome>(json);
+
+				if (operationOutcome != null)
+				{
+					foreach (var issue in operationOutcome.Issue)
+					{
+						if (issue.Severity == OperationOutcome.IssueSeverity.Error)
+						{
+							var firstCoding = issue.Details.Coding.FirstOrDefault();
+
+							if (firstCoding != null)
+							{
+								var system = firstCoding.System;
+								var code = firstCoding.Code;
+								var display = firstCoding.Display;
+							}
+						}
+					}
+				}*/
+
+				GetDocumentReferenceViewModel model = new GetDocumentReferenceViewModel();
+				model.IsSuccess = true;
+				model.DocumentReferenceId = id;
+				model.DocumentReferenceJson = json;
+				//model.ErrorMessage = $"Could not delete document {id}";
+				model.ApiResult = apiResult;
+				model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
+
+				var kildeType = "";
+				var kilde = "";
+
+				List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
+				{
+					"test" => KildeInfo.KildeListTest,
+					"qa" => KildeInfo.KildeListQA,
+					_ => null
+				};
+
+				var kildeInfo = kildeList.FirstOrDefault(x => x.HomeCommunityId == homeCommunityId.Replace("urn:uuid:", "").Replace("urn:oid:", ""));
+
+				model.KildeInfo = kildeInfo;
+
+				return View("DocumentReference", model);
+			}
+			catch (Hl7.Fhir.Serialization.DeserializationFailedException e)
+			{
+				foreach (var ex in e.Exceptions)
+				{
+					Debug.WriteLine(ex.Message);
+				}
+
+				GetDocumentReferenceViewModel model = new GetDocumentReferenceViewModel();
+				model.IsSuccess = false;
+				model.ErrorMessage = $"Could not get document reference {id}";
+				model.ApiResult = apiResult;
+				model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
+				return View("Index", model);
+			}
+		}
+		else
+		{
+			GetDocumentReferenceViewModel model = new GetDocumentReferenceViewModel();
+			model.IsSuccess = false;
+			model.ErrorMessage = $"Could not get document reference {id}";
+			model.ApiResult = apiResult;
+			model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
+			return View("Index", model);
+		}
+
+		//return Redirect("/documents"); 
+	}
 }
