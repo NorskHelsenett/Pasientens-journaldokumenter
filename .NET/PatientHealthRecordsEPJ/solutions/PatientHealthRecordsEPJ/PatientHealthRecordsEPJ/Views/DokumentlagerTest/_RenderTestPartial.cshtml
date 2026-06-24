@@ -502,6 +502,11 @@
 					RUNNING
 				</div>
 			}
+			else if (Model.Run.Status == DokumentlagerTestCaseStatus.NotRun)
+			{
+				<br />
+				<button id="runTest" class="btn btn-primary" onclick="runSingleTest(@groupIndex, @testIndex)"> <i class="bi bi-play"></i> Kjør test</button>
+			}
 		}
 	</td>
 	@* <td>@test.ExpectedResult</td> *@

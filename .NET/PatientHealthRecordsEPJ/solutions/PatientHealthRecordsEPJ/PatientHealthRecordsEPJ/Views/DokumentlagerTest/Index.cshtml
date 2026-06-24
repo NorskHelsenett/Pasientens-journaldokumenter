@@ -305,6 +305,33 @@
 		}
 	}
 
+	async function runSingleTest(groupIndex, testIndex) {
+
+		console.log("Resetting all tests");
+
+		await reset();
+
+		const homeCommunityId = document.querySelector("#selectSource").value;
+
+		if (homeCommunityId == undefined || homeCommunityId == null || homeCommunityId == "" || homeCommunityId == "0")
+		{
+			alert("Du må velge en kilde som du vil teste mot");
+			return;
+		}
+
+		console.log("Running test: ", groupIndex, testIndex);
+
+		//var groupIndex = 0;
+		//var testIndex = 0;
+
+		var testGroup = tests.testGroups[groupIndex]; 
+		var test = testGroup.testCases[testIndex]; 
+		
+		console.log(testGroup.name);
+			
+		await runTest(apiEnvironment, homeCommunityId, test, groupIndex, testIndex);				
+	}
+
 	async function startTest(apiEnvironment, homeCommunityId, groupIndex, testIndex) {
 		const response = await fetch(`/DokumentlagerTest/run?envId=${apiEnvironment}&homeCommunityId=${homeCommunityId}&groupIndex=${groupIndex}&testIndex=${testIndex}`, {
 			method: 'POST'
@@ -514,7 +541,7 @@
 					</div>
 
 
-					<button id="runTests" class="btn btn-primary btn-lg" onclick="runTests()" style="width:300px"> <i class="bi bi-play"></i> Kjør tester @* Run tests *@</button>
+					<button id="runTests" class="btn btn-primary btn-lg" onclick="runTests()" style="width:300px"> <i class="bi bi-play"></i> Kjør alle tester @* Run tests *@</button>
 					<br />
 					<br />
 
