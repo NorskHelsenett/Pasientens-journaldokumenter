@@ -108,6 +108,11 @@ builder.Services.AddSession(options =>
 
 // Backend NHN Persontjenesten
 builder.Services.AddHttpClient("OrganizationAPI", client => client.BaseAddress = new Uri(builder.Configuration["OrgRegEndpoints:Dev"]!))
+	.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+	{
+		// Disable SSL certificate validation
+		ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+	})
 	.UseHelseIdDPoP(configureClient => 
 	{
 		configureClient.Audience = "nhn:orgreg";
