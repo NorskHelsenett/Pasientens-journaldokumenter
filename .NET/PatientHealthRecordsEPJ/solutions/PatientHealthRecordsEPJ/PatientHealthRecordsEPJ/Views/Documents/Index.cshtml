@@ -50,7 +50,7 @@
 		}
 		return "-"; // Ikke Tilgjengelig
 	}
-	
+
 	string GetDepartmentName(DocumentReference document)
 	{
 		foreach (var author in document.Author)
@@ -71,6 +71,16 @@
 						if (IsOid(coding.System, Constants.Oid.ReshId))
 						{
 							return organization!.Name;
+						}
+						else if (coding.System == "http://terminology.hl7.org/CodeSystem/organization-type")
+						{
+							switch (coding.Code)
+							{
+								case "dept":
+									{
+										return organization!.Name; 										
+									}
+							}
 						}
 					}
 				}

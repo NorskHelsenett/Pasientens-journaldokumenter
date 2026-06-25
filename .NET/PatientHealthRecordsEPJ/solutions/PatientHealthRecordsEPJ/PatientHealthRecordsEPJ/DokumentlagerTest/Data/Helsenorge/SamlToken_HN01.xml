@@ -1,5 +1,5 @@
 ﻿<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
-	ID="_3c449791-075e-436e-b962-e14fb3b94285" IssueInstant="2026-04-06T13:18:52.078Z" Version="2.0">
+	ID="_306c96c2-2a03-4955-8468-db87c5fa071c" IssueInstant="2026-04-06T13:18:52.078Z" Version="2.0">
 	<saml:Issuer>sikkerhet.helsenorge.no</saml:Issuer>
 	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
 		<SignedInfo>

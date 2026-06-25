@@ -544,7 +544,12 @@ public class UploadDocumentsController : BaseController
 					Name = orgName,
 					Identifier = orgIdentifier,
 					AssigningAuthority = $"{orgAssignOid}"
-				}]
+				},
+				new Xon()
+				{
+					Name = "KAD",				
+					AssigningAuthority = $"2.16.578.1.12.4.5.390"
+				}]				
 			})
 			;
 

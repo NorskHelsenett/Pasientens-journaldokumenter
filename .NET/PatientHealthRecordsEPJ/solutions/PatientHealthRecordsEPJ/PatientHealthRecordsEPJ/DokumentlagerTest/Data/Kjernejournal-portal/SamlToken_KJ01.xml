@@ -1,5 +1,5 @@
 ﻿<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
-			  ID="_75bf1560-333f-4c07-8026-af6cb29d0de5" IssueInstant="2026-04-06T15:47:01.974Z"
+			  ID="_bde5db2d-5954-4cac-8be5-46eb6b3e7163" IssueInstant="2026-04-06T15:47:01.974Z"
 			  Version="2.0">
 	<saml:Issuer>https://helseid-xdssaml.test.nhn.no</saml:Issuer>
 	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">

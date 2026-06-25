@@ -434,11 +434,41 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 				{
 					foreach (var inst in a.InstitutionName)
 					{
-						var org = new Organization
+						var org = new Organization(); 
+
+						if (string.IsNullOrEmpty(inst.Identifier))
 						{
-							Id = Guid.NewGuid().ToString(),
-							Name = inst.Name,
-							Identifier = string.IsNullOrWhiteSpace(inst.Identifier)
+							// Department/sub-organization without identifier
+							org.Id = Guid.NewGuid().ToString();
+							org.Name = inst.Name;
+							org.Type =
+							[
+								new CodeableConcept
+								{
+									Coding =
+									[
+										new Coding
+										{
+											System = "http://terminology.hl7.org/CodeSystem/organization-type",
+											Code = "dept"
+										}
+									]
+								}
+							];
+							// Reference the parent organization (first org with identifier)
+							if (orgs.Count > 0)
+							{
+								org.PartOf = new ResourceReference
+								{
+									Reference = "#" + orgs.First().Id
+								};
+							}
+						}
+						else
+						{
+							org.Id = Guid.NewGuid().ToString();
+							org.Name = inst.Name;
+							org.Identifier = string.IsNullOrWhiteSpace(inst.Identifier)
 								? null
 								: new List<Identifier>
 								  {
@@ -447,7 +477,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 										  Value = inst.Identifier,
 										  System = "urn:oid:" + inst.AssigningAuthority
 									  }
-								  }
+								  }; 
 						};
 						orgs.Add(org);
 					}
