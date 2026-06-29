@@ -235,7 +235,7 @@
 										<td>Author:</td>
 										<td>@author.Name.ToFullName()</td>
 									</tr>
-									@if (author.InstitutionName!.Length > 0)
+									@if (author.InstitutionName!.Count > 0)
 									{
 
 										<tr>
@@ -243,7 +243,22 @@
 											<td>
 												@foreach (var inst in author.InstitutionName)
 												{
-													<div>@inst.Name</div>
+													if (inst.AssigningAuthority == "2.16.578.1.12.4.5.390")
+														{
+														<div>@inst.Name (<span class="code">@inst.AssigningAuthority</span>) <span>[NHN custom - name only]</span></div>
+														}
+														else
+														{
+														<div>@inst.Name (<span class="code">@inst.AssigningAuthority</span>|<span class="system">@inst.Identifier</span>)
+
+															@if (inst.AssigningAuthority == "2.16.578.1.12.4.1.4.102")
+																{
+																	<span>[RESH-ID]</span>
+																}
+
+														</div>
+														}
+														
 												}
 											</td>
 										</tr>

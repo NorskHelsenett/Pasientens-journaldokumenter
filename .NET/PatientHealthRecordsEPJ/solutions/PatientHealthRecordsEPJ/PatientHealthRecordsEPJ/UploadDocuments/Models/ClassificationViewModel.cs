@@ -17,5 +17,8 @@ namespace PatientHealthRecordsEPJ.UploadDocuments.Models
 		public SelectList SelectCategoryTypeList { get; set; } = default!;
 		public SelectList SelectConfidentialityCodeList_Hl7 { get; set; } = default!;
 		public SelectList SelectConfidentialityCodeList_9603 { get; set; } = default!;
+
+		// Department
+		public SelectList SelectDepartmentAssigningAuthorityList { get; set; } = default!;
 	}
 }

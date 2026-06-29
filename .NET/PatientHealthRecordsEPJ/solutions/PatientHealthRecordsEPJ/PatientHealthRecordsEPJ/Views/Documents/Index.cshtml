@@ -53,6 +53,17 @@
 
 	string GetDepartmentName(DocumentReference document)
 	{
+		
+		var containedOrganizations = document.Contained.Where(contained => contained is Organization).Select(contained => contained as Organization); 
+
+		//var departmentContained = containedOrganizations.FirstOrDefault(org => org.Type != null && org.Type.Any(type => type.Coding.Any(coding => IsOid(coding.System, Constants.Oid.Department_NHN_Custom_Oid_Created_June_2026))));
+		var departmentContained = containedOrganizations.FirstOrDefault(org => org.Identifier != null && org.Identifier.Any(identifier => IsOid(identifier.System, Constants.Oid.Department_NHN_Custom_Oid_Created_June_2026)));
+
+		if (departmentContained != null)
+		{
+			return departmentContained.Name;
+		}
+
 		foreach (var author in document.Author)
 		{
 			var contained = document.Contained.FirstOrDefault(contained => contained.Id == author.Reference.Replace("#", ""));
@@ -69,6 +80,10 @@
 					if (coding != null)
 					{
 						if (IsOid(coding.System, Constants.Oid.ReshId))
+						{
+							return organization!.Name;
+						}
+						else if (IsOid(coding.System, Constants.Oid.Department_NHN_Custom_Oid_Created_June_2026))
 						{
 							return organization!.Name;
 						}

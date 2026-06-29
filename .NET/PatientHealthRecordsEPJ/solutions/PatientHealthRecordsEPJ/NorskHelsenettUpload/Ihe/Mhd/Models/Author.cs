@@ -7,7 +7,8 @@ public class Author
 {
     [Required]
     public Xcn? Name { get; set; } = new Xcn();
-    public Xon[]? InstitutionName { get; set; } = [new Xon()];
-    public string[]? Role { get; set; } = [];
+    //public Xon[]? InstitutionName { get; set; } = [new Xon()];
+	public List<Xon>? InstitutionName { get; set; } = new List<Xon> { new Xon() };
+	public string[]? Role { get; set; } = [];
     public string? Specialty { get; set; }
 }

@@ -135,6 +135,37 @@ public class UploadDocumentsController : BaseController
 
 			metaData.Authors = request.DocumentCollection.SelectedDocument.Metadata.Authors;
 
+			// Overwrite department assigning authority, identifier and name if they are not set in the new metadata
+
+			var firstAuthor = metaData.Authors?.FirstOrDefault();
+
+			if (firstAuthor != null) 
+			{
+				// Check if we already have a department and if so remove it. We will add a new one if the new metadata has department assigning authority, identifier and name set.
+				var departmentXon = firstAuthor.InstitutionName.FirstOrDefault(institutionName => DepartmentAssigningAuthorityCodeList.ClassCodes.Any(y => y.System == institutionName.AssigningAuthority));
+
+				if (departmentXon != null)
+				{
+					firstAuthor.InstitutionName.Remove(departmentXon);
+				}
+
+				if (metaData.DepartmentAssigningAuthoritySystem == Constants.Oid.Department_NHN_Custom_Oid_Created_June_2026)
+				{
+					metaData.DepartmentIdentifier = null; // Should not be set for this department system
+				}
+
+				if (!string.IsNullOrWhiteSpace(metaData.DepartmentAssigningAuthoritySystem) && !string.IsNullOrWhiteSpace(metaData.DepartmentName))
+				{
+					var departmentXonNew = new Xon()
+					{
+						Name = metaData.DepartmentName,
+						Identifier = metaData.DepartmentIdentifier,
+						AssigningAuthority = metaData.DepartmentAssigningAuthoritySystem 
+					};
+					firstAuthor.InstitutionName.Add(departmentXonNew);
+				}
+			}						
+
 			// Save to session (including authors we already had in the session):
 			request.DocumentCollection.SelectedDocument.Metadata = metaData;
 		}
@@ -544,12 +575,14 @@ public class UploadDocumentsController : BaseController
 					Name = orgName,
 					Identifier = orgIdentifier,
 					AssigningAuthority = $"{orgAssignOid}"
-				},
-				new Xon()
-				{
-					Name = "KAD",				
-					AssigningAuthority = $"2.16.578.1.12.4.5.390"
-				}]				
+				}
+				//,
+				//new Xon()
+				//{
+				//	Name = "KAD",				
+				//	AssigningAuthority = $"{Constants.Oid.Department_NHN_Custom_Oid_Created_June_2026}"
+				//}
+				]				
 			})
 			;
 
@@ -940,9 +973,25 @@ public class UploadDocumentsController : BaseController
 
 		//model.Upload = request;
 		model.Metadata = request.DocumentCollection?.SelectedDocument?.Metadata;
-	
-		
+
+
 		//upload.Classification.
+
+		//
+		//	Department information
+		//
+		//
+		
+		model.SelectDepartmentAssigningAuthorityList = new SelectList(			
+		DepartmentAssigningAuthorityCodeList.ClassCodes.Select(c =>
+		new TextValue(
+			//$"{c.System}|{c.Code}|{c.Display}", // Value in select list
+			$"{c.System}", // Value in select list
+			$"{c.Display} [{c.Code}]"           // What the user sees
+		)),
+			nameof(TextValue.Value),				// Name of property used for value
+			nameof(TextValue.Text)                  // Name of property used for text
+		);
 
 		//
 		//	Encounter information

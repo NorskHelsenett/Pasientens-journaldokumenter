@@ -68,4 +68,9 @@ public class DocumentEntryMetadata
 	public string? Comment { get; set; }
 	//public string? HomeCommunityId { get; set; }
 	//public string? RepositoryUniqueId { get; set; }
+
+	// Special handling for deparment	
+	public string? DepartmentAssigningAuthoritySystem { get; set; }
+	public string? DepartmentIdentifier { get; set; }    // For RESH-ID, which is the unique identifier for a department in the Norwegian Specialist Health Service (Spesialisthelsetjenesten). It is used to identify the specific department or unit within a healthcare organization that is responsible for the document or service. The RESH-ID is part of the Norwegian healthcare system's organizational structure and is used for administrative and reporting purposes.
+	public string? DepartmentName { get; set; }
 }

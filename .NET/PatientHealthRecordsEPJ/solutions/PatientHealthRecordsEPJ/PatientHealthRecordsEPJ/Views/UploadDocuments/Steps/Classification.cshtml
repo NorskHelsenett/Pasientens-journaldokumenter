@@ -53,6 +53,79 @@
 			</div>
 			<div class="col-md-8">
 
+				<!-- Author, institution and potentially department -->
+
+				<h4>
+					<i id="AR1O9DG8K4UJP" class="bi bi-person-fill fs-1 text-primary"></i> Author, institution and department information:
+				</h4>
+
+				<div class="row mb-3">
+					<label for="inputAuthorName" class="col-sm-2 col-form-label">Author name:</label>
+					<div class="col-sm-10">
+						@{
+								var authorName = Model.SelectedDocument.Metadata.Authors[0].Name; 
+
+								var fullAuthorName = ""; 
+
+								if (!string.IsNullOrWhiteSpace(authorName.GivenName))
+								{
+									fullAuthorName += authorName.GivenName; 
+								}
+
+								if (!string.IsNullOrWhiteSpace(authorName.MiddleName))
+								{
+									fullAuthorName += " " + authorName.MiddleName; 
+								}
+
+							if (!string.IsNullOrWhiteSpace(authorName.FamilyName))
+							{
+								fullAuthorName += " " + authorName.FamilyName;
+							}
+
+						}
+						@* <input type="email" class="form-control" id="inputEmail3"> *@
+						@* <input asp-for="SelectedDocument.Metadata.Authors[0].Name" type="text" class="form-control" id="inputAuthorName" readonly> *@
+						<input type="text" class="form-control" id="inputAuthorName" value="@fullAuthorName" readonly>
+						@* <select asp-for="Metadata.HealthCareFacilityType"
+								asp-items="Model.SelectHealthcareFacilityList"
+								class="form-control">
+							<option value="">-- Select type of healthcare facility --</option>
+						</select> *@
+					</div>
+				</div>
+				<div class="row mb-3">
+					<label for="inputInstitutionName" class="col-sm-2 col-form-label">Institution name:</label>
+					<div class="col-sm-10">
+						@* <input type="email" class="form-control" id="inputEmail3"> *@
+						<input asp-for="SelectedDocument.Metadata.Authors[0].InstitutionName[0].Name" type="text" class="form-control" id="inputInstitutionName" readonly> @* (@Model.SelectedDocument.Metadata.Authors[0].InstitutionName[0].AssigningAuthority) *@
+					</div>
+				</div>			
+				<div class="row mb-3">
+					<label class="col-sm-2 col-form-label">Department (optional):</label>
+					<div class="col-sm-10">
+						<div class="row">
+							<div class="col-sm-4 d-flex align-items-center">
+								<strong class="me-2" style="white-space:nowrap">Type@* of department *@:</strong>
+								@* <input asp-for="Metadata.ServiceStartTime" type="date" class="form-control" id="inputServiceStartTime"> *@
+								<select asp-for="Metadata.DepartmentAssigningAuthoritySystem"
+										asp-items="Model.SelectDepartmentAssigningAuthorityList"
+										class="form-control">
+									<option value="">-- Select type of department --</option>
+								</select>
+							</div>
+							<div class="col-sm-4 d-flex align-items-center">
+								<strong class="me-2" style="white-space:nowrap">Name@* of department *@:</strong>
+								<input asp-for="Metadata.DepartmentName" type="text" class="form-control" id="inputDepartmentName">
+							</div>
+							<div class="col-sm-4 d-flex align-items-center">
+								<strong class="me-2" style="white-space:nowrap">ID @* of department  *@(only for RESH-ID):</strong>
+								<input asp-for="Metadata.DepartmentIdentifier" type="text" class="form-control" id="inputDepartmentId">
+							</div>
+						</div>
+					</div>
+				</div>
+
+
 				<!-- Encounter information -->
 
 				<h4>

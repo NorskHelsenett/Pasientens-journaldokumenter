@@ -51,6 +51,8 @@ public class Constants
 		public const string ReshId = "2.16.578.1.12.4.1.4.102";
 		public const string ApotekKonsesjonsnummer = "2.16.578.1.12.4.1.4.107";
 
+		public const string Department_NHN_Custom_Oid_Created_June_2026 = "2.16.578.1.12.4.5.390"; 
+
 		/// <summary>
 		///     2.16.578.1.12.4.1.2
 		///     Identifikator for kommunikasjonsparter i helsenettet.
