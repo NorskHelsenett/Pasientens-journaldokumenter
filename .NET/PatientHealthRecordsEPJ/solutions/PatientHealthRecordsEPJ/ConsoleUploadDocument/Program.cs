@@ -214,7 +214,7 @@ var currentDirectory = Directory.GetCurrentDirectory();
 
 //var fileName = "Epikrise.xml";
 var fileName = "ClinicalDocument_USNOBBET_KLOKKE.xml";
-var filePath = Path.Combine(currentDirectory, @"Examples\", fileName);
+var filePath = Path.Combine(currentDirectory, "Examples", fileName);
 
 var content = File.ReadAllBytes(filePath);
 
