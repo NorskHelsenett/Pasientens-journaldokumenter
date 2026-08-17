@@ -29,49 +29,49 @@
       },
       "Microsoft.AspNetCore.Hosting": {
         "type": "Direct",
-        "requested": "[2.3.9, )",
-        "resolved": "2.3.9",
-        "contentHash": "SiXLEniwzjs4g8whm6L3gY4Q5om/ZBF2akXJZ+wh0NhaZxHPnSLr+MFRkOjS+4EMLLw5eXmRPNREWqqTZuNnmA=="
+        "requested": "[2.3.12, )",
+        "resolved": "2.3.12",
+        "contentHash": "32sR/B5zUcyhl8WMOMcYs2IY/09DGwNcr9R2TUW7Xwk18iBzHk5ADmgoaZjJG+qfCOJQGZEoNfQadp9Vbc2MNQ=="
       },
       "Microsoft.AspNetCore.Hosting.Abstractions": {
         "type": "Direct",
-        "requested": "[2.3.9, )",
-        "resolved": "2.3.9",
-        "contentHash": "kNdOUJvxQ8Jy6DcKyVVZZRZ2lheJ+4bIn+MWY9UYBWEow6rsaRRfzZujEhNkynIpl1vxLohoXtkudnO3sDpAIQ=="
+        "requested": "[2.3.12, )",
+        "resolved": "2.3.12",
+        "contentHash": "jSEvM9Ot0ok4VIT8R5JNOSiLTay+sFBp1vCwiqWPqaY3HuvK0EAr8YfqOkxDnWw5nqyC5Z3asJ2NuddLNVzXGA=="
       },
       "Microsoft.Extensions.Hosting": {
         "type": "Direct",
-        "requested": "[10.0.7, )",
-        "resolved": "10.0.7",
-        "contentHash": "M/vBpfWcschvS2EUeq7cHfscsxabiGTptXwV7GeSueovGiSoNjyo1j5PMcWuOAAQrRW3nRqxZk8NeumrmpzUBg=="
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "eIDa/Rl+93aj17gMlFsJJx+LhBvb3CP0Mu1PeVYkDp2Y3S4Jock8UynfGQEcx7lrlq+gKW+ECQJHbro/LTPDEQ=="
       },
       "Microsoft.Extensions.Http": {
         "type": "Direct",
-        "requested": "[10.0.7, )",
-        "resolved": "10.0.7",
-        "contentHash": "1wbd+RPhRo3hJKNJhdGEO5ls0LGe55Ho4BUjlFtRUrWxDVVBd7g0Ydq9fbNy86pmvx/j7AGcSPo7YNCo1IRI6Q=="
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "ujx8RvcKzkxPFBguwgiygbwWVHVK0P7HFlNJ6I0JBRb28tzwe42jixBoA+dGmqG9IHepPVcm04vv2IDnU93ekA=="
       },
       "Fhir.Metrics": {
         "type": "Transitive",
-        "resolved": "1.3.1",
-        "contentHash": "pCC0/KT4xe7vvJ0UD9u8CTBQOoIqMBl01du0UvK95i1A6smPb32gdmwSJvtx+KV7jQwkIMeKblkH8M3d9iw7fg=="
+        "resolved": "1.4.0",
+        "contentHash": "SxpoHR46khpzQG4rOX+rJduPeuH3h9rEpEoguraOft24E0tMnnDk8CuTMVF3fMudsdyo5addKBf+wGngWHwgOQ=="
       },
       "Hl7.Fhir.Base": {
         "type": "Transitive",
-        "resolved": "6.2.0",
-        "contentHash": "ElZPJ4Iv9enmHCpui0HRAZDmXzmj/FntCaSntOaKJG1HxfbT9S2cW08sHYiiEh4Z+1HMxqyKbHwYPsmc75YYvA==",
+        "resolved": "6.4.0",
+        "contentHash": "ne+0zlNRGIiqSRKchg0qhQ7LCvS1AJGXo00InKWh6giv4FPv8wKEQpnDtRoCwCVuNtkVyc6XYdmHr5Neel3Xgw==",
         "dependencies": {
-          "Fhir.Metrics": "1.3.1",
+          "Fhir.Metrics": "1.4.0",
           "Newtonsoft.Json": "13.0.4",
           "System.ComponentModel.Annotations": "5.0.0"
         }
       },
       "Hl7.Fhir.Conformance": {
         "type": "Transitive",
-        "resolved": "6.2.0",
-        "contentHash": "XUW3rKAvn74iB0sVAuqoFlIyHcNuJrUbWSHpDQwQQ9AguJRSEnFNbekna1k/dmbPO00FwHGYC+luKJNzHluq4Q==",
+        "resolved": "6.4.0",
+        "contentHash": "Rdw5GAxXiSTsUptIlkP4DA42ykxclIdxzvTbgzoKttnFgD3m1V7lrvqmzKj5T4e9gK2MWU7I3r+Gw7NVkmSiNg==",
         "dependencies": {
-          "Hl7.Fhir.Base": "6.2.0"
+          "Hl7.Fhir.Base": "6.4.0"
         }
       },
       "Hl7.Fhir.ElementModel": {
@@ -84,10 +84,10 @@
       },
       "Hl7.Fhir.R4B": {
         "type": "Transitive",
-        "resolved": "6.2.0",
-        "contentHash": "VhfPEeLkKxaR7tBW7Nv3AMNju2hlxHUn0r4HbxU9QDYo5pi3YCwXpBWmku05aoLttahOJ/jTq3egQxJBxZ82oQ==",
+        "resolved": "6.4.0",
+        "contentHash": "u1MQYXOJzRl3vRzgalxjEpMSR2NyVM+CIS28QU/kFBI7EzR43AlOgl2VH9uPbxt6jTDmcxN7F0JmisuTZfz9pQ==",
         "dependencies": {
-          "Hl7.Fhir.Conformance": "6.2.0"
+          "Hl7.Fhir.Conformance": "6.4.0"
         }
       },
       "Hl7.Fhir.Serialization": {
@@ -156,7 +156,7 @@
       "norskhelsenettupload": {
         "type": "Project",
         "dependencies": {
-          "Hl7.Fhir.R4B": "[6.2.0, )",
+          "Hl7.Fhir.R4B": "[6.4.0, )",
           "Hl7.Fhir.Serialization": "[4.3.0, )"
         }
       },
@@ -166,7 +166,7 @@
           "Duende.IdentityModel": "[8.1.0, )",
           "Duende.IdentityModel.OidcClient": "[7.1.0, )",
           "Duende.IdentityModel.OidcClient.Extensions": "[7.1.0, )",
-          "Hl7.Fhir.R4B": "[6.2.0, )"
+          "Hl7.Fhir.R4B": "[6.4.0, )"
         }
       }
     }
