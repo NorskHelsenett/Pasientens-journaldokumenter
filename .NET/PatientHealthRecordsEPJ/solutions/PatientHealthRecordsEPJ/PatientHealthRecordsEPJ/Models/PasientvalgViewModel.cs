@@ -17,6 +17,7 @@ public class PasientvalgViewModel
 	public string EnvironmentId { get; set; } = default!;
 	public static List<OptionPair> EnvironmentList { get; set; } = new List<OptionPair>()
 	{
+		new OptionPair() { Id = "devtest", Label = "DevTest" },
 		new OptionPair() { Id = "test" , Label ="Test" },
 		new OptionPair() { Id = "qa" , Label ="QA" },
 	};
@@ -32,8 +33,8 @@ public class PasientvalgViewModel
 		new OptionPair() { Id = "samtykke" , Label = "Samtykke" },
 		new OptionPair() { Id = "akutt" , Label = "Akutt" },		
 		new OptionPair() { Id = "unntak" , Label = "Unntak" },
-		new OptionPair() { Id = "forhoyet_akutt" , Label = "Forhøyet akutt" },
-		new OptionPair() { Id = "forhoyet_samtykke" , Label = "Forhøyet samtykke" }		
+		new OptionPair() { Id = "forhoyet_akutt" , Label = "Forhï¿½yet akutt" },
+		new OptionPair() { Id = "forhoyet_samtykke" , Label = "Forhï¿½yet samtykke" }		
 	};
 
 	public static List<OptionPair> PatientMappingList { get; set; } = new List<OptionPair>()
