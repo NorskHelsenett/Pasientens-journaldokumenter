@@ -58,6 +58,11 @@
 		color: #fff;
 		}
 
+		.environment.devtest {
+			background-color: dodgerblue;
+			color: #fff;
+		}
+
 		.environment.test {
 		background-color: red;
 		color: #fff;
@@ -190,7 +195,11 @@
 							else
 							{
 								@* TODO: fix colors on different environmentst *@
-								@if (sessionData.EnvironmentId == "test")
+								@if (sessionData.EnvironmentId == "devtest")
+								{
+									<span class="environment devtest">@sessionData.EnvironmentName</span>
+								}
+								else if (sessionData.EnvironmentId == "test")
 								{
 									<span class="environment test">@sessionData.EnvironmentName</span>
 								}
