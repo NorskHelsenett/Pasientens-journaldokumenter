@@ -23,6 +23,8 @@ namespace PatientHealthRecordsEPJ.Controllers;
 
 public class HomeController : BaseController
 {
+	private static readonly TimeSpan HelseIdJwtLifetime = TimeSpan.FromSeconds(20);
+
 	private readonly ILogger<HomeController> _logger;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private ISession session => _httpContextAccessor.HttpContext!.Session;
@@ -446,11 +448,11 @@ public class HomeController : BaseController
 			Console.WriteLine($"Identity token from login: {loginResult.IdentityToken}");
 			Console.WriteLine($"DPoP token from login: {loginResult.AccessToken}");
 
+			sessionData.PjdAccessToken = loginResult.AccessToken;
+			sessionData.PjdAccessTokenExpiresAt = new DateTimeOffset(jsonAccessToken.ValidTo);
 			sessionData.RefreshToken = loginResult.RefreshToken;
 
 			sessionData.SaveToSession(session); 
-
-			sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
 			//sessionData.AccessToken = loginResult.AccessToken;
 
@@ -854,7 +856,7 @@ public class HomeController : BaseController
 		var claims = new List<Claim>
 	{
 		new Claim(JwtClaimTypes.Subject, ClientId),
-		new Claim(JwtClaimTypes.IssuedAt, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
+		new Claim(JwtClaimTypes.IssuedAt, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
 		new Claim(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
 	};
 
@@ -874,7 +876,7 @@ public class HomeController : BaseController
 
 		var credentials = new JwtSecurityToken(
 			header,
-			new JwtPayload(ClientId, disco.Issuer, extraClaims, DateTime.UtcNow, DateTime.UtcNow.AddSeconds(60))
+			new JwtPayload(ClientId, disco.Issuer, extraClaims, DateTime.UtcNow, DateTime.UtcNow.Add(HelseIdJwtLifetime))
 		);
 
 		var tokenHandler = new JwtSecurityTokenHandler();

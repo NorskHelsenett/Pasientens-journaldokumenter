@@ -43,8 +43,9 @@ public class PatchDocumentController : BaseController
 	public async Task<IActionResult> Index()
 	{
 		var loginResult = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
+		var repositoryAccessToken = await _userTokenService.GetValidPjdRepositoryAccessTokenAsync(HttpContext);
 
-		if (loginResult.PjdRepositoryAccessToken == null)
+		if (repositoryAccessToken == null)
 		{
 			return Redirect("/");
 		}		
@@ -93,6 +94,12 @@ public class PatchDocumentController : BaseController
 	public async Task<IActionResult> PatchDocument(string id, string homeCommunityId, string body)
 	{
 		var sessionData = session.SessionData();
+		var repositoryAccessToken = await _userTokenService.GetValidPjdRepositoryAccessTokenAsync(HttpContext);
+
+		if (repositoryAccessToken == null)
+		{
+			return Redirect("/");
+		}
 
 		id = id.NoUrn();
 		homeCommunityId = homeCommunityId.NoUrn();
@@ -111,7 +118,7 @@ public class PatchDocumentController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Patch,
 			apiUrl,
-			sessionData.PjdRepositoryAccessToken!,
+			repositoryAccessToken,
 			document: false,
 			headerKeyValues: headerKeyValues,
 			content: content

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,6 +29,150 @@ public sealed class HelseIdPersontjenestenOptions
 	public const string SectionKey = "HelseIdPersontjenesten";
 	
 	public string Scopes { get; set; } = string.Empty;
+}
+
+internal static class HelseIdClientAssertionFactory
+{
+    private static readonly TimeSpan TokenLifetime = TimeSpan.FromSeconds(20);
+
+    public static ClientAssertion Create(DiscoveryDocumentResponse disco, string clientId, string privateJwk)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtClaimTypes.Subject, clientId),
+            new(JwtClaimTypes.IssuedAt, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
+            new(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
+        };
+
+        var signingCredentials = GetSigningCredentials(privateJwk);
+        var header = new JwtHeader(signingCredentials)
+        {
+            ["typ"] = "client-authentication+jwt"
+        };
+
+        var token = new JwtSecurityToken(
+            header,
+            new JwtPayload(clientId, disco.Issuer, claims, DateTime.UtcNow, DateTime.UtcNow.Add(TokenLifetime)));
+
+        return new ClientAssertion
+        {
+            Type = OidcConstants.ClientAssertionTypes.JwtBearer,
+            Value = new JwtSecurityTokenHandler().WriteToken(token)
+        };
+    }
+
+    private static SigningCredentials GetSigningCredentials(string privateJwk)
+    {
+        var securityKey = new JsonWebKey(privateJwk);
+        return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
+    }
+}
+
+internal sealed class HelseIdClientAssertionRefreshHandler(
+    DiscoveryDocumentResponse disco,
+    string clientId,
+    string privateJwk,
+    ILogger<HelseIdClientAssertionRefreshHandler> logger) : DelegatingHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (request.Method == HttpMethod.Post && IsFormUrlEncodedContent(request.Content))
+        {
+            await ReplaceClientAssertionAsync(request, cancellationToken);
+        }
+
+        return await base.SendAsync(request, cancellationToken);
+    }
+
+    private async Task ReplaceClientAssertionAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var requestUri = request.RequestUri;
+        if (requestUri == null || !IsHelseIdEndpoint(requestUri))
+        {
+            return;
+        }
+
+        var payload = await request.Content!.ReadAsStringAsync(cancellationToken);
+        var formValues = ParseFormUrlEncoded(payload);
+        var hasClientAssertion = formValues.Any(x => x.Key == "client_assertion");
+        var hasClientAssertionType = formValues.Any(x => x.Key == "client_assertion_type");
+
+        if (!hasClientAssertion || !hasClientAssertionType)
+        {
+            return;
+        }
+
+        logger.LogDebug("Refreshing client assertion for HelseID request to {Url}", requestUri);
+
+        var refreshedAssertion = HelseIdClientAssertionFactory.Create(disco, clientId, privateJwk);
+        var refreshedFormValues = new List<KeyValuePair<string, string>>(formValues.Count + 2);
+
+        foreach (var formValue in formValues)
+        {
+            if (formValue.Key is "client_assertion" or "client_assertion_type")
+            {
+                continue;
+            }
+
+            refreshedFormValues.Add(formValue);
+        }
+
+        refreshedFormValues.Add(new KeyValuePair<string, string>("client_assertion", refreshedAssertion.Value));
+        refreshedFormValues.Add(new KeyValuePair<string, string>("client_assertion_type", refreshedAssertion.Type));
+
+        var originalHeaders = request.Content.Headers
+            .Select(header => new KeyValuePair<string, IEnumerable<string>>(header.Key, header.Value.ToArray()))
+            .ToList();
+
+        request.Content = new FormUrlEncodedContent(refreshedFormValues);
+
+        foreach (var header in originalHeaders)
+        {
+            request.Content.Headers.Remove(header.Key);
+            request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+    }
+
+    private bool IsHelseIdEndpoint(Uri requestUri)
+    {
+        if (string.IsNullOrWhiteSpace(disco.Issuer))
+        {
+            return false;
+        }
+
+        var issuerUri = new Uri(disco.Issuer);
+        return Uri.Compare(requestUri, issuerUri, UriComponents.SchemeAndServer, UriFormat.Unescaped, StringComparison.OrdinalIgnoreCase) == 0;
+    }
+
+    private static List<KeyValuePair<string, string>> ParseFormUrlEncoded(string payload)
+    {
+        var values = new List<KeyValuePair<string, string>>();
+        if (string.IsNullOrEmpty(payload))
+        {
+            return values;
+        }
+
+        foreach (var pair in payload.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var separatorIndex = pair.IndexOf('=');
+            if (separatorIndex < 0)
+            {
+                values.Add(new KeyValuePair<string, string>(WebUtility.UrlDecode(pair), string.Empty));
+                continue;
+            }
+
+            var key = WebUtility.UrlDecode(pair[..separatorIndex]);
+            var value = WebUtility.UrlDecode(pair[(separatorIndex + 1)..]);
+            values.Add(new KeyValuePair<string, string>(key, value));
+        }
+
+        return values;
+    }
+
+    private static bool IsFormUrlEncodedContent(HttpContent? content)
+    {
+        return string.Equals(content?.Headers.ContentType?.MediaType, "application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 public static class HttpClientExtensions
@@ -179,6 +324,8 @@ public class TokenService(
     IHttpClientFactory httpClientFactory,
     DPoPProofCreator dPoPProofCreator)
 {
+    private static readonly TimeSpan ClientAssertionLifetime = TimeSpan.FromSeconds(20);
+
     private DateTime _cachedAccessTokenExpiresAt = DateTime.MinValue;
     private string _cachedAccessToken = string.Empty;
     private HttpClient? _httpClient;
@@ -279,8 +426,8 @@ public class TokenService(
 			//audience: options.Value.TokenEndpoint,
 			audience: audience,
 			claims: claims,
-			notBefore: DateTime.Now,
-			expires: DateTime.Now.AddMinutes(1)
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.Add(ClientAssertionLifetime)
 		);
 
 		var token = new JwtSecurityToken(header, payload);

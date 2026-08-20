@@ -54,8 +54,9 @@ public class KjernejournalLoginController : BaseController
 	public async Task<IActionResult> Index()
 	{
 		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
+		var kjernejournalAccessToken = await _userTokenService.GetValidKjernejournalAccessTokenAsync(HttpContext);
 
-		if (sessionData.KjernejournalAccessToken == null)
+		if (kjernejournalAccessToken == null)
 		{
 			return Redirect("/");
 		}

@@ -218,6 +218,12 @@ public class DocumentsController : BaseController
 	public async Task<IActionResult> DeleteDocument(string id, string homeCommunityId)
 	{
 		var sessionData = session.SessionData();
+		var repositoryAccessToken = await _userTokenService.GetValidPjdRepositoryAccessTokenAsync(HttpContext);
+
+		if (repositoryAccessToken == null)
+		{
+			return Redirect("/");
+		}
 		
 		id = id.NoUrn();
 		homeCommunityId = homeCommunityId.NoUrn(); 
@@ -233,7 +239,7 @@ public class DocumentsController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Delete,
 			apiUrl,
-			sessionData.PjdRepositoryAccessToken!,
+			repositoryAccessToken,
 			document: false,
 			headerKeyValues: headerKeyValues
 			);
@@ -305,6 +311,12 @@ public class DocumentsController : BaseController
 	public async Task<IActionResult> GetDocumentReference(string id, string homeCommunityId)
 	{
 		var sessionData = session.SessionData();
+		var repositoryAccessToken = await _userTokenService.GetValidPjdRepositoryAccessTokenAsync(HttpContext);
+
+		if (repositoryAccessToken == null)
+		{
+			return Redirect("/");
+		}
 
 		id = id.NoUrn();
 		homeCommunityId = homeCommunityId.NoUrn();
@@ -320,7 +332,7 @@ public class DocumentsController : BaseController
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Get,
 			apiUrl,
-			sessionData.PjdRepositoryAccessToken!,
+			repositoryAccessToken,
 			document: false,
 			headerKeyValues: headerKeyValues
 			);

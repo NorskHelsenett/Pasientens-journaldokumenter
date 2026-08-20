@@ -90,8 +90,9 @@ public class DokumentlagerTestController : BaseController
 	public async Task<IActionResult> Index(string? homeCommunityId = null)
 	{
 		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
+		var repositoryAccessToken = await _userTokenService.GetValidPjdRepositoryAccessTokenAsync(HttpContext);
 
-		if (sessionData.PjdRepositoryAccessToken == null)
+		if (repositoryAccessToken == null)
 		{
 			return Redirect("/");
 		}

@@ -12,10 +12,14 @@ public class SessionData
 	// Helsepersonell: 
 	public string? IdentityToken { get; set; } = default!;
 	public string? PjdAccessToken { get; set; } = default!;  // Access token for PHR API (audience only contains "nhn:phr")
+	public DateTimeOffset? PjdAccessTokenExpiresAt { get; set; }
 	public string? PjdServiceAccessToken { get; set; } = default!;  // Access token for Pasientens journaldokumenters støttetjenester API (audience only contains "nhn:phr-service")
+	public DateTimeOffset? PjdServiceAccessTokenExpiresAt { get; set; }
 	public string? PjdRepositoryAccessToken { get; set; } = default!;  // Access token for Norsk helsenett dokumentlager API (audience only contains "nhn:phr-document-repository")
+	public DateTimeOffset? PjdRepositoryAccessTokenExpiresAt { get; set; }
 	public string? KjernejournalAccessToken { get; set; } = default!;    // Access token for Kjernejournal (audience only contains "nhn:kjernejournal")
 
+	public DateTimeOffset? KjernejournalAccessTokenExpiresAt { get; set; }
 	public string? RefreshToken { get; set; } = default!;
 	
 	public string? PersonId { get; set; } = default!; // Helsepersonell fødselsnummer

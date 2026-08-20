@@ -46,8 +46,9 @@ public class AtnaLogController : BaseController
 	public async Task<IActionResult> Index(int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date", string? homeCommunityId = null)
 	{
 		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext); 
+		var pjdServiceAccessToken = await _userTokenService.GetValidPjdServiceAccessTokenAsync(HttpContext);
 
-		if (sessionData.PjdServiceAccessToken == null)
+		if (pjdServiceAccessToken == null)
 		{
 			return Redirect("/");
 		}

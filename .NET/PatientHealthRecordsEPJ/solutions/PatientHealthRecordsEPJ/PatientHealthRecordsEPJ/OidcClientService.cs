@@ -3,6 +3,7 @@ using Duende.IdentityModel.OidcClient;
 using Duende.IdentityModel.OidcClient.DPoP;
 using Duende.IdentityModel.OidcClient.Results;
 using PatientHealthRecordsEPJ.Controllers;
+using PatientHealthRecordsEPJ.Services;
 
 namespace PatientHealthRecordsEPJ; 
 
@@ -17,6 +18,7 @@ public class OidcClientService : IOidcClientService
 {
 	private readonly IHttpClientFactory _httpClientFactory;
 	private readonly IConfiguration _configuration;
+	private readonly ILoggerFactory _loggerFactory;
 	private OidcClient _oidcClient;
 	private bool _initialized = false;
 
@@ -24,10 +26,11 @@ public class OidcClientService : IOidcClientService
 
 	public OidcClient Client => _oidcClient;
 
-	public OidcClientService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+	public OidcClientService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILoggerFactory loggerFactory)
 	{
 		_httpClientFactory = httpClientFactory;
 		_configuration = configuration;
+		_loggerFactory = loggerFactory;
 	}
 
 	public async Task InitializeAsync(string redirectUrl)
@@ -51,6 +54,14 @@ public class OidcClientService : IOidcClientService
 			RedirectUri = redirectUrl,
 			LoadProfile = false,
 			//IdentityTokenValidator = new JwtHandlerIdentityTokenValidator(),
+			BackchannelHandler = new HelseIdClientAssertionRefreshHandler(
+				_disco,
+				HomeController.ClientId,
+				Constants.JwkPrivateKey,
+				_loggerFactory.CreateLogger<HelseIdClientAssertionRefreshHandler>())
+			{
+				InnerHandler = new HttpClientHandler()
+			},
 		};
 
 		options.ConfigureDPoP(Constants.JwkPrivateKey);
