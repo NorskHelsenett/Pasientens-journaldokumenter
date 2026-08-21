@@ -886,7 +886,7 @@ public class HomeController : BaseController
 	private static SigningCredentials GetClientAssertionSigningCredentials()
 	{
 		var securityKey = new JsonWebKey(Constants.JwkPrivateKey);
-		return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
+		return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha256);
 	}
 
 	private static LoginResult ValidateIdentityClaims(LoginResult loginResult)

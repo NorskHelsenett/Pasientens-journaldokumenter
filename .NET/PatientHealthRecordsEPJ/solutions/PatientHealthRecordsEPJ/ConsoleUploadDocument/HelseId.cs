@@ -101,7 +101,7 @@ public class DPoPProofCreator(IOptions<HelseIdOptions> options, ILogger<DPoPProo
         logger.LogDebug("Creating DPoP proof for url {Url} with nonce: {Nonce} ", url, dPoPNonce);
 
         var securityKey = new JsonWebKey(options.Value.PrivateJwk);
-        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha512);
+        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha512);
 
         var jwk = securityKey.Kty switch
         {
@@ -215,7 +215,7 @@ public class TokenService(
     private ClientCredentialsTokenRequest CreateTokenRequest(string? dPoPNonce = null)
     {
         var securityKey = new JsonWebKey(options.Value.PrivateJwk);
-        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha512);
+        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha512);
 
 		var header = new JwtHeader(signingCredentials)
 		{

@@ -704,7 +704,7 @@ string BuildHelseIdJwt(DiscoveryDocumentResponse disco, List<Claim> extraClaims)
 SigningCredentials GetClientAssertionSigningCredentials()
 {
 	var securityKey = new JsonWebKey(helseIdOptions.PrivateJwk);
-	return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
+	return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha256);
 }
 
 LoginResult ValidateIdentityClaims(LoginResult loginResult)
