@@ -1,7 +1,5 @@
 using Duende.IdentityModel;
 using Duende.IdentityModel.Client;
-using Duende.IdentityModel.OidcClient;
-using Duende.IdentityModel.OidcClient.DPoP;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
@@ -30,6 +28,7 @@ public class HomeController : BaseController
 	private ISession session => _httpContextAccessor.HttpContext!.Session;
 	private readonly IMemoryCache _memoryCache;
 	private readonly IOidcClientService _oidcClientService;
+	private readonly IHelseIdDiscoveryDocumentCache _discoveryDocumentCache;
 	private readonly OrganizationService _organizationService;
 	private readonly PhrApiOptions _phrApiOptions;
 	private readonly IPhrApiEnvironmentProvider _phrApiEnvironmentProvider; 
@@ -38,6 +37,7 @@ public class HomeController : BaseController
 
 	// The client is configured in the HelseID test environment, so we will point to that
 	public const string StsUrl = "https://helseid-sts.test.nhn.no";
+	//public const string StsUrl = "https://samsvarstesting-sts-test.helseid.sky.nhn.no/<id to samsvarstesting session>"; // Use this if doing Samsvarstesting in Selvbetjening
 
 	// Define audience of all APIs we want to call. We'll use resource indicators to get tokens scoped only to each API. 
 	public const string PhrResource = "nhn:phr";
@@ -72,7 +72,6 @@ public class HomeController : BaseController
 	private const string PatientPointOfCareOrg = "883953142";    // BJØLSENHJEMMET
 
 	HttpClient httpClient;
-	OidcClient oidcClient;
 	DiscoveryDocumentResponse disco;
 
 	public HomeController(
@@ -81,6 +80,7 @@ public class HomeController : BaseController
 		IHttpContextAccessor httpContextAccessor, 
 		IMemoryCache memoryCache, 
 		IOidcClientService oidcClientService,
+		IHelseIdDiscoveryDocumentCache discoveryDocumentCache,
 		PhrApiOptions phrApiOptions,
 		IPhrApiEnvironmentProvider phrApiEnvironmentProvider,
 		OrganizationService organizationService,
@@ -91,6 +91,7 @@ public class HomeController : BaseController
 		_httpContextAccessor = httpContextAccessor;
 		_memoryCache = memoryCache;
 		_oidcClientService = oidcClientService;
+		_discoveryDocumentCache = discoveryDocumentCache;
 		_organizationService = organizationService; 
 		_phrApiOptions = phrApiOptions;
 		_phrApiEnvironmentProvider = phrApiEnvironmentProvider;
@@ -149,31 +150,10 @@ public class HomeController : BaseController
 		return redirectUrl;
 	}
 
-	private async Task SetupOidcClient()
+	private async Task SetupHelseIdAsync()
 	{
 		httpClient = new HttpClient();
-
-		var redirectUrl = GetRedirectUrl(); 
-
-		// Download the HelseID metadata from https://helseid-sts.test.nhn.no/.well-known/openid-configuration to determine endpoints and public keys used by HelseID:
-		// In a production environment, this document must be cached for better efficiency (both for this client and for HelseID)
-		disco = await httpClient.GetDiscoveryDocumentAsync(StsUrl);
-
-		var options = new OidcClientOptions
-		{
-			Authority = StsUrl,
-			ClientId = ClientId,
-			RedirectUri = redirectUrl,
-			LoadProfile = false,
-			// This validates the identity token (important!):
-			//IdentityTokenValidator = new JwtHandlerIdentityTokenValidator(),
-		};
-
-		// Set the DPoP proof, we can use the same key for this as for the client assertion:
-		options.ConfigureDPoP(Constants.JwkPrivateKey);
-
-		// Setup the oidc client for authentication against HelseID
-		oidcClient = new OidcClient(options);
+		disco = await _discoveryDocumentCache.GetDiscoveryDocumentAsync();
 	}
 
 	[HttpPost]
@@ -181,7 +161,7 @@ public class HomeController : BaseController
 	{
 		try
 		{				
-			await SetupOidcClient();
+			await SetupHelseIdAsync();
 			
 			model.OrganizationName = HomeViewModel.OrganizationList.FirstOrDefault(x => x.Id == model.OrganizationId)!.Label;
 			model.AuthorizationName = HomeViewModel.AuthorizationList.FirstOrDefault(x => x.Id == model.AuthorizationId)!.Label;
@@ -236,10 +216,9 @@ public class HomeController : BaseController
 			
 			Console.WriteLine("RedirectUrl: " + redirectUrl);
 
-			await SetupOidcClient();
+			await SetupHelseIdAsync();
 
-			// The authorizeState object contains the state that needs to be held between starting the authorize request and the response
-			var authorizeState = await oidcClient.PrepareLoginAsync();
+			var authorizeState = CreateAuthorizeState();
 
 			var cacheEntryOptions = new MemoryCacheEntryOptions()
 				.SetSlidingExpiration(TimeSpan.FromSeconds(120));
@@ -285,7 +264,7 @@ public class HomeController : BaseController
 		{
 			var redirectUrl = GetRedirectUrl();
 
-			await SetupOidcClient();
+			await SetupHelseIdAsync();
 
 			model.OrganizationName = HomeViewModel.OrganizationList.FirstOrDefault(x => x.Id == model.OrganizationId)!.Label;
 			model.AuthorizationName = HomeViewModel.AuthorizationList.FirstOrDefault(x => x.Id == model.AuthorizationId)!.Label;
@@ -319,8 +298,7 @@ public class HomeController : BaseController
 
 			var attestJson = BuildAttestJson(attest);
 
-			// The authorizeState object contains the state that needs to be held between starting the authorize request and the response
-			var authorizeState = await oidcClient.PrepareLoginAsync();
+			var authorizeState = CreateAuthorizeState();
 
 			var cacheEntryOptions = new MemoryCacheEntryOptions()
 				.SetSlidingExpiration(TimeSpan.FromSeconds(120));
@@ -392,40 +370,45 @@ public class HomeController : BaseController
 	{
 		try
 		{
-			await SetupOidcClient();
-
-			oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
+			await SetupHelseIdAsync();
 
 			var sessionData = session.SessionData();
 
-			var authorizeState = JsonSerializer.Deserialize<AuthorizeState>(sessionData.AuthorizeState); 
-
-			//var authorizeState = _memoryCache.Get("authorizeState") as AuthorizeState;
-			var helseIdResponse = Request.QueryString.ToString();
-
-			// User login has finished, now we want to request tokens from the /token endpoint
-			// We add a Resource parameter that indicates that we want scopes for PHR API. Later, we'll also get token with scopes for Kjernejournal. 
-
-			var parameters = new Parameters
+			var authorizeState = JsonSerializer.Deserialize<HelseIdAuthorizeState>(sessionData.AuthorizeState);
+			if (authorizeState == null)
 			{
-				{"resource", PhrResource}
-			};
-
-			var loginResult = await oidcClient.ProcessResponseAsync(helseIdResponse, authorizeState, parameters);
-
-			if (loginResult.IsError == false)
-			{
-				loginResult = ValidateIdentityClaims(loginResult);
+				throw new InvalidOperationException("Missing authorization state.");
 			}
 
-			if (loginResult.IsError)
+			var callbackError = Request.Query["error"].ToString();
+			if (!string.IsNullOrWhiteSpace(callbackError))
 			{
-				throw new Exception($"{loginResult.Error}: Description: {loginResult.ErrorDescription}");
+				throw new Exception($"{callbackError}: Description: {Request.Query["error_description"]}");
+			}
+
+			var returnedState = Request.Query["state"].ToString();
+			if (!string.Equals(returnedState, authorizeState.State, StringComparison.Ordinal))
+			{
+				throw new InvalidOperationException("Invalid state returned from HelseID.");
+			}
+
+			var authorizationCode = Request.Query["code"].ToString();
+			if (string.IsNullOrWhiteSpace(authorizationCode))
+			{
+				throw new InvalidOperationException("Missing authorization code from HelseID.");
+			}
+
+			var tokenResponse = await RequestAuthorizationCodeTokensAsync(authorizationCode, authorizeState.CodeVerifier, GetRedirectUrl(), PhrResource);
+			ValidateIdentityClaims(tokenResponse.IdentityToken);
+
+			if (string.IsNullOrWhiteSpace(tokenResponse.IdentityToken) || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
+			{
+				throw new InvalidOperationException("HelseID token response did not include required tokens.");
 			}
 
 			var handler = new JwtSecurityTokenHandler();
-			var jsonIdentityToken = handler.ReadToken(loginResult.IdentityToken) as JwtSecurityToken;
-			var jsonAccessToken = handler.ReadToken(loginResult.AccessToken) as JwtSecurityToken;
+			var jsonIdentityToken = handler.ReadJwtToken(tokenResponse.IdentityToken);
+			var jsonAccessToken = handler.ReadJwtToken(tokenResponse.AccessToken);
 
 			if (jsonIdentityToken != null)
 			{
@@ -445,12 +428,12 @@ public class HomeController : BaseController
 			// Copy the access token and paste it at https://jwt.ms to decode it
 
 			Console.WriteLine("First request, resource: " + PhrResource);
-			Console.WriteLine($"Identity token from login: {loginResult.IdentityToken}");
-			Console.WriteLine($"DPoP token from login: {loginResult.AccessToken}");
+			Console.WriteLine($"Identity token from login: {tokenResponse.IdentityToken}");
+			Console.WriteLine($"DPoP token from login: {tokenResponse.AccessToken}");
 
-			sessionData.PjdAccessToken = loginResult.AccessToken;
+			sessionData.PjdAccessToken = tokenResponse.AccessToken;
 			sessionData.PjdAccessTokenExpiresAt = new DateTimeOffset(jsonAccessToken.ValidTo);
-			sessionData.RefreshToken = loginResult.RefreshToken;
+			sessionData.RefreshToken = tokenResponse.RefreshToken;
 
 			sessionData.SaveToSession(session); 
 
@@ -465,10 +448,10 @@ public class HomeController : BaseController
 			_phrApiEnvironmentProvider.SetCurrentEnvironment(environmentId);
 
 			sessionData.IsAuthenticated = true;
-			sessionData.IdentityToken = loginResult.IdentityToken;
+			sessionData.IdentityToken = tokenResponse.IdentityToken;
 			//sessionData.AccessToken = loginResult.AccessToken;
 			//sessionData.RefreshToken = loginResult.RefreshToken;
-			sessionData.Name = loginResult.User.Identity!.Name!;
+			sessionData.Name = jsonIdentityToken.Claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Name)?.Value;
 			sessionData.PersonId = pid;
 			sessionData.HprNumber = jsonAccessToken.Claims.FirstOrDefault(c => c.Type == "helseid://claims/hpr/hpr_number")?.Value;
 
@@ -477,9 +460,9 @@ public class HomeController : BaseController
 			var orgAssignOid = string.Empty;			
 			
 			//var givenName = loginResult.User.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname").First().Value;
-			var givenName = loginResult.User.Claims.Where(x => x.Type == "given_name").First().Value;
-			var middleName = loginResult.User.Claims.Where(x => x.Type == "middle_name").First().Value;
-			var familyName = loginResult.User.Claims.Where(x => x.Type == "family_name").First().Value;
+			var givenName = jsonIdentityToken.Claims.Where(x => x.Type == "given_name").First().Value;
+			var middleName = jsonIdentityToken.Claims.Where(x => x.Type == "middle_name").First().Value;
+			var familyName = jsonIdentityToken.Claims.Where(x => x.Type == "family_name").First().Value;
 			//var familyName = loginResult.User.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname").First().Value;
 			var authorName = $"{givenName}{" " + middleName} {familyName}";
 
@@ -561,109 +544,89 @@ public class HomeController : BaseController
 	}
 
 
-	private static async Task<PushedAuthorizationResponse> GetPushedAuthorizationResponse(
+	private async Task<HelseIdPushedAuthorizationResponse> GetPushedAuthorizationResponse(
 		//AttestModel attest,
 		string attestJson,
 		HttpClient httpClient,
-		AuthorizeState authorizeState,
+		HelseIdAuthorizeState authorizeState,
 		DiscoveryDocumentResponse disco,
 		string scopes, 
 		string redirectUrl
 		)
 	{
-		// Sets the pushed authorization request parameters:
-		/*var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(authorizeState.CodeVerifier));
-		var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
-		var requestObject = BuildRequestObject(disco, attestJson);		*/
-
-		/*var dictionary = new Dictionary<string, string>
-		{			
-			{ "redirect_uri", redirectUrl}			
-		};
-		var parameters = new Parameters(dictionary);*/
-
-		// Setup a client assertion - this will authenticate the client (this application)
-		var clientAssertionPayload = GetClientAssertionPayload(disco);
-		var pushedAuthorizationRequest = new PushedAuthorizationRequest
+		var parameters = GetParametersForPushedAuthorizationRequest(attestJson, authorizeState, disco, scopes, redirectUrl);
+		using var request = new HttpRequestMessage(HttpMethod.Post, disco.PushedAuthorizationRequestEndpoint)
 		{
-			//Resource = new List<string> { PhrResource, KjernejournalResource },
-			Address = disco.PushedAuthorizationRequestEndpoint,
-			/*ClientId = ClientId,
-			ClientAssertion = clientAssertionPayload,
-			Request = requestObject,
-			Scope = scopes,
-			RedirectUri = redirectUrl,			
-			ResponseType = OidcConstants.ResponseTypes.Code,
-			ClientCredentialStyle = ClientCredentialStyle.PostBody,
-			CodeChallenge = codeChallenge,
-			CodeChallengeMethod = OidcConstants.CodeChallengeMethods.Sha256,
-			State = authorizeState.State,
-			Parameters = parameters*/
-			Parameters = GetParametersForPushedAuthorizationRequest(
-				//attest,
-				attestJson,
-				clientAssertionPayload,
-				authorizeState,
-				disco,
-				scopes,
-				redirectUrl
-				),
+			Content = new FormUrlEncodedContent(parameters)
 		};
 
-		// Calls the /par endpoint in order to get a request URI for the /authorize endpoint
-		return await httpClient.PushAuthorizationAsync(pushedAuthorizationRequest);
+		var response = await httpClient.SendAsync(request);
+		var json = await response.Content.ReadAsStringAsync();
+
+		if (response.IsSuccessStatusCode)
+		{
+			using var document = JsonDocument.Parse(json);
+			return new HelseIdPushedAuthorizationResponse
+			{
+				RequestUri = document.RootElement.GetProperty("request_uri").GetString(),
+				Json = json
+			};
+		}
+
+		string? error = null;
+		string? errorDescription = null;
+		try
+		{
+			using var document = JsonDocument.Parse(json);
+			error = document.RootElement.TryGetProperty("error", out var errorElement) ? errorElement.GetString() : response.ReasonPhrase;
+			errorDescription = document.RootElement.TryGetProperty("error_description", out var descriptionElement) ? descriptionElement.GetString() : json;
+		}
+		catch (JsonException)
+		{
+			error = response.ReasonPhrase;
+			errorDescription = json;
+		}
+
+		return new HelseIdPushedAuthorizationResponse
+		{
+			IsError = true,
+			Error = error,
+			ErrorDescription = errorDescription,
+			Json = json
+		};
 	}
 
-	// This is necessary in order to please the IdentityModel library:
-	private static Parameters GetParametersForPushedAuthorizationRequest(
+	private static List<KeyValuePair<string, string>> GetParametersForPushedAuthorizationRequest(
 		//AttestModel attest,
 		string attestJson,
-		ClientAssertion clientAssertionPayload,
-		AuthorizeState authorizeState,
+		HelseIdAuthorizeState authorizeState,
 		DiscoveryDocumentResponse disco,
 		string scopes, 
 		string redirectUrl
 		)
 	{
-		// Sets the pushed authorization request parameters:
 		var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(authorizeState.CodeVerifier));
 		var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 		var requestObject = BuildRequestObject(disco, attestJson);
+		var clientAssertionPayload = GetClientAssertionPayload(disco);
 
-		var parameters = new Parameters(); 
-		parameters.Add("resource", PhrResource);
-		parameters.Add("resource", PhrServiceResource, parameterReplace: ParameterReplaceBehavior.None);
-		parameters.Add("resource", PhrRepositoryResource, parameterReplace: ParameterReplaceBehavior.None);
-		parameters.Add("resource", KjernejournalResource, parameterReplace: ParameterReplaceBehavior.None);
-		parameters.Add("client_id", ClientId);
-		parameters.Add("client_assertion", clientAssertionPayload.Value);
-		parameters.Add("client_assertion_type", clientAssertionPayload.Type);
-		parameters.Add("request", requestObject);
-		parameters.Add("scope", scopes + " " + IdentityScopes);
-		parameters.Add("redirect_uri", redirectUrl);
-		parameters.Add("response_type", OidcConstants.ResponseTypes.Code);
-		parameters.Add("code_challenge", codeChallenge);
-		parameters.Add("code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256);
-		parameters.Add("state", authorizeState.State);
-
-		return parameters; 
-		
-		/*var dictionary = new Dictionary<string, string>
-		{
-			{ "resource", PhrResource },
-			{ "resource", KjernejournalResource },
-			{ "client_id", ClientId },
-			{ "client_assertion", clientAssertionPayload.Value },
-			{ "client_assertion_type", clientAssertionPayload.Type },
-			{ "request", requestObject },
-			{ "scope", scopes + " " + IdentityScopes },
-			{ "redirect_uri", redirectUrl},
-			{ "response_type", OidcConstants.ResponseTypes.Code },
-			{ "code_challenge", codeChallenge },
-			{ "code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256 },
-			{ "state", authorizeState.State },
-		};
-		return new Parameters(dictionary);*/
+		return
+		[
+			new("resource", PhrResource),
+			new("resource", PhrServiceResource),
+			new("resource", PhrRepositoryResource),
+			new("resource", KjernejournalResource),
+			new("client_id", ClientId),
+			new("client_assertion", clientAssertionPayload.Value),
+			new("client_assertion_type", clientAssertionPayload.Type),
+			new("request", requestObject),
+			new("scope", scopes + " " + IdentityScopes),
+			new("redirect_uri", redirectUrl),
+			new("response_type", OidcConstants.ResponseTypes.Code),
+			new("code_challenge", codeChallenge),
+			new("code_challenge_method", OidcConstants.CodeChallengeMethods.Sha256),
+			new("state", authorizeState.State),
+		];
 	}
 
 	private static string BuildAttestJson(AttestModel attest, bool writeIndented = true)
@@ -889,19 +852,88 @@ public class HomeController : BaseController
 		return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha256);
 	}
 
-	private static LoginResult ValidateIdentityClaims(LoginResult loginResult)
+	private async Task<TokenResponse> RequestAuthorizationCodeTokensAsync(string authorizationCode, string codeVerifier, string redirectUrl, string resource)
 	{
-		// The claims from the identity token has ben set on the User object;
-		// We validate that the user claims match the required security level:
-		if (loginResult.User.Claims.Any(c => c is
+		var firstResponse = await httpClient.RequestAuthorizationCodeTokenAsync(
+			BuildAuthorizationCodeTokenRequest(authorizationCode, codeVerifier, redirectUrl, resource));
+
+		if (firstResponse.IsError && !string.IsNullOrWhiteSpace(firstResponse.DPoPNonce))
+		{
+			return await httpClient.RequestAuthorizationCodeTokenAsync(
+				BuildAuthorizationCodeTokenRequest(authorizationCode, codeVerifier, redirectUrl, resource, firstResponse.DPoPNonce));
+		}
+
+		return firstResponse;
+	}
+
+	private AuthorizationCodeTokenRequest BuildAuthorizationCodeTokenRequest(string authorizationCode, string codeVerifier, string redirectUrl, string resource, string? dPoPNonce = null)
+	{
+		return new AuthorizationCodeTokenRequest
+		{
+			Address = disco.TokenEndpoint,
+			ClientId = ClientId,
+			Code = authorizationCode,
+			CodeVerifier = codeVerifier,
+			RedirectUri = redirectUrl,
+			GrantType = OidcConstants.GrantTypes.AuthorizationCode,
+			ClientCredentialStyle = ClientCredentialStyle.PostBody,
+			ClientAssertion = GetClientAssertionPayload(disco),
+			DPoPProofToken = HelseIdDpopProofFactory.Create(Constants.JwkPrivateKey, disco.TokenEndpoint, HttpMethod.Post.Method, dPoPNonce: dPoPNonce),
+			Parameters = new Parameters
+			{
+				{ "resource", resource }
+			}
+		};
+	}
+
+	private static HelseIdAuthorizeState CreateAuthorizeState()
+	{
+		return new HelseIdAuthorizeState
+		{
+			State = CreateRandomBase64UrlString(32),
+			CodeVerifier = CreateRandomBase64UrlString(64)
+		};
+	}
+
+	private static string CreateRandomBase64UrlString(int byteLength)
+	{
+		var bytes = RandomNumberGenerator.GetBytes(byteLength);
+		return WebEncoders.Base64UrlEncode(bytes);
+	}
+
+	private static void ValidateIdentityClaims(string? identityToken)
+	{
+		if (string.IsNullOrWhiteSpace(identityToken))
+		{
+			throw new InvalidOperationException("Missing identity token.");
+		}
+
+		var identityJwt = new JwtSecurityTokenHandler().ReadJwtToken(identityToken);
+
+		if (identityJwt.Claims.Any(c => c is
 			{
 				Type: "helseid://claims/identity/security_level",
 				Value: "4",
 			}))
 		{
-			return loginResult;
+			return;
 		}
 
-		return new LoginResult("Invalid security level", "The security level is not at the required value");
+		throw new InvalidOperationException("The security level is not at the required value.");
+	}
+
+	private sealed class HelseIdAuthorizeState
+	{
+		public string State { get; set; } = string.Empty;
+		public string CodeVerifier { get; set; } = string.Empty;
+	}
+
+	private sealed class HelseIdPushedAuthorizationResponse
+	{
+		public bool IsError { get; set; }
+		public string? Error { get; set; }
+		public string? ErrorDescription { get; set; }
+		public string? Json { get; set; }
+		public string? RequestUri { get; set; }
 	}
 }

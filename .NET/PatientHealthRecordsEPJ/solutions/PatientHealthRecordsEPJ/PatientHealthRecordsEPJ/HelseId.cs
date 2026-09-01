@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using PatientHealthRecordsEPJ.Controllers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
@@ -29,6 +30,48 @@ public sealed class HelseIdPersontjenestenOptions
 	public const string SectionKey = "HelseIdPersontjenesten";
 	
 	public string Scopes { get; set; } = string.Empty;
+}
+
+public interface IHelseIdDiscoveryDocumentCache
+{
+    Task<DiscoveryDocumentResponse> GetDiscoveryDocumentAsync(CancellationToken cancellationToken = default);
+}
+
+public sealed class HelseIdDiscoveryDocumentCache(IHttpClientFactory httpClientFactory) : IHelseIdDiscoveryDocumentCache
+{
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private DiscoveryDocumentResponse? _cachedDiscoveryDocument;
+
+    public async Task<DiscoveryDocumentResponse> GetDiscoveryDocumentAsync(CancellationToken cancellationToken = default)
+    {
+        if (_cachedDiscoveryDocument is { IsError: false })
+        {
+            return _cachedDiscoveryDocument;
+        }
+
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_cachedDiscoveryDocument is { IsError: false })
+            {
+                return _cachedDiscoveryDocument;
+            }
+
+            var httpClient = httpClientFactory.CreateClient();
+            var discoveryDocument = await httpClient.GetDiscoveryDocumentAsync(HomeController.StsUrl, cancellationToken);
+            if (discoveryDocument.IsError)
+            {
+                throw new InvalidOperationException($"Error retrieving HelseID discovery document: {discoveryDocument.Error}");
+            }
+
+            _cachedDiscoveryDocument = discoveryDocument;
+            return discoveryDocument;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
 }
 
 internal static class HelseIdClientAssertionFactory
@@ -175,6 +218,63 @@ internal sealed class HelseIdClientAssertionRefreshHandler(
     }
 }
 
+internal static class HelseIdDpopProofFactory
+{
+    public static string Create(string privateJwk, string url, string httpMethod, string? dPoPNonce = null, string? accessToken = null)
+    {
+        var securityKey = new JsonWebKey(privateJwk);
+        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha512);
+
+        var jwk = securityKey.Kty switch
+        {
+            JsonWebAlgorithmsKeyTypes.EllipticCurve => new Dictionary<string, string>
+            {
+                [JsonWebKeyParameterNames.Kty] = securityKey.Kty,
+                [JsonWebKeyParameterNames.X] = securityKey.X,
+                [JsonWebKeyParameterNames.Y] = securityKey.Y,
+                [JsonWebKeyParameterNames.Crv] = securityKey.Crv,
+            },
+            JsonWebAlgorithmsKeyTypes.RSA => new Dictionary<string, string>
+            {
+                [JsonWebKeyParameterNames.Kty] = securityKey.Kty,
+                [JsonWebKeyParameterNames.N] = securityKey.N,
+                [JsonWebKeyParameterNames.E] = securityKey.E,
+                [JsonWebKeyParameterNames.Alg] = signingCredentials.Algorithm,
+            },
+            _ => throw new InvalidOperationException("Invalid key type for DPoP proof.")
+        };
+
+        var jwtHeader = new JwtHeader(signingCredentials)
+        {
+            [JwtClaimTypes.TokenType] = "dpop+jwt",
+            [JwtClaimTypes.JsonWebKey] = jwk,
+        };
+
+        var urlWithoutQuery = url.Split('?')[0];
+        var payload = new JwtPayload
+        {
+            [JwtClaimTypes.JwtId] = Guid.NewGuid().ToString(),
+            [JwtClaimTypes.DPoPHttpMethod] = httpMethod,
+            [JwtClaimTypes.DPoPHttpUrl] = urlWithoutQuery,
+            [JwtClaimTypes.IssuedAt] = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+        };
+
+        if (!string.IsNullOrEmpty(dPoPNonce))
+        {
+            payload[JwtClaimTypes.Nonce] = dPoPNonce;
+        }
+
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            var hash = SHA256.HashData(Encoding.ASCII.GetBytes(accessToken));
+            payload[JwtClaimTypes.DPoPAccessTokenHash] = Base64UrlEncoder.Encode(hash);
+        }
+
+        var jwtSecurityToken = new JwtSecurityToken(jwtHeader, payload);
+        return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+    }
+}
+
 public static class HttpClientExtensions
 {
     public static IHttpClientBuilder UseHelseIdDPoP(this IHttpClientBuilder httpClientBuilder, Action<HelseIdOptions>? configureClient = null)
@@ -257,63 +357,7 @@ public class DPoPProofCreator(IOptions<HelseIdOptions> options, ILogger<DPoPProo
     {
         logger.LogDebug("Creating DPoP proof for url {Url} with nonce: {Nonce} ", url, dPoPNonce);
 
-        var securityKey = new JsonWebKey(options.Value.PrivateJwk);
-        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha512);
-
-        var jwk = securityKey.Kty switch
-        {
-            JsonWebAlgorithmsKeyTypes.EllipticCurve => new Dictionary<string, string>
-            {
-                [JsonWebKeyParameterNames.Kty] = securityKey.Kty,
-                [JsonWebKeyParameterNames.X] = securityKey.X,
-                [JsonWebKeyParameterNames.Y] = securityKey.Y,
-                [JsonWebKeyParameterNames.Crv] = securityKey.Crv,
-            },
-            JsonWebAlgorithmsKeyTypes.RSA => new Dictionary<string, string>
-            {
-                [JsonWebKeyParameterNames.Kty] = securityKey.Kty,
-                [JsonWebKeyParameterNames.N] = securityKey.N,
-                [JsonWebKeyParameterNames.E] = securityKey.E,
-                [JsonWebKeyParameterNames.Alg] = signingCredentials.Algorithm,
-            },
-            _ => throw new InvalidOperationException("Invalid key type for DPoP proof.")
-        };
-
-        var jwtHeader = new JwtHeader(signingCredentials)
-        {
-            [JwtClaimTypes.TokenType] = "dpop+jwt",
-            [JwtClaimTypes.JsonWebKey] = jwk,
-        };
-
-        var urlWithoutQuery = url.Split('?')[0];
-        var payload = new JwtPayload
-        {
-            [JwtClaimTypes.JwtId] = Guid.NewGuid().ToString(),
-            [JwtClaimTypes.DPoPHttpMethod] = httpMethod,
-            [JwtClaimTypes.DPoPHttpUrl] = urlWithoutQuery,
-            [JwtClaimTypes.IssuedAt] = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-        };
-
-        // Used when accessing the authentication server (HelseID):
-        if (!string.IsNullOrEmpty(dPoPNonce))
-        {
-            // nonce: A recent nonce provided via the DPoP-Nonce HTTP header.
-            payload[JwtClaimTypes.Nonce] = dPoPNonce;
-        }
-
-        // Used when accessing an API that requires a DPoP token:
-        if (!string.IsNullOrEmpty(accessToken))
-        {
-            // ath: hash of the access token. The value MUST be the result of a base64url encoding
-            // the SHA-256 [SHS] hash of the ASCII encoding of the associated access token's value.
-            var hash = SHA256.HashData(Encoding.ASCII.GetBytes(accessToken));
-            var ath = Base64UrlEncoder.Encode(hash);
-
-            payload[JwtClaimTypes.DPoPAccessTokenHash] = ath;
-        }
-
-        var jwtSecurityToken = new JwtSecurityToken(jwtHeader, payload);
-        return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+        return HelseIdDpopProofFactory.Create(options.Value.PrivateJwk, url, httpMethod, dPoPNonce, accessToken);
     }
 }
 

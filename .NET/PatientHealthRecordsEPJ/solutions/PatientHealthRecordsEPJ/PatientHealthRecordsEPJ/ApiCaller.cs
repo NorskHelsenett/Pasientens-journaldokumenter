@@ -1,5 +1,6 @@
 using Duende.IdentityModel.Client;
 using Duende.IdentityModel.OidcClient.DPoP;
+using PatientHealthRecordsEPJ.Services;
 using System.Net.Http.Headers;
 
 public class ApiResult
@@ -41,18 +42,9 @@ public class ApiCaller
 			request.Content = content;
 		}
 
-		var proofRequest = new DPoPProofRequest
-		{
-			Method = request.Method.ToString(),
-			Url = request.GetDPoPUrl(),
-			// This binds the access token to the DPoP proof:
-			AccessToken = accessToken,
-		};
+		var proof = HelseIdDpopProofFactory.Create(Constants.JwkPrivateKey, request.RequestUri!.ToString(), request.Method.ToString(), accessToken: accessToken);
 
-		// Set the DPoP proof, we use the same key for this as for the client assertion:
-		var proof = new DefaultDPoPProofTokenFactory(Constants.JwkPrivateKey).CreateProofToken(proofRequest);
-
-		request.SetDPoPToken(accessToken, proof.ProofToken);
+		request.SetDPoPToken(accessToken, proof);
 
 		if (headerKeyValues is not null)
 		{

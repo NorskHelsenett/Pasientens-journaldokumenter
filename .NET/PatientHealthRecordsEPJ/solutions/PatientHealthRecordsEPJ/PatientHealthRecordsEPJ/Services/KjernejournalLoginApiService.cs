@@ -91,20 +91,9 @@ public class KjernejournalLoginApiService
 			requestMessage.Headers.Add(keyValue.Key, keyValue.Value);
 		}
 
-		var proofRequest = new DPoPProofRequest
-		{
-			Method = requestMessage.Method.ToString(),
-			Url = requestMessage.GetDPoPUrl(),
-			// This binds the access token to the DPoP proof:
-			//AccessToken = sessionData.AccessToken
-			AccessToken = sessionData.KjernejournalAccessToken
-		};
+		var proof = HelseIdDpopProofFactory.Create(Constants.JwkPrivateKey, requestMessage.RequestUri!.ToString(), requestMessage.Method.ToString(), accessToken: sessionData.KjernejournalAccessToken);
 
-		// Set the DPoP proof, we use the same key for this as for the client assertion:
-		var proof = new DefaultDPoPProofTokenFactory(Constants.JwkPrivateKey).CreateProofToken(proofRequest);
-
-		//requestMessage.SetDPoPToken(sessionData.AccessToken, proof.ProofToken);
-		requestMessage.SetDPoPToken(sessionData.KjernejournalAccessToken, proof.ProofToken);
+		requestMessage.SetDPoPToken(sessionData.KjernejournalAccessToken, proof);
 
 		var httpClient = new HttpClient();
 

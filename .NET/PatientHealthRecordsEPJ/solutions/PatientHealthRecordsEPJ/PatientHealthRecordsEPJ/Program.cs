@@ -68,6 +68,7 @@ builder.Services
 #endif
 
 builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IHelseIdDiscoveryDocumentCache, HelseIdDiscoveryDocumentCache>();
 builder.Services.AddSingleton<IOidcClientService, OidcClientService>();
 
 builder.Services.AddScoped<IUserTokenService, UserTokenService>();
