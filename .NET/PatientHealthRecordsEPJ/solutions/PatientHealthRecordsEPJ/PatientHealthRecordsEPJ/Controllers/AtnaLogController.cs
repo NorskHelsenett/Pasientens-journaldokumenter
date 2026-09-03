@@ -133,15 +133,22 @@ public class AtnaLogController : BaseController
 			{
 				query.Add(new("date", d));
 			}
-		}
-	
+		}		
+
+		// Notify API that this request comes from Test EPJ. Then we should get access to all logs from all NHN dokumentlager test instances. 
+		// PJD.API does not accept pjd-test-epj query parameter in production.
+
+		var headerKeyValues = new List<KeyValuePair<string, string>>(); 
+
+		headerKeyValues.Add(new KeyValuePair<string, string>("pjd-test-epj", "true"));	
+
 		var _apiEnvironment = _phrApiEnvironmentProvider.GetCurrentEnvironment();
 
 		var apiUrl = _apiEnvironment.AtnaLogUrl;
 
 		var atnaLogUrl = QueryHelpers.AddQueryString(apiUrl, query!);
 		
-		var apiResult = await ApiCaller.CallApi(HttpMethod.Get, atnaLogUrl, sessionData.PjdServiceAccessToken!, document: false, isReadBodyAsString: true);		
+		var apiResult = await ApiCaller.CallApi(HttpMethod.Get, atnaLogUrl, sessionData.PjdServiceAccessToken!, document: false, isReadBodyAsString: true, headerKeyValues: headerKeyValues);		
 
 		if (apiResult.IsSuccess)
 		{
