@@ -23,6 +23,14 @@ public class KildeInfo
 	// repository: 2.16.578.1.12.4.5.100.z.xx.yy
 	// 1 for Prod, 2 for QA, 3 for Test og 4 for DevTest
 
+	public static List<KildeInfo> KildeListDev { get; set; } = new List<KildeInfo>()
+	{
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.1.1", Name = "Local development", AppName = "local-development-sykehus", Url = "", KildeType = KildeTypeEnum.NasjonaltLager, IsShowInUploadWizard = false },
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.4.15", Name = "Aktivt sykehus", AppName = "aktivt-sykehus", Url = "https://viti-aktivt-sykehus.d-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.4.16", Name = "Travelt sykehus", AppName = "travelt-sykehus", Url = "https://viti-travelt-sykehus.d-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.4.17", Name = "Stort sykehus", AppName = "stort-sykehus", Url = "https://viti-stort-sykehus.d-xcads.pjd.nhn.no", KildeType = KildeTypeEnum.NasjonaltLager},
+	};
+
 	public static List<KildeInfo> KildeListTest { get; set; } = new List<KildeInfo>()
 	{		
 		new KildeInfo() { HomeCommunityId = "2.16.578.1.12.4.5.100.1.1", Name = "Local development", AppName = "local-development-sykehus", Url = "", KildeType = KildeTypeEnum.NasjonaltLager, IsShowInUploadWizard = false },

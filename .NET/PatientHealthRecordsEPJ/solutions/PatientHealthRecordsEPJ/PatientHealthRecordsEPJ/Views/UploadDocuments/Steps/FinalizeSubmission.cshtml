@@ -488,6 +488,7 @@ One rim:RegistryPackage for each Folder in the Submission Request *@
 								{
 									List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
 									{
+										"devtest" => KildeInfo.KildeListDev,
 										"test" => KildeInfo.KildeListTest,
 										"qa" => KildeInfo.KildeListQA,
 										_ => null

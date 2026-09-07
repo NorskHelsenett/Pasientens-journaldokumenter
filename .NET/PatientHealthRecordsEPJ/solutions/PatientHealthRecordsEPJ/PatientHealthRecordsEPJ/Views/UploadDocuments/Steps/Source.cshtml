@@ -31,6 +31,7 @@
 
 			kilde = sessionData.EnvironmentId switch
 			{
+				"devtest" => KildeInfo.KildeListDev.First(x => x.HomeCommunityId == homeCommunityId),
 				"test" => KildeInfo.KildeListTest.First(x => x.HomeCommunityId == homeCommunityId),
 				"qa" => KildeInfo.KildeListQA.First(x => x.HomeCommunityId == homeCommunityId),
 				_ => null
@@ -61,6 +62,7 @@
 				@{
 					List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
 					{
+						"devtest" => KildeInfo.KildeListDev,
 						"test" => KildeInfo.KildeListTest,
 						"qa" => KildeInfo.KildeListQA,
 						_ => null
