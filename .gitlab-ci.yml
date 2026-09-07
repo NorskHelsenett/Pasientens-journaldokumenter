@@ -10,7 +10,7 @@ default:
 
 variables:
   NHN_AUTO_HARBOR: false
-  NHN_AUTO_NUPACK: false
+  NHN_AUTO_NUPACK: true
   DOTNET_SDK_VERSION: 10.0    
   CONTEXT_FOLDER: "."             
   IMAGE_NAME: "dokumentdeling-epj"
