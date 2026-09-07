@@ -3,19 +3,13 @@ using Hl7.Fhir.ElementModel.Types;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
+using NHN.OpenTelemetryExtensions;
 using NorskHelsenettUpload.Ihe.Mhd.Interfaces;
 using NorskHelsenettUpload.Ihe.Mhd.Services;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using PatientHealthRecords.ApiService;
 using PatientHealthRecordsEPJ;
 using PatientHealthRecordsEPJ.DokumentlagerTest;
 using PatientHealthRecordsEPJ.Services;
-using PTS.Internal.OpenTelemetry.Configuration;
-using PTS.Internal.OpenTelemetry.Extensions;
-using PTS.Internal.OpenTelemetry.Extensions.Hosting;
 using StackExchange.Redis;
 
 const long OneGb = 1L * 1024 * 1024 * 1024;
@@ -182,38 +176,10 @@ builder.Services.AddScoped<PersonApiService>();     // Used to get person from P
 builder.Services.AddScoped<ProvideDocumentBundleApiService>();     // Used to provide document bundle to PHR API
 builder.Services.AddScoped<KjernejournalLoginApiService>();     // Used to handle Kjernejournal login
 
-var traceOptions = builder.Configuration.GetSection("OpenTelemetry:Traces").Get<OpenTelemetryTraceOptions>()
-	?? throw new InvalidOperationException("Missing required configuration section 'OpenTelemetry:Traces'.");
-var metricOptions = builder.Configuration.GetSection("OpenTelemetry:Metrics").Get<OpenTelemetryMetricOptions>()
-	?? throw new InvalidOperationException("Missing required configuration section 'OpenTelemetry:Metrics'.");
-var logOptions = builder.Configuration.GetSection("OpenTelemetry:Logs").Get<OpenTelemetryLogOptions>()
-	?? throw new InvalidOperationException("Missing required configuration section 'OpenTelemetry:Logs'.");
-
-builder.Services.AddOpenTelemetry()
-	.ConfigureResource(resource => resource.AddService("PatientHealthRecordsEPJ"))
-	.AddDefaultTracing(builder.Environment, traceOptions)
-	.AddDefaultMetrics(builder.Environment, metricOptions)
-#if DEBUG
-	.WithTracing(tracing => tracing.AddConsoleExporter())
-	.WithMetrics(metrics => metrics.AddConsoleExporter())
-#endif
-;
-
-// PTS.Internal.OpenTelemetry has no AddDefaultLogging/AddCustomizedLogging helper (unlike tracing/metrics above),
-// so logs are wired up directly against the OpenTelemetry SDK's own logging integration.
-builder.Logging.AddOpenTelemetry(logging =>
-{
-	logging.IncludeFormattedMessage = true;
-	logging.IncludeScopes = true;
-	logging.AddOtlpExporter(otlp =>
-	{
-		otlp.Endpoint = new Uri(logOptions.Endpoint);
-		otlp.Protocol = logOptions.Protocol.ToOtlpExportProtocol();
-	});
-#if DEBUG
-	logging.AddConsoleExporter();
-#endif
-});
+// Sets up traces, metrics and logs with Team Plattform's recommended defaults.
+// service.name / deployment.environment.name default from the assembly but can be overridden
+// via the SERVICE_NAME / DEPLOYMENT_ENVIRONMENT environment variables.
+builder.SetupOpenTelemetryDHP();
 
 var app = builder.Build();
 

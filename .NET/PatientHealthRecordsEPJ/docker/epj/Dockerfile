@@ -55,4 +55,7 @@ COPY --from=build /app/publish-documentsharing-epj .
 # Opt out of the diagnostic pipeline, allowing the container to run as read-only: https://learn.microsoft.com/en-us/dotnet/core/docker/build-container?tabs=windows#create-the-dockerfile
 ENV DOTNET_EnableDiagnostics=0
 
+# Run as the non-root user built into the .NET 8+ base images, required by the cluster's Pod Security policies.
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "PatientHealthRecordsEPJ.dll"]
