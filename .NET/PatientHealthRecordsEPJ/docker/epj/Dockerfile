@@ -18,7 +18,12 @@ RUN HTTP_PROXY=${NHN_HTTP_PROXY} \
     http_proxy=${NHN_HTTP_PROXY} \
     https_proxy=${NHN_HTTP_PROXY} \
     no_proxy=${NHN_NO_PROXY} \
-    apk add --no-cache tzdata
+    apk add --no-cache tzdata ca-certificates
+
+# Trust the internal NHN PSKY root CA so outbound HTTPS calls to internal services
+# (e.g. api-dev.repository.pjd.test.nhn.no) don't fail with secure_connection_error.
+COPY ./.NET/PatientHealthRecordsEPJ/docker/epj/certs/nhn-internal-root-ca.crt /usr/local/share/ca-certificates/nhn-internal-root-ca.crt
+RUN update-ca-certificates
 
 # (Optional) Set container default timezone for any code that still uses "local time"
 # Your Razor fix should NOT rely on this, but it can prevent surprises elsewhere.
