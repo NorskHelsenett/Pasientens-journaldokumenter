@@ -153,14 +153,14 @@
           "Microsoft.IdentityModel.Tokens": "8.0.1"
         }
       },
-      "norskhelsenettupload": {
+      "NHN.NorskHelsenettUpload": {
         "type": "Project",
         "dependencies": {
           "Hl7.Fhir.R4B": "[6.4.0, )",
           "Hl7.Fhir.Serialization": "[4.3.0, )"
         }
       },
-      "patienthealthrecords.apiservice": {
+      "NHN.PatientHealthRecords.ApiService": {
         "type": "Project",
         "dependencies": {
           "Duende.IdentityModel": "[8.1.0, )",

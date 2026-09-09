@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	  <PackageId>NHN.NorskHelsenettUpload</PackageId>
   </PropertyGroup>
 
 	<ItemGroup>

@@ -503,7 +503,7 @@
         "resolved": "10.0.652802",
         "contentHash": "ULfGNl75BNXkpF42wNV2CDXJ64dUZZEa8xO2mBsc4tqbW9QjruxjEB6bAr4Z/T1rNU+leOztIjCJQYsBGFWYlw=="
       },
-      "fileformatconversionlibrary": {
+      "NHN.FileFormatConversionLibrary": {
         "type": "Project",
         "dependencies": {
           "MigraDocCore.Rendering": "[1.3.67, )",
@@ -511,14 +511,14 @@
           "SixLabors.ImageSharp": "[3.1.12, )"
         }
       },
-      "norskhelsenettupload": {
+      "NHN.NorskHelsenettUpload": {
         "type": "Project",
         "dependencies": {
           "Hl7.Fhir.R4B": "[6.4.0, )",
           "Hl7.Fhir.Serialization": "[4.3.0, )"
         }
       },
-      "patienthealthrecords.apiservice": {
+      "NHN.PatientHealthRecords.ApiService": {
         "type": "Project",
         "dependencies": {
           "Duende.IdentityModel": "[8.1.0, )",
@@ -527,7 +527,7 @@
           "Hl7.Fhir.R4B": "[6.4.0, )"
         }
       },
-      "testdatagenerator": {
+      "NHN.TestDataGenerator": {
         "type": "Project",
         "dependencies": {
           "Hl7.Fhir.R4B": "[6.4.0, )",
