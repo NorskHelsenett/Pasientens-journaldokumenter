@@ -11,8 +11,10 @@ default:
 variables:
   NHN_AUTO_HARBOR: false
   NHN_AUTO_NUPACK: true
-  DOTNET_SDK_VERSION: 10.0    
-  CONTEXT_FOLDER: "."             
+  AUTO_NUPACK_PROJECT_FILENAME: "PatientHealthRecordsEPJ.sln"
+  SRC_FOLDER: ".NET/PatientHealthRecordsEPJ/solutions/PatientHealthRecordsEPJ"
+  DOTNET_SDK_VERSION: 10.0
+  CONTEXT_FOLDER: "."
   IMAGE_NAME: "dokumentdeling-epj"
   
 build-image:
