@@ -183,7 +183,7 @@ public class DocumentsController : BaseController
 					}
 				}
 
-				//model.BlockedCount = bundle.entr // Hvordan gjør vi det når rest api bare returnerer et subset? 
+				//model.BlockedCount = bundle.entr // Hvordan gjï¿½r vi det nï¿½r rest api bare returnerer et subset? 
 
 				model.Pagination = Pagination.Create(bundle.Total ?? 0, pageIndex, pageSize);
 
@@ -401,7 +401,7 @@ public class DocumentsController : BaseController
 				model.ErrorMessage = $"Could not get document reference {id}";
 				model.ApiResult = apiResult;
 				model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
-				return View("Index", model);
+				return View("DocumentReference", model);
 			}
 		}
 		else
@@ -411,7 +411,7 @@ public class DocumentsController : BaseController
 			model.ErrorMessage = $"Could not get document reference {id}";
 			model.ApiResult = apiResult;
 			model.Pagination = new Pagination(); // To avoid NullReferenceException in onChangePageSize() and onChangePage() in Index.cshtml
-			return View("Index", model);
+			return View("DocumentReference", model);
 		}
 
 		//return Redirect("/documents"); 
