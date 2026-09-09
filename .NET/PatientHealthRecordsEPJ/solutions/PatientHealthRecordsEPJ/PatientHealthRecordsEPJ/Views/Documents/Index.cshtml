@@ -475,12 +475,13 @@
 
 								List<KildeInfo>? kildeList = sessionData.EnvironmentId switch
 								{
+									"devtest" => KildeInfo.KildeListDev,
 									"test" => KildeInfo.KildeListTest,
 									"qa" => KildeInfo.KildeListQA,
 									_ => null
 								};
 
-								var kildeInfo = kildeList.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId));
+								var kildeInfo = kildeList?.FirstOrDefault(x => x.HomeCommunityId == NoUrn(homeCommunityId));
 
 								var rowId = Guid.NewGuid().ToString();
 
