@@ -68,6 +68,11 @@
 		color: #fff;
 		}
 
+		.environment.test-geo {
+			background-color: red;
+			color: #fff;
+		}
+
 		.environment.qa {
 		background-color: darkmagenta;
 		color: #fff;
@@ -202,6 +207,10 @@
 								else if (sessionData.EnvironmentId == "test")
 								{
 									<span class="environment test">@sessionData.EnvironmentName</span>
+								}
+								else if (sessionData.EnvironmentId == "test-geo")
+								{
+									<span class="environment test-geo">@sessionData.EnvironmentName</span>
 								}
 								else if (sessionData.EnvironmentId == "qa")
 								{
