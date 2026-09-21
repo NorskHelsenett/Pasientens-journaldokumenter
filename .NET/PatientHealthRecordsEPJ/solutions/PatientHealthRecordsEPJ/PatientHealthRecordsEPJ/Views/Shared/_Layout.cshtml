@@ -68,14 +68,14 @@
 		color: #fff;
 		}
 
-		.environment.test-geo {
-			background-color: red;
+		.environment.qa {
+			background-color: darkmagenta;
 			color: #fff;
 		}
 
-		.environment.qa {
-		background-color: darkmagenta;
-		color: #fff;
+		.environment.qa-geo {
+			background-color: darkmagenta;
+			color: #fff;
 		}
 
 		.environment.prod {
@@ -208,13 +208,13 @@
 								{
 									<span class="environment test">@sessionData.EnvironmentName</span>
 								}
-								else if (sessionData.EnvironmentId == "test-geo")
-								{
-									<span class="environment test-geo">@sessionData.EnvironmentName</span>
-								}
 								else if (sessionData.EnvironmentId == "qa")
 								{
 									<span class="environment qa">@sessionData.EnvironmentName</span>
+								}
+								else if (sessionData.EnvironmentId == "qa-geo")
+								{
+									<span class="environment qa-geo">@sessionData.EnvironmentName</span>
 								}
 								else if (sessionData.EnvironmentId == "prod")
 								{

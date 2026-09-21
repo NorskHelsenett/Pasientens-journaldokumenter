@@ -19,8 +19,8 @@ public class PasientvalgViewModel
 	{
 		new OptionPair() { Id = "devtest", Label = "DevTest" },
 		new OptionPair() { Id = "test" , Label ="Test" },
-		new OptionPair() { Id = "test-geo" , Label ="Test [GEO]" },
 		new OptionPair() { Id = "qa" , Label ="QA" },
+		new OptionPair() { Id = "qa-geo" , Label ="QA [GEO]" },
 	};
 
 	public static List<OptionPair> DocumentListScopeList { get; set; } = new List<OptionPair>()
