@@ -9,7 +9,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hl7.Fhir.R4B" Version="6.4.0" />
+		<PackageReference Include="Hl7.Fhir.R4B" Version="6.5.0" />
 		<PackageReference Include="Hl7.Fhir.Serialization" Version="4.3.0" />
 	</ItemGroup>
 
