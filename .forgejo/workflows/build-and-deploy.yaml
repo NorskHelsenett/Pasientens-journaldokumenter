@@ -1,0 +1,87 @@
+  name: Build and Deploy
+  
+  on:
+    push:
+      branches: [main]
+    workflow_dispatch:
+  
+  env:
+    IMAGE_NAME: dokumentdeling-epj
+    REGISTRY: ncr.sky.nhn.no
+    REPOSITORY: team-dokumentdeling
+  
+  jobs:
+    build:
+      runs-on: docker
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Login to Harbor
+          uses: docker/login-action@v3
+          with:
+            registry: ${{ env.REGISTRY }}
+            username: ${{ secrets.HARBOR_USER }}
+            password: ${{ secrets.HARBOR_TOKEN }}
+
+        - name: Build and push image
+          uses: docker/build-push-action@v6
+          with:
+            context: .
+            file: Dockerfile
+            push: true
+            tags: |
+              ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+              ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+    
+    scan:
+      runs-on: docker
+      needs: build
+      container:
+        image: aquasec/trivy:0.71.0
+      steps:
+        - name: Scan image for vulnerabilities
+          env:
+            TRIVY_USERNAME: ${{ secrets.HARBOR_USER }}
+            TRIVY_PASSWORD: ${{ secrets.HARBOR_TOKEN }}
+            # Fallback chain for the vulnerability DB; public.ecr.aws first since
+            # mirror.gcr.io can serve stale blobs and ghcr.io denies the Harbor credentials above
+            TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2,ghcr.io/aquasecurity/trivy-db:2
+          run: |
+            trivy image \
+              --severity CRITICAL \
+              --exit-code 1 \
+              --scanners vuln,secret \
+              ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+    
+    update-mani-viti-dev:
+      runs-on: docker
+      needs: [build, scan]
+      steps:
+        - name: Update image tag in dokumentdeling-epj (test)
+          env:
+            FORGEJO_TOKEN: ${{ secrets.TOKEN_FORGEJO }}
+          run: |
+            set -e
+            IMAGE_TAG="${{ github.sha }}"
+            SHORT_TAG="${IMAGE_TAG:0:8}"
+            FORGEJO_API="https://code.nhn.no/api/v1"
+            REPO="Team_Dokumentdeling/mani-pjd.samples"
+            FILE_PATH="dokumentdeling-epj/values.test.yaml"
+            
+            # Get current file content and SHA
+            RESPONSE=$(curl -sS --fail-with-body -H "Authorization: token ${FORGEJO_TOKEN}" \
+              "${FORGEJO_API}/repos/${REPO}/contents/${FILE_PATH}?ref=main")
+            echo "API response received"
+            FILE_SHA=$(echo "$RESPONSE" | jq -r '.sha')
+            CURRENT_CONTENT=$(echo "$RESPONSE" | jq -r '.content' | base64 -d)
+            
+            # Update the image tag for nrc.sky.nhn.no
+            NEW_CONTENT=$(echo "$CURRENT_CONTENT" | sed "s/tag:.*/tag: \"${IMAGE_TAG}\"/")
+            NEW_CONTENT_B64=$(echo "$NEW_CONTENT" | base64 -w 0)
+            
+            # Push updated file
+            curl -sS --fail-with-body -X PUT -H "Authorization: token ${FORGEJO_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "${FORGEJO_API}/repos/${REPO}/contents/${FILE_PATH}" \
+              -d "{\"message\":\"ci: update pjd-saml image tag to ${SHORT_TAG}\",\"content\":\"${NEW_CONTENT_B64}\",\"sha\":\"${FILE_SHA}\",\"branch\":\"main\"}"
+    
