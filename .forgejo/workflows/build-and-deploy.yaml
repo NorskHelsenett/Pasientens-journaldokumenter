@@ -53,7 +53,7 @@
               --scanners vuln,secret \
               ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
     
-    update-mani-viti-dev:
+    update-image-test:
       runs-on: docker
       needs: [build, scan]
       steps:
