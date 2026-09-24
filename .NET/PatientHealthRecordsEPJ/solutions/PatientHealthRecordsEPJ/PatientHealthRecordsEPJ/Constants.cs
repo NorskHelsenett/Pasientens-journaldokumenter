@@ -9,7 +9,8 @@ public class Constants
 	public const long MB = KB * 1024;
 	public const long GB = MB * 1024;
 
-	// Dette er privatnøkkelen til 2141d734-7604-42ca-a377-27f1b712f4e6 - "Patient Health Records API EPJ"
+	// TODO: remove this out of code?
+	// Dette er privatnï¿½kkelen til 2141d734-7604-42ca-a377-27f1b712f4e6 - "Patient Health Records API EPJ"
 	public const string JwkPrivateKey = """ 
                 {
             "p": "_8WHFd_pMbnVMwNVn1zxuK3SOrTb0yQyq6j3yQ2bTkOGnZ3Qqh760fDcyDrW4h_Hhy2ssbPbuwyNFf9j5boDQ1R3IZL8hFq-dkF55pHGRMSBt0OVQYWu79mfU8KVaeYi439N9Hgt_XRl5J8VOaxN2sx1tWe4Gbjy9z6IEyJ8LgM",
@@ -73,7 +74,7 @@ public class Constants
 
 		/// <summary>
 		///     2.16.578.1.12.4.1.1
-		///     Kodeverk publisert på volven.no
+		///     Kodeverk publisert pï¿½ volven.no
 		/// </summary>
 		public const string KodeverkVolven = "2.16.578.1.12.4.1.1";
 
