@@ -22,6 +22,8 @@ public class ApiResult
 
 public class ApiCaller
 {
+	private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(5);
+
 	// Call Get Document References or Get Document api endpoints, with accesstoken and DPoP 
 	public static async Task<ApiResult> CallApi(HttpMethod method,
 		string url,
@@ -30,7 +32,8 @@ public class ApiCaller
 		List<KeyValuePair<string, string>> headerKeyValues = null!,
 		List<string> acceptHeaderValues = null!,
 		HttpContent content = null!, 
-		bool isReadBodyAsString = false
+		bool isReadBodyAsString = false,
+		TimeSpan? timeout = null
 		)
 	{
 		var request = new HttpRequestMessage(method, url); 
@@ -84,74 +87,99 @@ public class ApiCaller
 			ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
 		};
 
-		var httpClient = new HttpClient(handler);
-		var response = await httpClient.SendAsync(request);
+		var effectiveTimeout = timeout ?? DefaultTimeout;
 
-		if (response.IsSuccessStatusCode)
+		using var httpClient = new HttpClient(handler)
 		{
-			if (isReadBodyAsString)
-			{
-				var responseBody = await response.Content.ReadAsStringAsync();
+			Timeout = effectiveTimeout
+		};
 
-				return new ApiResult()
-				{
-					IsSuccess = true,
-					StatusCode = (int)response.StatusCode,
-					Body = responseBody,
-					ContentType = response.Content.Headers.ContentType!.ToString(),
-				};
-			}
-			else if (!document)
-			{
-				int norsCount = 0;
+		HttpResponseMessage response;
 
-				if (response.Headers.TryGetValues("NHN-SecurityLabel-Nors-Count", out var norsValues))
-				{
-					norsCount = Int32.Parse(norsValues.FirstOrDefault()!);
-				}
-
-				bool isRetrievedFromCache = false; 
-
-				if (response.Headers.TryGetValues("NHN-Retrieved-From-Cache", out var retrievedFromCacheValues))
-				{
-					isRetrievedFromCache = Boolean.Parse(retrievedFromCacheValues.FirstOrDefault()!);
-				}
-
-				var responseBody = await response.Content.ReadAsStringAsync();
-
-				return new ApiResult()
-				{
-					IsSuccess = true,
-					StatusCode = (int)response.StatusCode,
-					Body = responseBody,
-					ContentType = response.Content.Headers.ContentType!.ToString(),
-					NorsCount = norsCount,
-					IsRetrievedFromCache = isRetrievedFromCache
-				};
-			}
-			else
-			{
-				var responseBytes = await response.Content.ReadAsByteArrayAsync();
-
-				return new ApiResult()
-				{
-					IsSuccess = true,
-					StatusCode = (int)response.StatusCode,
-					Data = responseBytes,
-					ContentType = response.Content.Headers.ContentType!.ToString(),
-				};
-			}
+		try
+		{
+			response = await httpClient.SendAsync(request);
 		}
-		else
+		catch (TaskCanceledException ex)
 		{
-			var responseBody = await response.Content.ReadAsStringAsync();
-
 			return new ApiResult()
 			{
 				IsSuccess = false,
-				StatusCode = (int)response.StatusCode,
-				Body = responseBody
+				StatusCode = StatusCodes.Status408RequestTimeout,
+				ErrorMessage = $"The request timed out after {effectiveTimeout.TotalSeconds:0} seconds.",
+				Body = ex.Message
 			};
+		}
+
+		using (response)
+		{
+
+			if (response.IsSuccessStatusCode)
+			{
+				if (isReadBodyAsString)
+				{
+					var responseBody = await response.Content.ReadAsStringAsync();
+
+					return new ApiResult()
+					{
+						IsSuccess = true,
+						StatusCode = (int)response.StatusCode,
+						Body = responseBody,
+						ContentType = response.Content.Headers.ContentType!.ToString(),
+					};
+				}
+				else if (!document)
+				{
+					int norsCount = 0;
+
+					if (response.Headers.TryGetValues("NHN-SecurityLabel-Nors-Count", out var norsValues))
+					{
+						norsCount = Int32.Parse(norsValues.FirstOrDefault()!);
+					}
+
+					bool isRetrievedFromCache = false; 
+
+					if (response.Headers.TryGetValues("NHN-Retrieved-From-Cache", out var retrievedFromCacheValues))
+					{
+						isRetrievedFromCache = Boolean.Parse(retrievedFromCacheValues.FirstOrDefault()!);
+					}
+
+					var responseBody = await response.Content.ReadAsStringAsync();
+
+					return new ApiResult()
+					{
+						IsSuccess = true,
+						StatusCode = (int)response.StatusCode,
+						Body = responseBody,
+						ContentType = response.Content.Headers.ContentType!.ToString(),
+						NorsCount = norsCount,
+						IsRetrievedFromCache = isRetrievedFromCache
+					};
+				}
+				else
+				{
+					var responseBytes = await response.Content.ReadAsByteArrayAsync();
+
+					return new ApiResult()
+					{
+						IsSuccess = true,
+						StatusCode = (int)response.StatusCode,
+						Data = responseBytes,
+						ContentType = response.Content.Headers.ContentType!.ToString(),
+					};
+				}
+			}
+			else
+			{
+				var responseBody = await response.Content.ReadAsStringAsync();
+
+				return new ApiResult()
+				{
+					IsSuccess = false,
+					StatusCode = (int)response.StatusCode,
+					Body = responseBody
+				};
+			}
 		}
 	}
 }

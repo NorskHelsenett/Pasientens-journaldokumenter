@@ -1254,7 +1254,14 @@ public class UploadDocumentsController : BaseController
 		{
 			if (apiResult.Body != null)
 			{
-				model.ResponseBody = PrettyJson(apiResult.Body);
+				try
+				{
+					model.ResponseBody = PrettyJson(apiResult.Body);
+				}
+				catch (Exception ex)
+				{
+					model.ResponseBody = apiResult.Body;
+				}
 			}
 
 			if (validate)
