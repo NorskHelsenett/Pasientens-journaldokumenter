@@ -425,8 +425,9 @@ public class TokenService(
 			["typ"] = "client-authentication+jwt"
 		};
 
-		// Tell HelseID which org(s) you act for
-		var parentOrg = "930161012";        // your parent org number
+        // Tell HelseID which org(s) you act for
+        //var parentOrg = "930161012";        // your parent org number
+        var parentOrg = HomeController.ParentOrg; 
 		string? childOrg = null;            // optional child org
 
 		var helseidAuthorization = new[]

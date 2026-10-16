@@ -66,7 +66,8 @@ public class HomeController : BaseController
 	public const string TestRedirectUrl = "https://epj.pjd.test.nhn.no/callback";
 	public const string TestPostLogoutRedirectUrl = "https://epj.pjd.test.nhn.no/";
 
-	private const string ParentOrg = "958935420";   // Oslo kommune
+	//private const string ParentOrg = "958935420";   // Oslo kommune
+	public const string ParentOrg = "312182904";   // Oslo kommune
 													//private const string ParentOrg = "994598759"; 
 	private const string ChildOrg = "883953142";    // BJØLSENHJEMMET
 	private const string PatientPointOfCareOrg = "883953142";    // BJØLSENHJEMMET
@@ -162,7 +163,9 @@ public class HomeController : BaseController
 		try
 		{				
 			await SetupHelseIdAsync();
-			
+
+			model.OrganizationId = "312182904";
+
 			model.OrganizationName = HomeViewModel.OrganizationList.FirstOrDefault(x => x.Id == model.OrganizationId)!.Label;
 			model.AuthorizationName = HomeViewModel.AuthorizationList.FirstOrDefault(x => x.Id == model.AuthorizationId)!.Label;
 			
@@ -265,6 +268,8 @@ public class HomeController : BaseController
 			var redirectUrl = GetRedirectUrl();
 
 			await SetupHelseIdAsync();
+
+			model.OrganizationId = "DocY";
 
 			model.OrganizationName = HomeViewModel.OrganizationList.FirstOrDefault(x => x.Id == model.OrganizationId)!.Label;
 			model.AuthorizationName = HomeViewModel.AuthorizationList.FirstOrDefault(x => x.Id == model.AuthorizationId)!.Label;
