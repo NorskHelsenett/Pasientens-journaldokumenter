@@ -59,8 +59,7 @@ public class HomeViewModel
 	};
 
 	public static List<OptionPair> OrganizationList { get; set; } = new List<OptionPair>()
-	{
-		new OptionPair() { Id = "DocY", Label="DocY" },
+	{		
 		new OptionPair() { Id = "BETANIEN_HOSPITAL" , Label="Betanien Hospital" },
 		new OptionPair() { Id = "BJØLSENHJEMMET" , Label="Bjølsenhjemmet"},
 		new OptionPair() { Id = "HAUKELAND_UNIVERSITETSSJUKEHUS" , Label="Haukeland Universitetssjukehus"},
@@ -77,8 +76,7 @@ public class HomeViewModel
 	};
 
 	public static List<LegalEntityAndPointOfCarePair> OrganizationMappingList { get; set; } = new List<LegalEntityAndPointOfCarePair>()
-	{
-		new LegalEntityAndPointOfCarePair() { Id = "DocY" , LegalEntity = "312182904", PointOfCare = "312182904" },
+	{		
 		new LegalEntityAndPointOfCarePair() { Id = "BETANIEN_HOSPITAL" , LegalEntity = "981275721", PointOfCare = "873255102" },
 		new LegalEntityAndPointOfCarePair() { Id = "BJØLSENHJEMMET" , LegalEntity = "958935420", PointOfCare = "883953142" },
 		new LegalEntityAndPointOfCarePair() { Id = "HAUKELAND_UNIVERSITETSSJUKEHUS" , LegalEntity = "983974724", PointOfCare = "974557746" },
