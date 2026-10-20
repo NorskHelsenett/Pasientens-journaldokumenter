@@ -45,7 +45,7 @@ public class ProvideBundle
 		var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl);
 		
 		requestMessage.Content = stringContent;
-
+		
 		var contentBytes = await stringContent.ReadAsByteArrayAsync(); 
 
 		var contentLength = contentBytes?.Length;
@@ -61,7 +61,12 @@ public class ProvideBundle
 				PayloadSizeInBytes= contentLength.Value,
 			};
 		}
-		
+
+		foreach (var headerKeyValue in headerKeyValues)
+		{
+			requestMessage.Headers.Add(headerKeyValue.Key, headerKeyValue.Value);
+		}
+
 		// Expect: 100-continue is meant for HTTP/1.1 and is not supported in HTTP/2, which is used by .NET HttpClient. Setting this header will not have the intended effect and may lead to unexpected behavior. Since .NET HttpClient does not support Expect: 100-continue, we should not set this header.
 		// requestMessage.Headers.ExpectContinue = true; 
 
