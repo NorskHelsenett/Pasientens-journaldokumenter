@@ -86,7 +86,7 @@
 	<header>
 		<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
 			<div class="container-fluid">
-				<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><div class="logo">Pasientens journaldokumenter REST API</div> EPJ</a>
+				<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><div class="logo">Pasientens journaldokumenter EPJ</div></a>
 				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
 						aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
@@ -220,11 +220,31 @@
 								if (sessionData.IsAuthenticated && !string.IsNullOrWhiteSpace(sessionData.PatientId))
 								{
 									<br />
-									
-									var hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId; 
-						
-									<a href="@hnLoginUrl" target="_blank">Helsenorge &rarr;</a><br />						
+																											
+									var hnEnvironmentName = string.Empty; 
+									var hnLoginUrl = string.Empty;
 
+									switch (sessionData.EnvironmentId)
+									{
+										case "devtest":									
+											hnEnvironmentName = "Test01";
+											hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test01
+											break;									
+										case "test":
+											hnEnvironmentName = "Test01";
+											hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test01
+											break;
+										case "qa":
+											hnEnvironmentName = "Test02";
+											hnLoginUrl = "https://tjenester.hn2.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test02
+											break;
+										default:
+											hnEnvironmentName = "Test01";
+											hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test01
+											break;
+									}; 							
+												
+									<a href="@hnLoginUrl" target="_blank">Helsenorge &rarr;</a><br />
 								}
 
 							}

@@ -317,10 +317,31 @@ else
 				<div class="fs-3">
 					<p class="actions">						
 						@{
-							var hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId; 
+							var hnEnvironmentName = string.Empty; 
+							var hnLoginUrl = string.Empty;
+
+							switch (sessionData.EnvironmentId)
+							{
+								case "devtest":									
+									hnEnvironmentName = "Test01";
+									hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test01
+									break;									
+								case "test":
+									hnEnvironmentName = "Test01";
+									hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test01
+									break;
+								case "qa":
+									hnEnvironmentName = "Test02";
+									hnLoginUrl = "https://tjenester.hn2.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test02
+									break;
+								default:
+									hnEnvironmentName = "Test01";
+									hnLoginUrl = "https://tjenester.hn.test.nhn.no/?pnr=" + sessionData.PatientId;  // Test01
+									break;
+							}; 							
 						}
 
-						<a href="@hnLoginUrl" class="btn btn-primary p-3" target="_blank">Logg inn i Helsenorge &rarr;</a><br />						
+						<a href="@hnLoginUrl" class="btn btn-primary p-3" target="_blank">Logg inn i Helsenorge (@hnEnvironmentName) &rarr;</a><br />
 					</p>
 				</div>
 			</div>
