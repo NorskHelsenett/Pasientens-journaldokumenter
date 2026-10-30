@@ -50,8 +50,11 @@ public class HelseIdController : BaseController
 		if (sessionData.SourcePatientInfo == null) 
 		{
 			return RedirectToAction(nameof(PatientController.Pasientvalg), "Patient");
-		}		
-
+		}
+		
+		var pjdRepositoryAccessToken = await _userTokenService.GetValidPjdRepositoryAccessTokenAsync(HttpContext);
+		var pjdServiceAccessToken = await _userTokenService.GetValidPjdServiceAccessTokenAsync(HttpContext);
+		
 		this.sessionData = session.SessionData();
 
 		if (!sessionData.IsAuthenticated)
@@ -60,11 +63,22 @@ public class HelseIdController : BaseController
 		var model = new HelseIdViewModel()
 		{
 			IsSuccess = true,
-			AccessToken = sessionData.PjdAccessToken,
+			//AccessToken = sessionData.a,
+			PhrAccessToken = sessionData.PjdAccessToken,
+			RepositoryAccessToken = pjdRepositoryAccessToken,
+			ServiceAccessToken = pjdServiceAccessToken,
 		};
 
-		model.JwtToken = !string.IsNullOrWhiteSpace(sessionData.PjdAccessToken)
+		model.PhrJwtToken = !string.IsNullOrWhiteSpace(sessionData.PjdAccessToken)
 			? DecodeJwtPayloadPretty(sessionData.PjdAccessToken)
+			: null;
+
+		model.RepositoryJwtToken = !string.IsNullOrWhiteSpace(pjdRepositoryAccessToken)
+			? DecodeJwtPayloadPretty(pjdRepositoryAccessToken)
+			: null;
+
+		model.ServiceJwtToken = !string.IsNullOrWhiteSpace(pjdServiceAccessToken)
+			? DecodeJwtPayloadPretty(pjdServiceAccessToken)
 			: null;
 
 		return View(model);

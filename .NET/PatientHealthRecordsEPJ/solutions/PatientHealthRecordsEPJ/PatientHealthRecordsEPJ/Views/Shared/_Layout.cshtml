@@ -109,9 +109,9 @@
 							selected = path == "/" ? selectedClass : string.Empty;
 						}
 						
-						<li class="nav-item">
-							<a class="nav-link text-dark @selected" asp-area="" asp-controller="Home" asp-action="Index">Hjem</a>
-						</li>
+						@* <li class="nav-item">
+							<a class="nav-link text-dark @selected" asp-area="" asp-controller="Home" asp-action="Index"> <i class="bi bi-house-door-fill" style="font-size:24px"></i> Hjem </a>
+						</li> *@
 						@* <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li> *@
@@ -165,7 +165,7 @@
 							}
 
 							<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Logout">Logg ut</a>
+								<a class="nav-link text-dark" style="padding-top:0;" asp-area="" asp-controller="Home" asp-action="Logout" title="Logg ut">@* Logg ut *@ <i class="bi bi-box-arrow-right" style="font-size:24px;"></i></a>
 							</li>
 						}
 						@* else

@@ -67,7 +67,7 @@ public class DocumentsController : BaseController
 		return redirectUrl;
 	}
 	
-	public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date", bool? useCaching = null)
+	public async Task<IActionResult> Index(string filter, [FromQuery] string query, int page = 1, int pageSize = DEFAULT_PAGE_SIZE, string sort = "-date", bool? useCaching = null, string? startDate = null, string? endDate = null, bool showAll = false)
 	{
 		var sessionData = await _userTokenService.GetValidAccessTokensAsync(HttpContext);
 
@@ -79,6 +79,25 @@ public class DocumentsController : BaseController
 			return Redirect("/");
 		}
 
+		DateOnly? startDateOnly = null;
+		DateOnly? endDateOnly = null;
+
+		if (startDate != null)
+		{
+			if (DateOnly.TryParseExact(startDate, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var parsedStartDate))
+			{
+				startDateOnly = parsedStartDate;
+			}
+		}
+
+		if (endDate != null)
+		{
+			if (DateOnly.TryParseExact(endDate, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var parsedEndDate))
+			{
+				endDateOnly = parsedEndDate;
+			}
+		}
+
 		sessionLoginResult = session.SessionData();
 	
 		if (useCaching != null)
@@ -87,7 +106,7 @@ public class DocumentsController : BaseController
 			sessionLoginResult.SaveToSession(session);
 		}
 
-		var model = await GetDocumentReferences(page, pageSize, sort: sort, query: query);
+		var model = await GetDocumentReferences(page, pageSize, sort: sort, query: query, startDate: startDateOnly, endDate: endDateOnly, showAll: showAll);
 
 		model.UseCaching = sessionLoginResult.UseCaching;
 
@@ -98,10 +117,26 @@ public class DocumentsController : BaseController
 		int pageIndex = 1,
 		int pageSize = DEFAULT_PAGE_SIZE,
 		string sort = "-date",
-		string query = ""
+		string query = "",
+		DateOnly? startDate = null,
+		DateOnly? endDate = null,
+		bool showAll = false
 		)
 	{
 		GetDocumentReferencesViewModel model = new GetDocumentReferencesViewModel();
+
+		if (!showAll)
+		{
+			if (startDate == null && endDate == null)
+			{
+				// Default to last 30 days
+				endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+				startDate = endDate.Value.AddYears(-1);
+			}
+		}
+
+		model.StartDate = startDate;
+		model.EndDate = endDate;
 
 		var headerKeyValues = new List<KeyValuePair<string, string>>();
 
@@ -120,17 +155,40 @@ public class DocumentsController : BaseController
 
 		var apiUrl = _apiEnvironment.GetDocumentReferencesApiUrl;
 
-		var urlencodedContent = new FormUrlEncodedContent([
-			new("patient.identifier", sessionLoginResult.SourcePatientInfo?.NIN),
-			new("status", "current"),
-			new("_count", pageSize.ToString()),
-			new("_page", pageIndex.ToString()),
-			new("_sort", sort),
+		List<KeyValuePair<string, string>> formValues = new List<KeyValuePair<string, string>>()
+		{
+			new ("patient.identifier", sessionLoginResult.SourcePatientInfo?.NIN),
+			new ("status", "current"),
+			new ("_count", pageSize.ToString()),
+			new ("_page", pageIndex.ToString()),
+			new ("_sort", sort),
 			// If _include contains DocumentReference:relatesTo, get associations. Note: Will make an extra call to XDS for associations and slow down UI rendering.
 			// OK for Test EPJ so that we can show associations in the UI in the "Info" column. 
 			// In production, consider calling a separate API (GetDocumentAssociations) to get associations only when user requests it for a specific document.			
-			new("_include", "DocumentReference:relatesTo") 
-		]);
+			new("_include", "DocumentReference:relatesTo")
+		};
+		
+		List<string> creation = new List<string>();
+
+		if (startDate != null)
+		{
+			creation.Add($"ge{startDate.Value:yyyy-MM-dd}T00:00:00+00:00");			
+		}
+
+		if (endDate != null)
+		{							
+			creation.Add($"le{endDate.Value:yyyy-MM-dd}T23:59:59+00:00");
+		}
+
+		if (creation.Count > 0)
+		{
+			foreach (var creationValue in creation)
+			{
+				formValues.Add(new("creation", creationValue));
+			}			
+		}
+
+		var urlencodedContent = new FormUrlEncodedContent(formValues);
 
 		var apiResult = await ApiCaller.CallApi(HttpMethod.Post,
 			apiUrl,

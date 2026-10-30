@@ -29,6 +29,9 @@ public class GetDocumentReferencesViewModel
 
 	public int BlockedCount { get; set; }
 
+	public DateOnly? StartDate { get; set; }
+	public DateOnly? EndDate { get; set; }
+
 	public Pagination Pagination { get; set; }
 
 	public ApiResult ApiResult { get; set; }
