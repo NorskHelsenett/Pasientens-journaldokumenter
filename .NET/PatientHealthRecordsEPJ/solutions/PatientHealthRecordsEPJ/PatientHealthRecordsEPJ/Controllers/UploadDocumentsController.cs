@@ -752,10 +752,14 @@ public class UploadDocumentsController : BaseController
 				break;
 
 			default:
-				var fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
+
+				if (string.IsNullOrEmpty(document.Title))
+				{
+					var fileNameNoExtension = Path.GetFileNameWithoutExtension(fileName);
 				
-				//document.WithTitle(ToPascalCase(fileNameNoExtension));
-				document.WithTitle(ToTitleCase(fileNameNoExtension));
+					//document.WithTitle(ToPascalCase(fileNameNoExtension));
+					document.WithTitle(ToTitleCase(fileNameNoExtension));
+				}
 
 				var confidentiality = ConfidentialityCodeList.ConfidentialityCodes_Hl7.FirstOrDefault(coding => coding.Code == "N");
 
