@@ -98,6 +98,8 @@ public class StatusController : BaseController
 			{
 				StatusResult? status = JsonSerializer.Deserialize<StatusResult>(apiResult.Body, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
+				model.JsonStatus = apiResult.Body;
+
 				// Call /statuspvk endpoint to get raw pvk settings 
 
 				var statusPvkUrl = _apiEnvironment.StatusPvkUrl;
@@ -152,7 +154,7 @@ public class StatusController : BaseController
 				model.IsSuccess = true; 
 				model.Status = status;
 				model.StatusPvk = statusPvk;
-				model.JsonStatus = apiResult.Body;
+				
 				return model; 
 			}
 			catch 

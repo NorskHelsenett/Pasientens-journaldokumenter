@@ -64,6 +64,9 @@ public class PatientController : BaseController
 			model.PatientId = nin; 
 		}
 
+		// We replace " so that we can paste a NIN from the clipboard without having to remove quotes first. Copying from pgAdmin or other sources often adds quotes around the NIN.
+		model.PatientId = model.PatientId?.Replace("\"", "").Trim() ?? string.Empty;
+
 		return RedirectToAction(nameof(ChoosePasient), new { patientId = model.PatientId, grunnlag = model.GrunnlagId });		
 	}
 	
