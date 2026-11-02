@@ -26,7 +26,8 @@ public class DeathDto
 
 public class AddressProtectionDto
 {
-	public bool IsConfidentialAddress { get; set; }
+	public bool HasAddressProtection { get; set; }		// Any protection level
+	public bool HasConfidentialAddress { get; set; }    // Confidential or StrictlyConfidential
 	public AddressConfidentiality? ProtectionLevel { get; set; }
 }
 

@@ -166,8 +166,14 @@
 						</h4>
 						<table class="table w-auto">
 							<tr>
-								<td>isConfidentialAddress:</td>
-								<td><strong>@Model.Status.AddressProtection.IsConfidentialAddress.ToString()</strong></td>
+								<td>hasAddressProtection:</td>
+								<td><strong>@Model.Status.AddressProtection.HasAddressProtection.ToString()</strong></td>
+								<td>true if any protection level</td>
+							</tr>
+							<tr>
+								<td>hasConfidentialAddress:</td>
+								<td><strong>@Model.Status.AddressProtection.HasConfidentialAddress.ToString()</strong></td>
+								<td>true if protection level <em>Confidential</em> or <em>StrictlyConfidential</em></td>
 							</tr>
 							<tr>
 								<td>protectionLevel:</td>
