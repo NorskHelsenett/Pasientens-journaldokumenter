@@ -14,6 +14,7 @@ public class StatusResult
 public class PrivacySetting
 {
 	public bool HasReservationKjernejournal { get; set; }
+	public bool HasReservationProvesvar { get; set; }
 	public bool IsRestricted { get; set; }
 	public bool IsBlocked { get; set; }
 }
