@@ -94,14 +94,14 @@
 					Error: @Model.ErrorMessage
 					</p>
 					<p>
-						API response status code: @Model.ApiResult.StatusCode
+						API response status code: @Model.ApiResult?.StatusCode
 					</p>
-					<p>
+					<div>
 						API response body:
 						<pre>
-								@Model.ApiResult.Body
-							</pre>
-					</p>
+								@Model.ApiResult?.Body
+						</pre>
+					</div>
 				</div>
 			</div>
 		</div>

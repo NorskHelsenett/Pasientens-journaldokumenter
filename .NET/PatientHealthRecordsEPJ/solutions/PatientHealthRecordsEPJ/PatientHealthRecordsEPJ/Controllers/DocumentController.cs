@@ -382,6 +382,9 @@ public class DocumentController : BaseController
 						break;
 
 					default:
+						model.IsSuccess = false;
+						model.ErrorMessage = $"Unsupported content type: {apiResult.ContentType}";
+						model.ApiResult = apiResult;
 						break;
 				}
 
