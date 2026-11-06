@@ -8,6 +8,7 @@ using PatientHealthRecordsEPJ.Models;
 using PatientHealthRecordsEPJ.Services;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -315,7 +316,7 @@ public class DocumentController : BaseController
 
 						var html = xmlTemplate.Transform(xml);
 
-						model.Html = html; // Transfomert html vil bli lagret i en IFRAME på nettsiden
+						model.Html = html; // Transfomert html vil bli lagret i en IFRAME pï¿½ nettsiden
 
 						model.ContentType = "application/xml";
 
@@ -380,7 +381,17 @@ public class DocumentController : BaseController
 							model.IsSuccess = true;
 						}
 						break;
+					case "application/fhir+json": // FHIR
+						var jsonText = Encoding.UTF8.GetString(apiResult.Data!);
 
+						using (var jsonDoc = JsonDocument.Parse(jsonText))
+						{
+							model.Html = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions { WriteIndented = true });
+						}
+
+						model.ContentType = apiResult.ContentType;
+						model.IsSuccess = true;
+						break;
 					default:
 						model.IsSuccess = false;
 						model.ErrorMessage = $"Unsupported content type: {apiResult.ContentType}";

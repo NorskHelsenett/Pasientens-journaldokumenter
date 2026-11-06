@@ -68,6 +68,7 @@ public class GetDocumentViewModel
 	public string? ContentType { get; set; }
 	public string? Html { get; set; }	
 	public string? ImageBase64String { get; set; }
+	public string? JsonBase64String { get; set; }
 	public string? DocumentUrl { get; set; }
 	public string? ClinicalDocumentUrl { get; set; }
 	public bool IsConverted { get; set; }

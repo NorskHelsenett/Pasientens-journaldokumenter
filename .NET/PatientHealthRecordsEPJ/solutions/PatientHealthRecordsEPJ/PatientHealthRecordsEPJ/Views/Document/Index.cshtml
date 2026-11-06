@@ -183,7 +183,13 @@
 						|| Model.IsUnknownContentType
 					)
 					{
-						var rawContent = Model.IsUnknownContentType ? Html.Raw(System.Net.WebUtility.HtmlEncode(Model.Html)) : Html.Raw(Model.Html); 
+						var isJsonContent = Model.ContentType == "application/fhir+json" || Model.ContentType == "application/json";
+
+						var rawContent = Model.IsUnknownContentType
+							? Html.Raw(System.Net.WebUtility.HtmlEncode(Model.Html))
+							: isJsonContent
+								? Html.Raw($"<pre>{System.Net.WebUtility.HtmlEncode(Model.Html)}</pre>")
+								: Html.Raw(Model.Html);
 
 						<iframe id="contentIframe">
 						</iframe>
