@@ -65,7 +65,7 @@ public class TypeCodeList
 
 		// LOINC: 
 
-		new SimpleCoding() { System = "2.16.840.1.113883.6.1", Code = "60591-5", Display = "Patient summary Document" }
+		new SimpleCoding() { System = "http://loinc.org", Code = "60591-5", Display = "Patient summary Document" }
 		
 	}; 
 }

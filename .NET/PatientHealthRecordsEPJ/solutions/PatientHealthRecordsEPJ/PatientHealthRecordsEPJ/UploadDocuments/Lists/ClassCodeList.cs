@@ -13,6 +13,7 @@ public class ClassCodeList
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "E00-1", Display = "Bildediagnostikk" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "F00-1", Display = "Kurve, observasjon og behandling" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "I00-1", Display = "Korrespondanse" },
-		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "S00-1", Display = "Test og scoring" }
+		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.9602", Code = "S00-1", Display = "Test og scoring" },
+		new SimpleCoding() { System = "http://hl7.eu/fhir/health-data-api/CodeSystem/eehrxf-document-priority-category-cs", Code = "Patient-Summaries", Display = "patient summaries" }
 	}; 
 }
