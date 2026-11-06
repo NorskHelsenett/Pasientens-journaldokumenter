@@ -753,12 +753,28 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			var display = parts.Length > 2 ? parts[2] : null;
 			return (system, code, display);
 		}
+		
+		public static bool TryParseOid(string value)
+		{
+			try
+			{
+				// Denne vil kaste en exception hvis formatet er helt feil
+				var oid = new Oid(value);
+				return !string.IsNullOrEmpty(oid.Value);
+			}
+			catch
+			{
+				return false;
+			}
+		}
 
 		private static CodeableConcept ToCodeableConcept((string system, string code, string? display) c)
 		{
+			var prefix = TryParseOid(c.system) ? "urn:oid:" : "";
+			
 			var coding = new Coding
 			{
-				System = string.IsNullOrWhiteSpace(c.system) ? null : "urn:oid:" + c.system,
+				System = string.IsNullOrWhiteSpace(c.system) ? null : prefix + c.system,
 				Code = c.code,
 				Display = string.IsNullOrWhiteSpace(c.display) ? null : c.display
 			};
