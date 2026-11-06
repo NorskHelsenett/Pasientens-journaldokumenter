@@ -14,6 +14,7 @@ public class PracticeSettingCodeList
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.8653", Code = "9", Display = "AMK-sentral" }, // ⚠️ had missing Display in HTML
         new SimpleCoding() { System = "2.16.578.1.12.4.1.1.8651", Code = "A02", Display = "Observasjonsenhet" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.8651", Code = "A03", Display = "Intensivenhet" },
-		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.8651", Code = "A04", Display = "Overvåkningsenhet" }
+		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.8651", Code = "A04", Display = "Overvåkningsenhet" },
+		new SimpleCoding() { System = "http://snomed.info/sct", Code = "394814009", Display = "General practice" }
 	}; 
 }

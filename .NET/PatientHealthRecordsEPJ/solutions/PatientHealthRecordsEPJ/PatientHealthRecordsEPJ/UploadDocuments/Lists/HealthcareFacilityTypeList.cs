@@ -16,6 +16,8 @@ public class HealthcareFacilityTypeList
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.1303", Code = "86.903", Display = "Helsestasjons- og skolehelsetjeneste" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.1303", Code = "86.907", Display = "Ambulansetjenester" },
 		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.1303", Code = "86.909", Display = "Andre helsetjenester" },
-		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.1303", Code = "87.102", Display = "Somatiske sykehjem" }
+		new SimpleCoding() { System = "2.16.578.1.12.4.1.1.1303", Code = "87.102", Display = "Somatiske sykehjem" },
+		new SimpleCoding() { System = "http://snomed.info/sct", Code = "257622000", Display = "General practice clinic (environment)" }
+		
 	}; 
 }
