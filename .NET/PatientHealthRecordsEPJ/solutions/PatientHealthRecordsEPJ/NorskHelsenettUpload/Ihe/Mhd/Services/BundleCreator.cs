@@ -8,16 +8,20 @@ using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace NorskHelsenettUpload.Ihe.Mhd.Services
 {
+	
 	public class BundleCreator : IBundleCreator
 	{
 		public const string COMPREHENSIVE = "Comprehensive";		
 
 		public const string REMOVED_FOR_DISPLAY_TEXT = "REMOVED_FOR_DISPLAY";
 		public const string REMOVED_FOR_DISPLAY_TEXT_BASE64 = "UkVNT1ZFRF9GT1JfRElTUExBWQ=="; // Must be base64 encoded value of the value in REMOVED_FOR_DISPLAY_TEXT
+		
+		private static readonly Regex OidPattern = new(@"^(0|[1-2])(\.(0|[1-9]\d*))+$", RegexOptions.Compiled);
 
 		public string CreateFhirBundle(ProvideDocumentBundleRequest model, string type, bool removeBinaryDataForDisplay = false)
 		{		
@@ -753,19 +757,10 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 			var display = parts.Length > 2 ? parts[2] : null;
 			return (system, code, display);
 		}
-		
-		public static bool TryParseOid(string value)
+
+		private static bool TryParseOid(string value)
 		{
-			try
-			{
-				// Denne vil kaste en exception hvis formatet er helt feil
-				var oid = new Oid(value);
-				return !string.IsNullOrEmpty(oid.Value);
-			}
-			catch
-			{
-				return false;
-			}
+			return !string.IsNullOrWhiteSpace(value) && OidPattern.IsMatch(value);
 		}
 
 		private static CodeableConcept ToCodeableConcept((string system, string code, string? display) c)

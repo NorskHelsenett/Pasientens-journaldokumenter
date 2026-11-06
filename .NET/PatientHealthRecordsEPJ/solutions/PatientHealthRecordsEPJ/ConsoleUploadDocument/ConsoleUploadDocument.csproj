@@ -27,12 +27,12 @@
 
   <ItemGroup>
     <PackageReference Include="Duende.IdentityModel" Version="8.1.0" />
-    <PackageReference Include="Duende.IdentityModel.OidcClient" Version="7.1.0" />
-    <PackageReference Include="Duende.IdentityModel.OidcClient.Extensions" Version="7.1.0" />
+    <PackageReference Include="Duende.IdentityModel.OidcClient" Version="7.1.1" />
+    <PackageReference Include="Duende.IdentityModel.OidcClient.Extensions" Version="7.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.13" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.13" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
