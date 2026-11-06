@@ -641,7 +641,7 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 						Value = new CodeableConcept
 						{
 							Coding = [ new Coding {
-										System = "urn:oid:" + codingTypeCode[0],
+										System = CheckPrefixForOid(codingTypeCode[0]).ToString() + codingTypeCode[0],
 										Code = codingTypeCode[1],
 										Display = (!string.IsNullOrEmpty(codingTypeCode[2])) ? codingTypeCode[2] : "Missing display name for type code"
 									} ]
@@ -744,6 +744,14 @@ namespace NorskHelsenettUpload.Ihe.Mhd.Services
 					Url = "List"
 				}
 			};
+		}
+
+		private static string CheckPrefixForOid(string s)
+		{
+			if (!string.IsNullOrWhiteSpace(s) && OidPattern.IsMatch(s))
+				return "urn:oid:";
+			
+			return string.Empty;
 		}
 
 		private static (string system, string code, string? display) ParseCoding(string? pipeSeparated)
