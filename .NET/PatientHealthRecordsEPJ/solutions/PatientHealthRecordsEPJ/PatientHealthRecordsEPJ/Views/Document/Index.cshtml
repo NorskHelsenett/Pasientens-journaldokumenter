@@ -23,13 +23,15 @@
 	iframe
 	{
 		width:100%;
-		height:800px; 
+		height:800px;
 
 		/* border:none;  */
-		border: 1px solid #aaa; 
+		border: 1px solid #aaa;
 	}
 
 </style>
+
+<link rel="stylesheet" href="~/css/fhir-document-render.css" asp-append-version="true" />
 
 <script>
 	function onDocumentRowClick(e) {
@@ -60,6 +62,8 @@
 		iframe.contentWindow.document.close();
 	}
 </script>
+
+<script src="~/js/fhir-document-render.js" asp-append-version="true"></script>
 
 
 <div style="max-width:1900px;margin:0 auto">
@@ -196,6 +200,23 @@
 
 						<script type="text/javascript">
 							setIframeContent('contentIframe', `@rawContent`);
+						</script>
+					}
+
+					@if (Model.ContentType == "application/fhir+json")
+					{
+						<div style="margin-top:10px;">
+							<button type="button" id="tryRenderFhirBtn" class="btn btn-primary">Prøv å vise som dokument</button>
+						</div>
+
+						<div id="fhirRenderedContainer" class="fhir-doc" style="display:none; margin-top:14px;"></div>
+
+						<script type="text/javascript">
+							const fhirJsonRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Html));
+
+							document.getElementById('tryRenderFhirBtn').addEventListener('click', function () {
+								window.tryRenderFhir(fhirJsonRaw, 'fhirRenderedContainer');
+							});
 						</script>
 					}
 
