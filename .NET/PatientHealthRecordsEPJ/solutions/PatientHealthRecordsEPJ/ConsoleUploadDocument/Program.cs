@@ -17,6 +17,8 @@ using NorskHelsenettUpload.Ihe.Mhd.Models;
 using NorskHelsenettUpload.Ihe.Mhd.Services;
 using NorskHelsenettUpload.Models;
 using PatientHealthRecords.ApiService;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -95,10 +97,9 @@ const int LocalhostPort = 8089;
 string StsUrl = "https://helseid-sts.test.nhn.no";
 string RedirectUrl = $"https://localhost:{LocalhostPort.ToString()}/callback";
 //string ApiScopes = "nhn:phr/mhd/create-documents-with-reference nhn:phr/mhd/generate-metadata nhn:phr/delete-documents-and-reference";
-string ApiScopes = "nhn:phr/mhd/create-documents-with-reference";
-//string ApiScopes = "nhn:phr/mhd/generate-metadata nhn:phr/delete-documents-and-reference";
-//string ApiScopes = "nhn:phr/mhd/read-documentreferences/kjernejournalforskriften nhn:phr/mhd/read-document nhn:phr/delete-documents-and-reference nhn:phr/mhd/create-documents-with-reference nhn:phr/mhd/generate-metadata"; 
+string ApiScopes = "nhn:phr-repo/mhd/create nhn:phr-repo/delete-docs-and-refs nhn:phr-repo/fhir/documentreference.read";
 string IdentityScopes = "openid profile offline_access helseid://scopes/identity/pid helseid://scopes/identity/security_level";
+var clientAssertionLifetime = TimeSpan.FromSeconds(10);
 
 var helseIdOptions = services
 	.GetRequiredService<IOptions<HelseIdOptions>>()
@@ -123,6 +124,9 @@ try
 		ClientId = helseIdOptions.ClientId,
 		RedirectUri = RedirectUrl,
 		LoadProfile = false,
+		BackchannelHandler = new ClientAssertionRefreshHandler(
+			() => GetClientAssertionPayload(disco),
+			disco.Issuer),
 		// This validates the identity token (important!):
 		//IdentityTokenValidator = new JwtHandlerIdentityTokenValidator()
 	};
@@ -136,8 +140,12 @@ try
 	// The authorizeState object contains the state that needs to be held between starting the authorize request and the response
 	var authorizeState = await oidcClient.PrepareLoginAsync();
 
+	using var oidcBackchannelClient = new HttpClient(new ClientAssertionRefreshHandler(
+		() => GetClientAssertionPayload(disco),
+		disco.Issuer));
+
 	var pushedAuthorizationResponse = await GetPushedAuthorizationResponse(
-		httpClient,
+		oidcBackchannelClient,
 		authorizeState,
 		disco);
 
@@ -155,37 +163,89 @@ try
 
 	var browserResult = await browser.InvokeAsync(browserOptions, default);
 
+	if (browserResult.ResultType != BrowserResultType.Success)
+	{
+		throw new Exception($"Browser login failed: {browserResult.Error}");
+	}
+
+	var callbackResponse = browserResult.Response ?? string.Empty;
+	Dictionary<string, Microsoft.Extensions.Primitives.StringValues> callbackParameters;
+
+	if (Uri.TryCreate(callbackResponse, UriKind.Absolute, out var callbackUri))
+	{
+		callbackParameters = QueryHelpers.ParseQuery(callbackUri.Query)
+			.ToDictionary(x => x.Key, x => x.Value);
+	}
+	else
+	{
+		var queryOrFragment = callbackResponse;
+
+		var queryIndex = queryOrFragment.IndexOf('?');
+		if (queryIndex >= 0)
+		{
+			queryOrFragment = queryOrFragment[queryIndex..];
+		}
+		else if (!queryOrFragment.StartsWith("?"))
+		{
+			queryOrFragment = "?" + queryOrFragment.TrimStart('#');
+		}
+
+		callbackParameters = QueryHelpers.ParseQuery(queryOrFragment)
+			.ToDictionary(x => x.Key, x => x.Value);
+	}
+
+	if (callbackParameters.TryGetValue("error", out var authorizationError))
+	{
+		var authorizationErrorDescription = callbackParameters.TryGetValue("error_description", out var authorizationErrorDescriptionValue)
+			? authorizationErrorDescriptionValue.ToString()
+			: string.Empty;
+		throw new Exception($"{authorizationError}: Description: {authorizationErrorDescription}");
+	}
+
+	var authorizationCode = callbackParameters.TryGetValue("code", out var codeValue)
+		? codeValue.ToString()
+		: null;
+
+	var returnedState = callbackParameters.TryGetValue("state", out var stateValue)
+		? stateValue.ToString()
+		: null;
+
+	if (string.IsNullOrWhiteSpace(authorizationCode))
+	{
+		throw new Exception("Missing authorization code in callback response.");
+	}
+
+	if (!string.Equals(returnedState, authorizeState.State, StringComparison.Ordinal))
+	{
+		throw new Exception("Invalid state in callback response.");
+	}
+
 	// If the result type is success, the browser result should contain the authorization code.
 	// We can now call the /token endpoint with the authorization code in order to get tokens:
+	var tokenResponse = await RequestAuthorizationCodeTokensWithDpopNonceRetryAsync(
+		httpClient,
+		disco,
+		authorizationCode,
+		authorizeState.CodeVerifier,
+		RedirectUrl);
 
-	// We need a client assertion on the request in order to authenticate the client:
-	oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
-
-	var loginResult = await oidcClient.ProcessResponseAsync(browserResult.Response, authorizeState);
-
-	if (loginResult.IsError == false)
+	if (tokenResponse.IsError)
 	{
-		loginResult = ValidateIdentityClaims(loginResult);
+		throw new Exception($"{tokenResponse.Error}: Description: {tokenResponse.ErrorDescription}");
 	}
 
-	if (loginResult.IsError)
-	{
-		throw new Exception($"{loginResult.Error}: Description: {loginResult.ErrorDescription}");
-	}
+	ValidateIdentityTokenClaims(tokenResponse.IdentityToken);
 
 	// The access token can now be used when calling an api
 	// It contains the user id, the security level, the organization number
 	// and the child organization
 	// Copy the access token and paste it at https://jwt.ms to decode it
 
-	Console.WriteLine($"Identity token from login: {loginResult.IdentityToken}");
-	Console.WriteLine($"DPoP token from login: {loginResult.AccessToken}");
+	Console.WriteLine($"Identity token from login: {tokenResponse.IdentityToken}");
+	Console.WriteLine($"DPoP token from login: {tokenResponse.AccessToken}");
 
 	// We can now call the /token endpoint again with the refresh token in order to get a new access token:
-	// Client assertions cannot be used twice, so we need a new payload:
-	oidcClient.Options.ClientAssertion = GetClientAssertionPayload(disco);
-
-	var refreshTokenResult = await oidcClient.RefreshTokenAsync(loginResult.RefreshToken);
+	var refreshTokenResult = await RefreshTokenWithDpopNonceRetryAsync(httpClient, disco, tokenResponse.RefreshToken);
 
 	if (refreshTokenResult.IsError)
 	{
@@ -245,7 +305,14 @@ request.Submission
 			//Prefix
 			//Suffix	
 			//Degree
-		}
+		},
+		InstitutionName = [
+						new Xon()
+						{
+							Name = organizationName,
+							Identifier = organizationIdentifier,
+							AssigningAuthority = $"{organizationAssignOid}"
+						}]
 	}
 	)
 	.WithComments("Submission comment")
@@ -675,7 +742,7 @@ string BuildHelseIdJwt(DiscoveryDocumentResponse disco, List<Claim> extraClaims)
 		{
 			{ "iss", helseIdOptions!.ClientId },
 			{ "aud", disco.Issuer },
-			{ "exp", new DateTimeOffset(DateTime.UtcNow.AddSeconds(60)).ToUnixTimeSeconds() },
+			{ "exp", new DateTimeOffset(DateTime.UtcNow.Add(clientAssertionLifetime)).ToUnixTimeSeconds() },
 			{ "iat", new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() },
 		};
 
@@ -707,19 +774,187 @@ SigningCredentials GetClientAssertionSigningCredentials()
 	return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSsaPssSha256);
 }
 
-LoginResult ValidateIdentityClaims(LoginResult loginResult)
+void ValidateIdentityTokenClaims(string? identityToken)
 {
-	// The claims from the identity token has ben set on the User object;
-	// We validate that the user claims match the required security level:
-	if (loginResult.User.Claims.Any(c => c is
+	if (string.IsNullOrWhiteSpace(identityToken))
+	{
+		throw new InvalidOperationException("Missing identity token.");
+	}
+
+	var identityJwt = new JwtSecurityTokenHandler().ReadJwtToken(identityToken);
+
+	if (identityJwt.Claims.Any(c => c is
 		{
 			Type: "helseid://claims/identity/security_level",
 			Value: "4",
 		}))
 	{
-		return loginResult;
+		return;
 	}
 
-	return new LoginResult("Invalid security level", "The security level is not at the required value");
+	throw new InvalidOperationException("The security level is not at the required value.");
+}
+
+async Task<TokenResponse> RefreshTokenWithDpopNonceRetryAsync(HttpClient httpClient, DiscoveryDocumentResponse disco, string refreshToken)
+{
+	var firstResponse = await httpClient.RequestRefreshTokenAsync(BuildRefreshTokenRequest(disco, refreshToken));
+
+	if (firstResponse.IsError && !string.IsNullOrWhiteSpace(firstResponse.DPoPNonce))
+	{
+		return await httpClient.RequestRefreshTokenAsync(BuildRefreshTokenRequest(disco, refreshToken, firstResponse.DPoPNonce));
+	}
+
+	return firstResponse;
+}
+
+async Task<TokenResponse> RequestAuthorizationCodeTokensWithDpopNonceRetryAsync(
+	HttpClient httpClient,
+	DiscoveryDocumentResponse disco,
+	string authorizationCode,
+	string codeVerifier,
+	string redirectUrl)
+{
+	var firstResponse = await httpClient.RequestAuthorizationCodeTokenAsync(
+		BuildAuthorizationCodeTokenRequest(disco, authorizationCode, codeVerifier, redirectUrl));
+
+	if (firstResponse.IsError && !string.IsNullOrWhiteSpace(firstResponse.DPoPNonce))
+	{
+		return await httpClient.RequestAuthorizationCodeTokenAsync(
+			BuildAuthorizationCodeTokenRequest(disco, authorizationCode, codeVerifier, redirectUrl, firstResponse.DPoPNonce));
+	}
+
+	return firstResponse;
+}
+
+AuthorizationCodeTokenRequest BuildAuthorizationCodeTokenRequest(
+	DiscoveryDocumentResponse disco,
+	string authorizationCode,
+	string codeVerifier,
+	string redirectUrl,
+	string? dPoPNonce = null)
+{
+	var dPoPProofCreator = new DPoPProofCreator(Options.Create(helseIdOptions), Microsoft.Extensions.Logging.Abstractions.NullLogger<DPoPProofCreator>.Instance);
+
+	return new AuthorizationCodeTokenRequest
+	{
+		Address = disco.TokenEndpoint,
+		ClientId = helseIdOptions.ClientId,
+		Code = authorizationCode,
+		CodeVerifier = codeVerifier,
+		RedirectUri = redirectUrl,
+		GrantType = OidcConstants.GrantTypes.AuthorizationCode,
+		ClientCredentialStyle = ClientCredentialStyle.PostBody,
+		ClientAssertion = GetClientAssertionPayload(disco),
+		DPoPProofToken = dPoPProofCreator.CreateDPoPProof(disco.TokenEndpoint, HttpMethod.Post.Method, dPoPNonce: dPoPNonce)
+	};
+}
+
+RefreshTokenRequest BuildRefreshTokenRequest(DiscoveryDocumentResponse disco, string refreshToken, string? dPoPNonce = null)
+{
+	var dPoPProofCreator = new DPoPProofCreator(Options.Create(helseIdOptions), Microsoft.Extensions.Logging.Abstractions.NullLogger<DPoPProofCreator>.Instance);
+
+	return new RefreshTokenRequest
+	{
+		Address = disco.TokenEndpoint,
+		ClientId = helseIdOptions.ClientId,
+		RefreshToken = refreshToken,
+		GrantType = OidcConstants.GrantTypes.RefreshToken,
+		ClientCredentialStyle = ClientCredentialStyle.PostBody,
+		ClientAssertion = GetClientAssertionPayload(disco),
+		DPoPProofToken = dPoPProofCreator.CreateDPoPProof(disco.TokenEndpoint, HttpMethod.Post.Method, dPoPNonce: dPoPNonce)
+	};
 }
 #endregion
+
+internal sealed class ClientAssertionRefreshHandler(
+	Func<ClientAssertion> createClientAssertion,
+	string issuer) : DelegatingHandler(new HttpClientHandler())
+{
+	protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+	{
+		if (request.Method == HttpMethod.Post && request.Content is not null && IsHelseIdEndpoint(request.RequestUri, issuer))
+		{
+			await ReplaceClientAssertionAsync(request, cancellationToken);
+		}
+
+		return await base.SendAsync(request, cancellationToken);
+	}
+
+	private async Task ReplaceClientAssertionAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+	{
+		var payload = await request.Content!.ReadAsStringAsync(cancellationToken);
+		var formValues = ParseFormUrlEncoded(payload);
+
+		var hasClientAssertion = formValues.Any(x => x.Key == "client_assertion");
+		var hasClientAssertionType = formValues.Any(x => x.Key == "client_assertion_type");
+
+		if (!hasClientAssertion || !hasClientAssertionType)
+		{
+			return;
+		}
+
+		var refreshedAssertion = createClientAssertion();
+		var refreshedFormValues = new List<KeyValuePair<string, string>>(formValues.Count + 2);
+
+		foreach (var formValue in formValues)
+		{
+			if (formValue.Key is "client_assertion" or "client_assertion_type")
+			{
+				continue;
+			}
+
+			refreshedFormValues.Add(formValue);
+		}
+
+		refreshedFormValues.Add(new KeyValuePair<string, string>("client_assertion", refreshedAssertion.Value));
+		refreshedFormValues.Add(new KeyValuePair<string, string>("client_assertion_type", refreshedAssertion.Type));
+
+		var originalHeaders = request.Content.Headers
+			.Select(header => new KeyValuePair<string, IEnumerable<string>>(header.Key, header.Value.ToArray()))
+			.ToList();
+
+		request.Content = new FormUrlEncodedContent(refreshedFormValues);
+
+		foreach (var header in originalHeaders)
+		{
+			request.Content.Headers.Remove(header.Key);
+			request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+		}
+	}
+
+	private static bool IsHelseIdEndpoint(Uri? requestUri, string issuer)
+	{
+		if (requestUri == null || string.IsNullOrWhiteSpace(issuer))
+		{
+			return false;
+		}
+
+		var issuerUri = new Uri(issuer);
+		return Uri.Compare(requestUri, issuerUri, UriComponents.SchemeAndServer, UriFormat.Unescaped, StringComparison.OrdinalIgnoreCase) == 0;
+	}
+
+	private static List<KeyValuePair<string, string>> ParseFormUrlEncoded(string payload)
+	{
+		var values = new List<KeyValuePair<string, string>>();
+		if (string.IsNullOrEmpty(payload))
+		{
+			return values;
+		}
+
+		foreach (var pair in payload.Split('&', StringSplitOptions.RemoveEmptyEntries))
+		{
+			var separatorIndex = pair.IndexOf('=');
+			if (separatorIndex < 0)
+			{
+				values.Add(new KeyValuePair<string, string>(WebUtility.UrlDecode(pair), string.Empty));
+				continue;
+			}
+
+			var key = WebUtility.UrlDecode(pair[..separatorIndex]);
+			var value = WebUtility.UrlDecode(pair[(separatorIndex + 1)..]);
+			values.Add(new KeyValuePair<string, string>(key, value));
+		}
+
+		return values;
+	}
+}
