@@ -139,9 +139,31 @@
 				var dreason = r.reasonReference && r.reasonReference[0] ? resolveRef(r.reasonReference[0], index).display : null;
 				return dreason ? 'for ' + dreason : null;
 			}
+			case 'Observation': {
+				var val = obsValue(r);
+				var interp = r.interpretation && r.interpretation[0] ? ccText(r.interpretation[0]) : null;
+				var members = (r.hasMember || []).map(function (m) {
+					var mr = resolveRef(m, index).resource;
+					if (!mr) return null;
+					var mv = obsValue(mr);
+					return (getTitle(mr, index) || 'Relatert observasjon') + (mv ? ': ' + mv : '');
+				}).filter(Boolean);
+				var oparts = [val ? 'Resultat: ' + val : null, interp].concat(members).filter(Boolean);
+				return oparts.length ? oparts.join(' · ') : null;
+			}
 			default:
 				return null;
 		}
+	}
+
+	function obsValue(r) {
+		if (r.valueQuantity) return [r.valueQuantity.value, r.valueQuantity.unit || r.valueQuantity.code].filter(function (x) { return x != null; }).join(' ');
+		if (r.valueCodeableConcept) return ccText(r.valueCodeableConcept);
+		if (r.valueInteger != null) return String(r.valueInteger);
+		if (r.valueDateTime) return r.valueDateTime;
+		if (r.valueString) return r.valueString;
+		if (r.valueBoolean != null) return r.valueBoolean ? 'Ja' : 'Nei';
+		return null;
 	}
 
 	function getCode(r) {
