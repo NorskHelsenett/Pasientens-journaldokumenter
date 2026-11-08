@@ -96,7 +96,6 @@ var sourceId = "1.1"; // TODO: what should sourceId be?
 const int LocalhostPort = 8089;
 string StsUrl = "https://helseid-sts.test.nhn.no";
 string RedirectUrl = $"https://localhost:{LocalhostPort.ToString()}/callback";
-//string ApiScopes = "nhn:phr/mhd/create-documents-with-reference nhn:phr/mhd/generate-metadata nhn:phr/delete-documents-and-reference";
 string ApiScopes = "nhn:phr-repo/mhd/create nhn:phr-repo/delete-docs-and-refs nhn:phr-repo/fhir/documentreference.read";
 string IdentityScopes = "openid profile offline_access helseid://scopes/identity/pid helseid://scopes/identity/security_level";
 var clientAssertionLifetime = TimeSpan.FromSeconds(10);
@@ -274,7 +273,7 @@ var currentDirectory = Directory.GetCurrentDirectory();
 
 //var fileName = "Epikrise.xml";
 var fileName = "ClinicalDocument_USNOBBET_KLOKKE.xml";
-var filePath = Path.Combine(currentDirectory, @"Examples\", fileName);
+var filePath = Path.Combine(currentDirectory, @"Examples", fileName);
 
 var content = File.ReadAllBytes(filePath);
 
@@ -392,7 +391,7 @@ BundleCreator bundleCreator = new BundleCreator();
 var bundleDocument = bundleCreator.CreateFhirBundle(request, BundleCreator.COMPREHENSIVE);
 
 /*
-	Call PHR API, provide document bundle endpoint
+	Call NHN Dokumentlager API, provide document bundle endpoint
 */
 var _phrApiService = services.GetRequiredService<IPhrApiService>();
 
