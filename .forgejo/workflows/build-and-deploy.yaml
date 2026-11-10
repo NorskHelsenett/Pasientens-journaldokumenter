@@ -27,7 +27,7 @@
           uses: docker/build-push-action@v6
           with:
             context: .
-            file: .NET/PatientHealthRecordsEPJ/docker/epj/Dockerfile
+            file: dotnet/PatientHealthRecordsEPJ/docker/epj/Dockerfile
             push: true
             tags: |
               ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

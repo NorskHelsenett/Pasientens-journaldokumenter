@@ -22,7 +22,7 @@ RUN HTTP_PROXY=${NHN_HTTP_PROXY} \
 
 # Trust the internal NHN PSKY root CA so outbound HTTPS calls to internal services
 # (e.g. api-dev.repository.pjd.test.nhn.no) don't fail with secure_connection_error.
-COPY ./.NET/PatientHealthRecordsEPJ/docker/epj/certs/nhn-internal-root-ca.crt /usr/local/share/ca-certificates/nhn-internal-root-ca.crt
+COPY ./dotnet/PatientHealthRecordsEPJ/docker/epj/certs/nhn-internal-root-ca.crt /usr/local/share/ca-certificates/nhn-internal-root-ca.crt
 RUN update-ca-certificates
 
 # (Optional) Set container default timezone for any code that still uses "local time"
@@ -44,7 +44,7 @@ ENV no_proxy=${NHN_NO_PROXY}
 
 WORKDIR /src
 
-COPY ./.NET/PatientHealthRecordsEPJ/solutions/PatientHealthRecordsEPJ/ ./
+COPY ./dotnet/PatientHealthRecordsEPJ/solutions/PatientHealthRecordsEPJ/ ./
 
 RUN dotnet restore "PatientHealthRecordsEPJ/PatientHealthRecordsEPJ.csproj"
 RUN dotnet publish "PatientHealthRecordsEPJ/PatientHealthRecordsEPJ.csproj" -c Release -o /app/publish-documentsharing-epj /p:UseAppHost=false --no-restore 
