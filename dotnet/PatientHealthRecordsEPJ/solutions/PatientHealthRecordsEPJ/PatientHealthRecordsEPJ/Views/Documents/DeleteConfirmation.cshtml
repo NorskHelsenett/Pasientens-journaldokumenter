@@ -1,0 +1,41 @@
+﻿@model GetDocumentReferencesViewModel
+
+@{
+	var sessionData = Context.Session.SessionData();
+}
+
+<div class="container-fluid max">
+
+	<div class="row">
+		<div class="col-md-12">
+
+			<h3>Dokument referanse (@Model.DeletedDocumentReferenceId) og dokument har blitt slettet.</h3>
+			<br />
+
+			<div class="text-center fs-3">
+				Pasient:
+				@if (string.IsNullOrEmpty(sessionData.PatientName))
+				{
+					<span>
+						@sessionData.PatientId
+					</span>
+				}
+				else
+				{
+					<span>@sessionData.PatientName (@sessionData.PatientId)</span>
+				}
+
+			</div>
+
+			<div class="text-center fs-3">
+				<br />
+				<p>
+					<a href="/documents" class="btn btn-primary">Åpne pasientens journaldokumenter i @sessionData.EnvironmentName</a><br />
+					<br />					
+				</p>
+			</div>
+		</div>
+	</div>
+
+
+</div>
